@@ -36,6 +36,11 @@ class ProveedorAutenticacionFalso implements IProveedorAutenticacion {
   private contador = 0;
 
   async registrarCredenciales(datos: CredencialesRegistro): Promise<UsuarioAutenticado> {
+    if (datos.email === 'servicio-caido@ejemplo.test') {
+      // Simula una falla no controlada (ej. Supabase Auth inaccesible) para
+      // ejercitar el catch genérico -> 500 / PEA-SIS-003 del route handler.
+      throw new Error('Supabase Auth no responde');
+    }
     this.contador += 1;
     return { id: `00000000-0000-0000-0000-0000000000${String(this.contador).padStart(2, '0')}`, email: datos.email };
   }
@@ -98,5 +103,29 @@ describe('POST /api/auth/registro (AUTH-01)', () => {
 
     const repositorio = container.resolve<IRepositorioUsuarios>('IRepositorioUsuarios');
     await expect(repositorio.existePorEmailActivo('dueno2@ejemplo.test')).resolves.toBe(false);
+  });
+
+  it('rechaza un body que no es JSON válido con 400 antes de resolver el caso de uso', async () => {
+    const request = new NextRequest('http://localhost/api/auth/registro', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: 'esto no es json{',
+    });
+
+    const respuesta = await POST(request);
+    expect(respuesta.status).toBe(400);
+    const cuerpo = await respuesta.json();
+    expect(cuerpo.codigo).toBe('PEA-SIS-005');
+  });
+
+  it('devuelve 500 / PEA-SIS-003 ante un error no controlado, sin exponer el detalle interno', async () => {
+    const respuesta = await POST(
+      crearRequest({ email: 'servicio-caido@ejemplo.test', password: 'contraseñaSegura123' }),
+    );
+
+    expect(respuesta.status).toBe(500);
+    const cuerpo = await respuesta.json();
+    expect(cuerpo.codigo).toBe('PEA-SIS-003');
+    expect(cuerpo.mensaje).not.toContain('Supabase Auth no responde');
   });
 });
