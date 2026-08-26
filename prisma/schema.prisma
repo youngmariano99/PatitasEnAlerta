@@ -1,0 +1,481 @@
+// Prisma define forma, relaciones e índices. Los CHECK constraints y las
+// políticas RLS (docs/ROLES.md Sección 3) NO se expresan acá: se agregan
+// editando el archivo migration.sql generado por `prisma migrate dev --create-only`,
+// pegando el contenido correspondiente de docs/SCHEMA.md y docs/ROLES.md antes
+// de aplicar la migración. Ver docs/SETUP.md paso 6.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ============================================================
+// MÓDULO 1 — Autenticación y Registro de Mascotas
+// ============================================================
+
+model Rol {
+  id        Int      @id
+  nombre    String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  usuarios  Usuario[]
+
+  @@map("roles")
+}
+
+model Usuario {
+  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email              String
+  passwordHash       String    @map("password_hash")
+  rolId              Int       @map("rol_id")
+  estadoVerificacion String    @default("no_requerido") @map("estado_verificacion")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @default(now()) @updatedAt @map("updated_at")
+  deletedAt          DateTime? @map("deleted_at")
+
+  rol                    Rol                      @relation(fields: [rolId], references: [id])
+  perfilVeterinario      PerfilVeterinario?
+  perfilMunicipio        PerfilMunicipio?
+  mascotas               Mascota[]
+  reportesReportados     Reporte[]                @relation("ReportadoPor")
+  eventos                Evento[]
+  turnosComoProveedor    Turno[]                  @relation("TurnoProveedor")
+  turnosReservados       Turno[]                  @relation("TurnoReservadoPor")
+  vitrinaAdopcion        VitrinaAdopcion[]
+
+  @@map("usuarios")
+  @@index([rolId])
+}
+
+model PerfilVeterinario {
+  usuarioId      String    @id @map("usuario_id") @db.Uuid
+  matricula      String
+  colegioEmisor  String    @map("colegio_emisor")
+  verificadoEn   DateTime? @map("verificado_en")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @default(now()) @updatedAt @map("updated_at")
+  deletedAt      DateTime? @map("deleted_at")
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
+
+  @@map("perfiles_veterinario")
+  @@unique([matricula, colegioEmisor])
+}
+
+model PerfilMunicipio {
+  usuarioId           String    @id @map("usuario_id") @db.Uuid
+  nombreInstitucional String    @map("nombre_institucional")
+  verificadoEn        DateTime? @map("verificado_en")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime @default(now()) @updatedAt @map("updated_at")
+  deletedAt            DateTime? @map("deleted_at")
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
+
+  @@map("perfiles_municipio")
+}
+
+model Verificacion {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  usuarioId      String    @map("usuario_id") @db.Uuid
+  tipo           String
+  estado         String    @default("pendiente")
+  motivoRechazo  String?   @map("motivo_rechazo")
+  revisadoPor    String?   @map("revisado_por") @db.Uuid
+  resueltoEn     DateTime? @map("resuelto_en")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  @@map("verificaciones")
+  @@index([estado])
+  @@index([usuarioId])
+}
+
+model Mascota {
+  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  // Identificador Prisma en ASCII (el motor de esquema no acepta "ñ" en nombres
+  // de campo); la columna real en Postgres sigue siendo "dueño_id" vía @map.
+  duenoId              String    @map("dueño_id") @db.Uuid
+  nombre               String
+  especie              String
+  raza                 String?
+  edadAproximada       Int?      @map("edad_aproximada")
+  fotoUrl              String    @map("foto_url")
+  identificacionChip   String?   @map("identificacion_chip")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @default(now()) @updatedAt @map("updated_at")
+  deletedAt            DateTime? @map("deleted_at")
+
+  dueno   Usuario   @relation(fields: [duenoId], references: [id])
+  reportes Reporte[]
+
+  @@map("mascotas")
+  @@index([duenoId])
+}
+
+// ============================================================
+// MÓDULO 2 — Motor de Reportes Unificado
+// ============================================================
+
+model Reporte {
+  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tipo                  String
+  subtipo               String?
+  reportadoPor          String    @map("reportado_por") @db.Uuid
+  mascotaId             String?   @map("mascota_id") @db.Uuid
+  descripcion           String
+  // descripcion_embedding VECTOR(1536) — Prisma no soporta pgvector nativamente aún;
+  // se agrega vía migración SQL manual (ver docs/SCHEMA.md) y se consulta con $queryRaw.
+  fotoUrl               String    @map("foto_url")
+  latitud               Float
+  longitud              Float
+  estado                String    @default("reportado")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @default(now()) @updatedAt @map("updated_at")
+  deletedAt             DateTime? @map("deleted_at")
+
+  reportadoPorUsuario Usuario                 @relation("ReportadoPor", fields: [reportadoPor], references: [id])
+  mascota             Mascota?                @relation(fields: [mascotaId], references: [id])
+  historialEstado     ReporteHistorialEstado[]
+
+  @@map("reportes")
+  @@index([tipo, estado])
+  @@index([latitud, longitud])
+  @@index([reportadoPor])
+}
+
+model ReporteHistorialEstado {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  reporteId      String   @map("reporte_id") @db.Uuid
+  estadoAnterior String   @map("estado_anterior")
+  estadoNuevo    String   @map("estado_nuevo")
+  usuarioId      String   @map("usuario_id") @db.Uuid
+  registradoEn   DateTime @default(now()) @map("registrado_en")
+
+  reporte Reporte @relation(fields: [reporteId], references: [id])
+
+  @@map("reportes_historial_estado")
+  @@index([reporteId])
+}
+
+model Notificacion {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  usuarioId       String   @map("usuario_id") @db.Uuid
+  tipo            String
+  referenciaTabla String   @map("referencia_tabla")
+  referenciaId    String   @map("referencia_id") @db.Uuid
+  leido           Boolean  @default(false)
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@map("notificaciones")
+  @@index([usuarioId, leido])
+}
+
+// ============================================================
+// MÓDULO 3 — Municipio: Eventos, Turnera y Vitrina de Adopción
+// ============================================================
+
+model Evento {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  municipioId   String    @map("municipio_id") @db.Uuid
+  titulo        String
+  tipo          String
+  direccion     String
+  latitud       Float
+  longitud      Float
+  fecha         DateTime
+  cuposTotales  Int       @map("cupos_totales")
+  requisitos    String?
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at")
+  deletedAt     DateTime? @map("deleted_at")
+
+  municipio Usuario @relation(fields: [municipioId], references: [id])
+  turnos    Turno[]
+
+  @@map("eventos")
+  @@index([municipioId, fecha])
+}
+
+model DisponibilidadVeterinario {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  veterinarioId String    @map("veterinario_id") @db.Uuid
+  diaSemana     Int       @map("dia_semana")
+  horaInicio    DateTime  @map("hora_inicio") @db.Time
+  horaFin       DateTime  @map("hora_fin") @db.Time
+  activo        Boolean   @default(true)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at")
+  deletedAt     DateTime? @map("deleted_at")
+
+  @@map("disponibilidad_veterinario")
+  @@index([veterinarioId, diaSemana])
+}
+
+model Turno {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  proveedorTipo  String    @map("proveedor_tipo")
+  proveedorId    String    @map("proveedor_id") @db.Uuid
+  eventoId       String?   @map("evento_id") @db.Uuid
+  reservadoPor   String?   @map("reservado_por") @db.Uuid
+  franjaInicio   DateTime  @map("franja_inicio")
+  franjaFin      DateTime  @map("franja_fin")
+  estado         String    @default("disponible")
+  asistio        Boolean?
+  version        Int       @default(0)
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @default(now()) @updatedAt @map("updated_at")
+  deletedAt      DateTime? @map("deleted_at")
+
+  proveedor        Usuario  @relation("TurnoProveedor", fields: [proveedorId], references: [id])
+  reservante        Usuario? @relation("TurnoReservadoPor", fields: [reservadoPor], references: [id])
+  evento           Evento?  @relation(fields: [eventoId], references: [id])
+
+  @@map("turnos")
+  @@index([proveedorId, franjaInicio])
+  @@index([reservadoPor])
+}
+
+model VitrinaAdopcion {
+  id                          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  municipioId                 String    @map("municipio_id") @db.Uuid
+  nombreAnimal                String    @map("nombre_animal")
+  especie                     String
+  edadAproximada               Int?      @map("edad_aproximada")
+  tamano                      String?
+  temperamento                String?
+  estadoSalud                 String?   @map("estado_salud")
+  requisitosAdopcion          String?   @map("requisitos_adopcion")
+  fotoUrl                     String    @map("foto_url")
+  estado                      String    @default("disponible")
+  // Columnas Post-MVP (Módulo 9), nullable hasta activar el algoritmo de compatibilidad
+  nivelEnergia                String?   @map("nivel_energia")
+  compatibleNinos             Boolean?  @map("compatible_ninos")
+  compatibleOtrosAnimales     Boolean?  @map("compatible_otros_animales")
+  necesidadesMedicasDetalle   String?   @map("necesidades_medicas_detalle")
+  createdAt                   DateTime  @default(now()) @map("created_at")
+  updatedAt                   DateTime  @default(now()) @updatedAt @map("updated_at")
+  deletedAt                   DateTime? @map("deleted_at")
+
+  municipio Usuario @relation(fields: [municipioId], references: [id])
+
+  @@map("vitrina_adopcion")
+  @@index([municipioId, estado])
+}
+
+// ============================================================
+// MÓDULO 4 — Veterinarios: Libreta Sanitaria Básica
+// ============================================================
+
+model AutorizacionLibreta {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  mascotaId     String    @map("mascota_id") @db.Uuid
+  veterinarioId String    @map("veterinario_id") @db.Uuid
+  otorgadaEn    DateTime  @default(now()) @map("otorgada_en")
+  revocadaEn    DateTime? @map("revocada_en")
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  @@map("autorizaciones_libreta")
+}
+
+model EntradaLibretaSanitaria {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  mascotaId     String    @map("mascota_id") @db.Uuid
+  veterinarioId String    @map("veterinario_id") @db.Uuid
+  tipo          String
+  descripcion   String
+  fecha         DateTime  @db.Date
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at")
+  deletedAt     DateTime? @map("deleted_at")
+
+  @@map("entradas_libreta_sanitaria")
+  @@index([mascotaId, fecha])
+  @@index([veterinarioId])
+}
+
+// ============================================================
+// POST-MVP — Módulos 5 a 9 (esquema listo, sin UI todavía)
+// Ver docs/SCHEMA.md Sección 1.B para el detalle completo de cada tabla.
+// ============================================================
+
+model SolicitudRecurso {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizacionId String    @map("organizacion_id") @db.Uuid
+  tipo           String
+  descripcion    String
+  reporteId      String?   @map("reporte_id") @db.Uuid
+  estado         String    @default("abierta")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @default(now()) @updatedAt @map("updated_at")
+  deletedAt      DateTime? @map("deleted_at")
+
+  @@map("solicitudes_recurso")
+  @@index([organizacionId, estado])
+}
+
+model Colaboracion {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  solicitudId   String    @map("solicitud_id") @db.Uuid
+  stakeholderId String    @map("stakeholder_id") @db.Uuid
+  estado        String    @default("propuesta")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at")
+  deletedAt     DateTime? @map("deleted_at")
+
+  @@map("colaboraciones")
+  @@index([solicitudId])
+  @@index([stakeholderId])
+}
+
+model ProductoVeterinario {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  veterinarioId String    @map("veterinario_id") @db.Uuid
+  nombre        String
+  descripcion   String?
+  precio        Decimal   @db.Decimal(10, 2)
+  stock         Int       @default(0)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at")
+  deletedAt     DateTime? @map("deleted_at")
+
+  @@map("productos_veterinario")
+  @@index([veterinarioId])
+}
+
+model PedidoProducto {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  productoId     String    @map("producto_id") @db.Uuid
+  compradorId    String    @map("comprador_id") @db.Uuid
+  cantidad       Int
+  precioUnitario Decimal   @map("precio_unitario") @db.Decimal(10, 2)
+  estado         String    @default("pendiente")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @default(now()) @updatedAt @map("updated_at")
+  deletedAt      DateTime? @map("deleted_at")
+
+  @@map("pedidos_producto")
+  @@index([compradorId])
+}
+
+model HistorialCompartido {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  mascotaId           String    @map("mascota_id") @db.Uuid
+  veterinarioOrigenId String    @map("veterinario_origen_id") @db.Uuid
+  veterinarioDestinoId String   @map("veterinario_destino_id") @db.Uuid
+  autorizadoEn        DateTime  @default(now()) @map("autorizado_en")
+  revocadoEn          DateTime? @map("revocado_en")
+  createdAt           DateTime  @default(now()) @map("created_at")
+
+  @@map("historiales_compartidos")
+}
+
+model Comercio {
+  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  usuarioId          String    @map("usuario_id") @db.Uuid
+  nombreComercio     String    @map("nombre_comercio")
+  tipoComercio       String    @map("tipo_comercio")
+  direccion          String
+  latitud            Float
+  longitud           Float
+  estadoVerificacion String    @default("pendiente") @map("estado_verificacion")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @default(now()) @updatedAt @map("updated_at")
+  deletedAt          DateTime? @map("deleted_at")
+
+  @@map("comercios")
+  @@index([latitud, longitud])
+}
+
+model ProductoComercio {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  comercioId  String    @map("comercio_id") @db.Uuid
+  nombre      String
+  descripcion String?
+  categoria   String?
+  precio      Decimal?  @db.Decimal(10, 2)
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  @@map("productos_comercio")
+  @@index([comercioId])
+}
+
+model Curso {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  publicadoPor  String    @map("publicado_por") @db.Uuid
+  titulo        String
+  descripcion   String
+  contenidoUrl  String?   @map("contenido_url")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at")
+  deletedAt     DateTime? @map("deleted_at")
+
+  @@map("cursos")
+}
+
+model InscripcionCurso {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  cursoId     String   @map("curso_id") @db.Uuid
+  usuarioId   String   @map("usuario_id") @db.Uuid
+  inscritoEn  DateTime @default(now()) @map("inscrito_en")
+
+  @@map("inscripciones_curso")
+  @@unique([cursoId, usuarioId])
+}
+
+model TemaForo {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  creadoPor   String    @map("creado_por") @db.Uuid
+  titulo      String
+  contenido   String
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  @@map("temas_foro")
+}
+
+model RespuestaForo {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  temaId      String    @map("tema_id") @db.Uuid
+  usuarioId   String    @map("usuario_id") @db.Uuid
+  contenido   String
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  @@map("respuestas_foro")
+  @@index([temaId])
+}
+
+model CuestionarioAdoptante {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  usuarioId           String    @map("usuario_id") @db.Uuid
+  horasSoloEstimadas  Int?      @map("horas_solo_estimadas")
+  presenciaNinos      Boolean?  @map("presencia_ninos")
+  espacioDisponible   String?   @map("espacio_disponible")
+  experienciaPrevia   String?   @map("experiencia_previa")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @default(now()) @updatedAt @map("updated_at")
+  deletedAt           DateTime? @map("deleted_at")
+
+  @@map("cuestionarios_adoptante")
+  @@index([usuarioId])
+}
+
+model SugerenciaCompatibilidad {
+  id                   String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  cuestionarioId       String   @map("cuestionario_id") @db.Uuid
+  vitrinaAdopcionId    String   @map("vitrina_adopcion_id") @db.Uuid
+  scoreCompatibilidad  Decimal  @map("score_compatibilidad") @db.Decimal(5, 4)
+  metodo               String
+  generadoEn           DateTime @default(now()) @map("generado_en")
+
+  @@map("sugerencias_compatibilidad")
+  @@index([cuestionarioId, scoreCompatibilidad])
+}

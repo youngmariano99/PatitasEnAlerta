@@ -1,0 +1,9 @@
+# Ajustar @usuarios reales antes del primer PR.
+# Mientras el equipo es chico, un solo Tech Lead como owner global alcanza;
+# separar por carpeta cuando haya más de 2-3 personas tocando el repo.
+
+*                           @tech-lead-a-definir
+
+/prisma/                    @tech-lead-a-definir
+/docs/                      @product-owner-a-definir
+/.github/                   @tech-lead-a-definir

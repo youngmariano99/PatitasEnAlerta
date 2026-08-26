@@ -1,0 +1,18 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-display: 'Plus Jakarta Sans', sans-serif;
+  --font-sans: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+body {
+  @apply bg-base text-text-primary font-sans text-sm antialiased;
+}
+
+/* Utilidad reusable para estados vacíos (borde discontinuo + CTA) del sistema de diseño */
+.estado-vacio {
+  @apply border border-dashed border-surface2 rounded-lg p-8 text-center text-text-muted;
+}
