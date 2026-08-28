@@ -2,8 +2,12 @@ import 'reflect-metadata';
 import { container } from 'tsyringe';
 import type { IRepositorioUsuarios } from '@dominio/puertos/IRepositorioUsuarios';
 import type { IProveedorAutenticacion } from '@dominio/puertos/IProveedorAutenticacion';
+import type { IRepositorioMascotas } from '@dominio/puertos/IRepositorioMascotas';
+import type { IAlmacenamientoImagenes } from '@dominio/puertos/IAlmacenamientoImagenes';
 import { PrismaUsuarioRepositorio } from '@infraestructura/adaptadores/PrismaUsuarioRepositorio';
 import { SupabaseAuthAdapter } from '@infraestructura/adaptadores/SupabaseAuthAdapter';
+import { PrismaMascotaRepositorio } from '@infraestructura/adaptadores/PrismaMascotaRepositorio';
+import { CloudinaryStorageAdapter } from '@infraestructura/adaptadores/CloudinaryStorageAdapter';
 
 /**
  * Punto único de registro de dependencias (patrón Singleton para el propio
@@ -18,5 +22,7 @@ import { SupabaseAuthAdapter } from '@infraestructura/adaptadores/SupabaseAuthAd
  */
 container.registerSingleton<IRepositorioUsuarios>('IRepositorioUsuarios', PrismaUsuarioRepositorio);
 container.registerSingleton<IProveedorAutenticacion>('IProveedorAutenticacion', SupabaseAuthAdapter);
+container.registerSingleton<IRepositorioMascotas>('IRepositorioMascotas', PrismaMascotaRepositorio);
+container.registerSingleton<IAlmacenamientoImagenes>('IAlmacenamientoImagenes', CloudinaryStorageAdapter);
 
 export { container };
