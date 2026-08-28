@@ -79,3 +79,5 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
           NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder
           DATABASE_URL: postgresql://patitas:placeholder@localhost:5432/placeholder
+          NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: placeholder
+          NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET: placeholder
