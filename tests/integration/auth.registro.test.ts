@@ -48,6 +48,10 @@ class ProveedorAutenticacionFalso implements IProveedorAutenticacion {
   async eliminarCredenciales(): Promise<void> {
     // no-op: nada que revertir en el fake.
   }
+
+  async solicitarRecuperacionPassword(): Promise<void> {
+    // no usado en este test
+  }
 }
 
 function crearRequest(body: unknown): NextRequest {
