@@ -25,4 +25,16 @@ SELECT
 FROM generate_series(1, 180) AS gs
 WHERE EXISTS (SELECT 1 FROM usuarios WHERE rol_id = 1 AND deleted_at IS NULL);
 
+-- Baja lógica de ~10% de las mascotas recién sembradas (AUTH-05), para
+-- poder verificar manualmente que los listados las excluyen sin borrar la
+-- fila: nunca un DELETE físico, solo UPDATE ... SET deleted_at = now().
+WITH candidatas AS (
+  SELECT id FROM mascotas
+  WHERE deleted_at IS NULL
+  ORDER BY random()
+  LIMIT (SELECT ceil(count(*) * 0.10) FROM mascotas WHERE deleted_at IS NULL)
+)
+UPDATE mascotas SET deleted_at = now()
+WHERE id IN (SELECT id FROM candidatas);
+
 COMMIT;

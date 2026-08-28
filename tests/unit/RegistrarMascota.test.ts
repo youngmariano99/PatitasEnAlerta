@@ -13,6 +13,10 @@ import { FotoObligatoriaError } from '@dominio/errores/erroresMascotas';
 function crearFakes(fotoValida = true) {
   const repositorioMascotas: jest.Mocked<IRepositorioMascotas> = {
     crear: jest.fn().mockImplementation(async (datos: DatosMascota) => Mascota.reconstruir('mascota-1', datos)),
+    buscarPorId: jest.fn(),
+    listarPorDueño: jest.fn(),
+    actualizar: jest.fn(),
+    darDeBaja: jest.fn(),
   };
   const almacenamientoImagenes: jest.Mocked<IAlmacenamientoImagenes> = {
     esUrlDeImagenValida: jest.fn().mockReturnValue(fotoValida),
