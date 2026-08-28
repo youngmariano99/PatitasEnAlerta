@@ -19,4 +19,14 @@ export interface IProveedorAutenticacion {
 
   /** Revierte un alta de credenciales (compensación si falla el paso siguiente de persistencia). */
   eliminarCredenciales(id: string): Promise<void>;
+
+  /**
+   * Dispara el email de recuperación de contraseña de Supabase Auth.
+   * Contrato de este puerto: NUNCA rechaza la promesa — ni cuando el email
+   * no pertenece a ninguna cuenta ni ante una falla real del proveedor
+   * (queda logueada por la implementación). Es la base del comportamiento
+   * anti-enumeración exigido en AUTH-06: el llamador no tiene ninguna rama
+   * de error que lo tiente a responder distinto según el caso.
+   */
+  solicitarRecuperacionPassword(email: string, redirectTo: string): Promise<void>;
 }

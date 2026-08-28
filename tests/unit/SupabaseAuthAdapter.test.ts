@@ -6,10 +6,14 @@ import { EmailYaRegistradoError } from '@dominio/errores/erroresAutenticacion';
 
 const createUserMock = jest.fn();
 const deleteUserMock = jest.fn();
+const resetPasswordForEmailMock = jest.fn();
 
 jest.mock('@supabase/supabase-js', () => ({
   createClient: jest.fn(() => ({
-    auth: { admin: { createUser: createUserMock, deleteUser: deleteUserMock } },
+    auth: {
+      admin: { createUser: createUserMock, deleteUser: deleteUserMock },
+      resetPasswordForEmail: resetPasswordForEmailMock,
+    },
   })),
 }));
 
@@ -19,6 +23,7 @@ describe('SupabaseAuthAdapter', () => {
   beforeEach(() => {
     createUserMock.mockReset();
     deleteUserMock.mockReset();
+    resetPasswordForEmailMock.mockReset();
     process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://proyecto-test.supabase.co';
     process.env.SUPABASE_SERVICE_ROLE_KEY = 'clave-service-role-de-prueba';
   });
@@ -98,5 +103,25 @@ describe('SupabaseAuthAdapter', () => {
     const adapter = new SupabaseAuthAdapter();
 
     await expect(adapter.eliminarCredenciales('auth-1')).rejects.toThrow('no se pudo borrar');
+  });
+
+  it('solicitarRecuperacionPassword invoca resetPasswordForEmail con el redirectTo recibido', async () => {
+    resetPasswordForEmailMock.mockResolvedValue({ data: {}, error: null });
+    const adapter = new SupabaseAuthAdapter();
+
+    await adapter.solicitarRecuperacionPassword('ana@ejemplo.test', 'https://patitasenalerta.test/auth/recuperar-password/nueva');
+
+    expect(resetPasswordForEmailMock).toHaveBeenCalledWith('ana@ejemplo.test', {
+      redirectTo: 'https://patitasenalerta.test/auth/recuperar-password/nueva',
+    });
+  });
+
+  it('solicitarRecuperacionPassword NUNCA rechaza, ni siquiera si Supabase devuelve un error (anti-enumeración)', async () => {
+    resetPasswordForEmailMock.mockResolvedValue({ data: null, error: { message: 'rate limit exceeded' } });
+    const adapter = new SupabaseAuthAdapter();
+
+    await expect(
+      adapter.solicitarRecuperacionPassword('ana@ejemplo.test', 'https://patitasenalerta.test/auth/recuperar-password/nueva'),
+    ).resolves.toBeUndefined();
   });
 });

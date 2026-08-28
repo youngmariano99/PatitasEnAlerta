@@ -56,6 +56,17 @@ export class SupabaseAuthAdapter implements IProveedorAutenticacion {
     return { id: data.user.id, email: data.user.email ?? datos.email };
   }
 
+  async solicitarRecuperacionPassword(email: string, redirectTo: string): Promise<void> {
+    const { error } = await this.cliente.auth.resetPasswordForEmail(email, { redirectTo });
+    if (error) {
+      // No se relanza a propósito: Supabase Auth ya no distingue acá si el
+      // email existe o no (anti-enumeración a nivel de la propia API), y
+      // este adaptador no debe convertirse en la primera vía de fuga de esa
+      // información. Queda logueado para observabilidad/soporte.
+      logger.error({ err: error, email }, 'Supabase Auth no pudo procesar la solicitud de recuperación de contraseña');
+    }
+  }
+
   async eliminarCredenciales(id: string): Promise<void> {
     const { error } = await this.cliente.auth.admin.deleteUser(id);
     if (error) {

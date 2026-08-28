@@ -5,6 +5,7 @@
  ├─ /login
  ├─ /registro                     (Dueño de mascota | Veterinario)
  └─ /recuperar-password
+     └─ /recuperar-password/nueva  (define la nueva contraseña; requiere el enlace de un solo uso enviado por Supabase Auth)
 
 /panel                            (dashboard raíz, redirige según rol)
 

@@ -31,6 +31,7 @@ describe('RegistrarUsuario (unidad, sin HTTP)', () => {
     const proveedorAutenticacion: jest.Mocked<IProveedorAutenticacion> = {
       registrarCredenciales: jest.fn().mockResolvedValue({ id: 'id-supabase-1', email: datos.email }),
       eliminarCredenciales: jest.fn().mockResolvedValue(undefined),
+      solicitarRecuperacionPassword: jest.fn().mockResolvedValue(undefined),
     };
 
     const caso = new RegistrarUsuario(repositorioUsuarios, proveedorAutenticacion);
@@ -48,6 +49,7 @@ describe('RegistrarUsuario (unidad, sin HTTP)', () => {
     const proveedorAutenticacion: jest.Mocked<IProveedorAutenticacion> = {
       registrarCredenciales: jest.fn(),
       eliminarCredenciales: jest.fn(),
+      solicitarRecuperacionPassword: jest.fn().mockResolvedValue(undefined),
     };
 
     const caso = new RegistrarUsuario(repositorioUsuarios, proveedorAutenticacion);
@@ -64,6 +66,7 @@ describe('RegistrarUsuario (unidad, sin HTTP)', () => {
     const proveedorAutenticacion: jest.Mocked<IProveedorAutenticacion> = {
       registrarCredenciales: jest.fn().mockResolvedValue({ id: 'id-supabase-2', email: datos.email }),
       eliminarCredenciales: jest.fn().mockResolvedValue(undefined),
+      solicitarRecuperacionPassword: jest.fn().mockResolvedValue(undefined),
     };
 
     const caso = new RegistrarUsuario(repositorioUsuarios, proveedorAutenticacion);
@@ -81,6 +84,7 @@ describe('RegistrarUsuario (unidad, sin HTTP)', () => {
     const proveedorAutenticacion: jest.Mocked<IProveedorAutenticacion> = {
       registrarCredenciales: jest.fn().mockResolvedValue({ id: 'id-supabase-3', email: datos.email }),
       eliminarCredenciales: jest.fn().mockResolvedValue(undefined),
+      solicitarRecuperacionPassword: jest.fn().mockResolvedValue(undefined),
     };
 
     const caso = new RegistrarUsuario(repositorioUsuarios, proveedorAutenticacion);
@@ -98,6 +102,7 @@ describe('RegistrarUsuario (unidad, sin HTTP)', () => {
     const proveedorAutenticacion: jest.Mocked<IProveedorAutenticacion> = {
       registrarCredenciales: jest.fn().mockResolvedValue({ id: 'id-supabase-4', email: datos.email }),
       eliminarCredenciales: jest.fn().mockRejectedValue(new Error('Supabase también está caído')),
+      solicitarRecuperacionPassword: jest.fn().mockResolvedValue(undefined),
     };
 
     const caso = new RegistrarUsuario(repositorioUsuarios, proveedorAutenticacion);
