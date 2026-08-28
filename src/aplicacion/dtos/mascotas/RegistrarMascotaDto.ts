@@ -1,13 +1,6 @@
 import { z } from 'zod';
 import { registroOpenApi, ErrorApiSchema } from '@aplicacion/dtos/openapi-registry';
-
-// Convierte '' (campo de texto opcional vacío en un <input>) a `undefined`,
-// para no persistir cadenas vacías como si fueran un dato real.
-const opcionalDeTexto = (maximo: number) =>
-  z.preprocess(
-    (valor) => (valor === '' ? undefined : valor),
-    z.string().trim().max(maximo).optional(),
-  );
+import { opcionalDeTexto } from '@aplicacion/dtos/zod-helpers';
 
 /**
  * Contrato de entrada del alta de mascota (AUTH-04). `dueñoId` NO forma

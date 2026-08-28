@@ -15,3 +15,9 @@ export class FotoObligatoriaError extends ErrorDominio {
     );
   }
 }
+
+export class MascotaNoEncontradaError extends ErrorDominio {
+  constructor() {
+    super('PEA-AUTH-009', 'No encontramos esa mascota o ya no está disponible.', 404);
+  }
+}

@@ -27,6 +27,22 @@ class RepositorioMascotasFalso implements IRepositorioMascotas {
     this.creadas.push(datos);
     return Mascota.reconstruir(`mascota-${this.creadas.length}`, datos);
   }
+
+  async buscarPorId(): Promise<Mascota | null> {
+    return null;
+  }
+
+  async listarPorDueño(): Promise<Mascota[]> {
+    return [];
+  }
+
+  async actualizar(): Promise<Mascota> {
+    throw new Error('no usado en este test');
+  }
+
+  async darDeBaja(): Promise<void> {
+    // no usado en este test
+  }
 }
 
 class AlmacenamientoImagenesFalso implements IAlmacenamientoImagenes {
