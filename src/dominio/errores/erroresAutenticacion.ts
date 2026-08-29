@@ -39,3 +39,9 @@ export class AltaInstitucionalNoAutorizadaError extends ErrorDominio {
     );
   }
 }
+
+export class SesionExpiradaError extends ErrorDominio {
+  constructor() {
+    super('PEA-AUTH-005', 'Tu sesión expiró por seguridad. Iniciá sesión de nuevo para continuar.', 401);
+  }
+}
