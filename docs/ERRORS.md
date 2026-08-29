@@ -16,6 +16,7 @@
 | PEA-AUTH-010 | Necesitamos al menos una foto de tu mascota para completar el registro. | Aplicación (Zod, campo obligatorio) — 400 | Resaltar el campo de carga de imagen con ícono ⚠️, sin bloquear los demás campos ya completados. |
 | PEA-AUTH-011 | Este tipo de cuenta institucional se habilita desde la administración de la plataforma. | Middleware (RLS, alta exclusiva por Admin) — 403 | Mostrar un mensaje de contacto/solicitud institucional en vez del formulario de autoregistro. |
 | PEA-AUTH-012 | Hiciste muchos intentos seguidos. Esperá unos minutos antes de volver a intentar. | Middleware (`@upstash/ratelimit`) — 429 | Mostrar el tiempo de espera restante; no exponer el límite exacto configurado. |
+| PEA-AUTH-013 | Esta verificación ya fue resuelta anteriormente. Actualizá la lista para ver el estado actual. | Dominio (control optimista, `estado` ≠ `pendiente`) — 409 | Refrescar automáticamente la cola de verificaciones pendientes. |
 
 ## Módulo 2 — Motor de Reportes Unificado
 
