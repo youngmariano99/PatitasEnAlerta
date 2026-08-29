@@ -5,11 +5,13 @@ import type { IProveedorAutenticacion } from '@dominio/puertos/IProveedorAutenti
 import type { IRepositorioMascotas } from '@dominio/puertos/IRepositorioMascotas';
 import type { IAlmacenamientoImagenes } from '@dominio/puertos/IAlmacenamientoImagenes';
 import type { IRepositorioVeterinarios } from '@dominio/puertos/IRepositorioVeterinarios';
+import type { IRepositorioPerfil } from '@dominio/puertos/IRepositorioPerfil';
 import { PrismaUsuarioRepositorio } from '@infraestructura/adaptadores/PrismaUsuarioRepositorio';
 import { SupabaseAuthAdapter } from '@infraestructura/adaptadores/SupabaseAuthAdapter';
 import { PrismaMascotaRepositorio } from '@infraestructura/adaptadores/PrismaMascotaRepositorio';
 import { CloudinaryStorageAdapter } from '@infraestructura/adaptadores/CloudinaryStorageAdapter';
 import { PrismaVeterinarioRepositorio } from '@infraestructura/adaptadores/PrismaVeterinarioRepositorio';
+import { PrismaPerfilRepositorio } from '@infraestructura/adaptadores/PrismaPerfilRepositorio';
 
 /**
  * Punto único de registro de dependencias (patrón Singleton para el propio
@@ -27,5 +29,6 @@ container.registerSingleton<IProveedorAutenticacion>('IProveedorAutenticacion', 
 container.registerSingleton<IRepositorioMascotas>('IRepositorioMascotas', PrismaMascotaRepositorio);
 container.registerSingleton<IAlmacenamientoImagenes>('IAlmacenamientoImagenes', CloudinaryStorageAdapter);
 container.registerSingleton<IRepositorioVeterinarios>('IRepositorioVeterinarios', PrismaVeterinarioRepositorio);
+container.registerSingleton<IRepositorioPerfil>('IRepositorioPerfil', PrismaPerfilRepositorio);
 
 export { container };
