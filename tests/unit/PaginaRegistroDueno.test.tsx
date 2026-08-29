@@ -169,4 +169,12 @@ describe('PaginaRegistroDueno (app/auth/registro)', () => {
 
     expect(screen.queryByText(/Ya existe una cuenta con ese email/)).not.toBeInTheDocument();
   });
+
+  it('AUTH-03, Paso 3: el formulario público nunca ofrece "Municipio" como opción de autoregistro', () => {
+    render(<PaginaRegistroDueno />);
+
+    expect(screen.queryByRole('radio', { name: /municipio/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/^municipio$/i)).not.toBeInTheDocument();
+    expect(screen.getAllByRole('radio')).toHaveLength(2);
+  });
 });

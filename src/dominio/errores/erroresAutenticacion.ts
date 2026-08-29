@@ -29,3 +29,13 @@ export class MatriculaYaRegistradaError extends ErrorDominio {
     );
   }
 }
+
+export class AltaInstitucionalNoAutorizadaError extends ErrorDominio {
+  constructor() {
+    super(
+      'PEA-AUTH-011',
+      'Este tipo de cuenta institucional se habilita desde la administración de la plataforma.',
+      403,
+    );
+  }
+}
