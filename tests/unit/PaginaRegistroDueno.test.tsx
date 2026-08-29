@@ -95,4 +95,78 @@ describe('PaginaRegistroDueno (app/auth/registro)', () => {
     expect(await screen.findByText(/No pudimos conectarnos con el servidor/)).toBeInTheDocument();
     await waitFor(() => expect(screen.getByRole('button', { name: 'Crear cuenta' })).not.toBeDisabled());
   });
+
+  it('al elegir "Veterinario/a" muestra los campos de matrícula y colegio emisor (PerfilFormularioFactory, AC1)', async () => {
+    const usuario = userEvent.setup();
+    render(<PaginaRegistroDueno />);
+
+    expect(screen.queryByLabelText('Matrícula profesional')).not.toBeInTheDocument();
+
+    await usuario.click(screen.getByRole('radio', { name: 'Veterinario/a' }));
+
+    expect(screen.getByLabelText('Matrícula profesional')).toBeInTheDocument();
+    expect(screen.getByLabelText('Colegio que emitió tu matrícula')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Crear cuenta' })).toBeDisabled();
+  });
+
+  it('registra un veterinario con éxito enviando rol=veterinario y los campos de matrícula', async () => {
+    mockearFetch({
+      status: 201,
+      body: { id: '1', email: 'vet@ejemplo.test', matricula: 'MP-1001', colegioEmisor: 'Colegio X', estadoVerificacion: 'pendiente' },
+    });
+    const usuario = userEvent.setup();
+    render(<PaginaRegistroDueno />);
+
+    await usuario.click(screen.getByRole('radio', { name: 'Veterinario/a' }));
+    await usuario.type(screen.getByLabelText('Email'), 'vet@ejemplo.test');
+    await usuario.type(screen.getByLabelText('Contraseña'), 'contraseñaSegura123');
+    await usuario.type(screen.getByLabelText('Matrícula profesional'), 'MP-1001');
+    await usuario.type(screen.getByLabelText('Colegio que emitió tu matrícula'), 'Colegio X');
+    await usuario.click(screen.getByRole('button', { name: 'Crear cuenta' }));
+
+    expect(await screen.findByText('¡Cuenta creada!')).toBeInTheDocument();
+    expect(screen.getByText(/matrícula queda en revisión/)).toBeInTheDocument();
+    const [, opciones] = (global.fetch as jest.Mock).mock.calls[0];
+    expect(JSON.parse(opciones.body)).toMatchObject({
+      email: 'vet@ejemplo.test',
+      matricula: 'MP-1001',
+      colegioEmisor: 'Colegio X',
+      rol: 'veterinario',
+    });
+  });
+
+  it('resalta matrícula y colegio emisor ante un conflicto de unicidad (409 / PEA-AUTH-006)', async () => {
+    mockearFetch({
+      status: 409,
+      body: { codigo: 'PEA-AUTH-006', mensaje: 'Ya existe una matrícula registrada con esos datos para este colegio.' },
+    });
+    const usuario = userEvent.setup();
+    render(<PaginaRegistroDueno />);
+
+    await usuario.click(screen.getByRole('radio', { name: 'Veterinario/a' }));
+    await usuario.type(screen.getByLabelText('Email'), 'vet@ejemplo.test');
+    await usuario.type(screen.getByLabelText('Contraseña'), 'contraseñaSegura123');
+    await usuario.type(screen.getByLabelText('Matrícula profesional'), 'MP-1001');
+    await usuario.type(screen.getByLabelText('Colegio que emitió tu matrícula'), 'Colegio X');
+    await usuario.click(screen.getByRole('button', { name: 'Crear cuenta' }));
+
+    const mensajes = await screen.findAllByText(
+      'Ya existe una matrícula registrada con esos datos para este colegio. Verificá el número ingresado.',
+    );
+    expect(mensajes).toHaveLength(2);
+    expect(screen.getByLabelText('Matrícula profesional')).toHaveClass('border-red-500');
+    expect(screen.getByLabelText('Colegio que emitió tu matrícula')).toHaveClass('border-red-500');
+  });
+
+  it('cambiar de rol limpia los errores de duplicado mostrados previamente', async () => {
+    mockearFetch({ status: 409, body: { codigo: 'PEA-AUTH-001', mensaje: 'Ya existe una cuenta con ese email.' } });
+    render(<PaginaRegistroDueno />);
+    const usuario = await completarFormularioValido();
+    await usuario.click(screen.getByRole('button', { name: 'Crear cuenta' }));
+    await screen.findByText(/Ya existe una cuenta con ese email/);
+
+    await usuario.click(screen.getByRole('radio', { name: 'Veterinario/a' }));
+
+    expect(screen.queryByText(/Ya existe una cuenta con ese email/)).not.toBeInTheDocument();
+  });
 });
