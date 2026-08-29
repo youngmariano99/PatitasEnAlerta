@@ -55,6 +55,10 @@ class RepositorioVerificacionesEnMemoria implements IRepositorioVerificaciones {
     throw new Error('no usado en este test');
   }
 
+  async listarResueltas(): Promise<never> {
+    throw new Error('no usado en este test');
+  }
+
   async resolver(datos: DatosResolverVerificacion): Promise<VerificacionResueltaResultado> {
     const fila = this.filas.get(datos.verificacionId);
     if (!fila || fila.estado !== 'pendiente') {

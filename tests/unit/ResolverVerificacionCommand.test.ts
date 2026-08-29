@@ -21,6 +21,7 @@ function crearFakes(opciones?: { rol?: string }) {
   };
   const repositorioVerificaciones: jest.Mocked<IRepositorioVerificaciones> = {
     listarPendientes: jest.fn(),
+    listarResueltas: jest.fn(),
     resolver: jest.fn().mockImplementation(async (datos) => ({
       verificacionId: datos.verificacionId,
       usuarioId: 'vet-1',

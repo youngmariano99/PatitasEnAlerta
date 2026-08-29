@@ -7,8 +7,11 @@ import type {
 import type {
   FilaVerificacionPendiente,
   PaginaVerificacionesPendientes,
+  FilaHistorialVerificacion,
+  PaginaHistorialVerificaciones,
   VerificacionResueltaResultado,
   TipoVerificacion,
+  DecisionVerificacion,
 } from '@dominio/entidades/Verificacion';
 import { VerificacionYaResueltaError } from '@dominio/errores/erroresVerificaciones';
 
@@ -45,6 +48,58 @@ export class PrismaVerificacionesRepositorio implements IRepositorioVerificacion
       usuarioId: fila.usuarioId,
       tipo: fila.tipo as TipoVerificacion,
       email: fila.usuario.email,
+      createdAt: fila.createdAt,
+      matricula: fila.usuario.perfilVeterinario?.matricula ?? null,
+      colegioEmisor: fila.usuario.perfilVeterinario?.colegioEmisor ?? null,
+      nombreInstitucional: fila.usuario.perfilMunicipio?.nombreInstitucional ?? null,
+    }));
+
+    return { items, total, pagina, porPagina };
+  }
+
+  // Historial de auditoría (AUTH-09) — exclusivamente de lectura, ordenado
+  // por resuelto_en descendente (la resolución más reciente primero, el
+  // orden natural para revisar auditoría), a diferencia de listarPendientes
+  // (created_at ascendente, orden de atención de una cola).
+  async listarResueltas(pagina: number, porPagina: number): Promise<PaginaHistorialVerificaciones> {
+    const where = { estado: { not: 'pendiente' } };
+
+    const [filas, total] = await Promise.all([
+      prisma.verificacion.findMany({
+        where,
+        orderBy: { resueltoEn: 'desc' },
+        skip: (pagina - 1) * porPagina,
+        take: porPagina,
+        select: {
+          id: true,
+          usuarioId: true,
+          tipo: true,
+          estado: true,
+          motivoRechazo: true,
+          revisadoPor: true,
+          resueltoEn: true,
+          createdAt: true,
+          usuario: {
+            select: {
+              email: true,
+              perfilVeterinario: { select: { matricula: true, colegioEmisor: true } },
+              perfilMunicipio: { select: { nombreInstitucional: true } },
+            },
+          },
+        },
+      }),
+      prisma.verificacion.count({ where }),
+    ]);
+
+    const items: FilaHistorialVerificacion[] = filas.map((fila) => ({
+      id: fila.id,
+      usuarioId: fila.usuarioId,
+      tipo: fila.tipo as TipoVerificacion,
+      email: fila.usuario.email,
+      estado: fila.estado as DecisionVerificacion,
+      motivoRechazo: fila.motivoRechazo,
+      revisadoPor: fila.revisadoPor,
+      resueltoEn: fila.resueltoEn,
       createdAt: fila.createdAt,
       matricula: fila.usuario.perfilVeterinario?.matricula ?? null,
       colegioEmisor: fila.usuario.perfilVeterinario?.colegioEmisor ?? null,
