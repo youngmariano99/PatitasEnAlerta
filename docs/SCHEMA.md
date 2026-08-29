@@ -48,6 +48,12 @@ CREATE TABLE usuarios (
 CREATE UNIQUE INDEX ux_usuarios_email ON usuarios (email) WHERE deleted_at IS NULL;
 CREATE INDEX ix_usuarios_rol ON usuarios (rol_id) WHERE deleted_at IS NULL;
 
+-- AUTH-verificación: BadgeVerificacion (src/presentacion/componentes/auth)
+-- se suscribe a esta tabla vía Supabase Realtime (Postgres Changes) para
+-- reflejar sin recargar cuando un Administrador aprueba/rechaza una
+-- verificación. Requiere habilitar la réplica lógica de esta tabla:
+ALTER PUBLICATION supabase_realtime ADD TABLE usuarios;
+
 CREATE TABLE perfiles_veterinario (
   usuario_id UUID PRIMARY KEY REFERENCES usuarios(id),
   matricula TEXT NOT NULL,
