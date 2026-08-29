@@ -1,6 +1,7 @@
-import { z } from 'zod';
+import type { z } from 'zod';
 import { RegistrarDuenoSchema } from '@aplicacion/dtos/auth/RegistrarDuenoDto';
 import { RegistrarVeterinarioSchema } from '@aplicacion/dtos/auth/RegistrarVeterinarioDto';
+import { CrearCuentaMunicipioSchema } from '@aplicacion/dtos/auth/CrearCuentaMunicipioDto';
 
 export type RolFormularioPerfil = 'dueño' | 'veterinario' | 'municipio';
 
@@ -30,16 +31,10 @@ class FabricaFormularioVeterinario implements IFabricaFormularioPerfil {
 class FabricaFormularioMunicipio implements IFabricaFormularioPerfil {
   crearEsquema(): z.ZodTypeAny {
     // El municipio no se autoregistra — alta exclusiva del Administrador de
-    // Plataforma (docs/ROLES.md, AUTH-03). Este esquema documenta el
-    // "producto" que le corresponde a la familia sin exponer un endpoint
-    // público que lo use todavía.
-    return RegistrarDuenoSchema.extend({
-      nombreInstitucional: z
-        .string({ required_error: 'Ingresá el nombre de la institución.' })
-        .trim()
-        .min(1, 'Ingresá el nombre de la institución.')
-        .max(150, 'El nombre institucional no puede superar los 150 caracteres.'),
-    });
+    // Plataforma vía POST /api/admin/municipio (docs/ROLES.md, AUTH-03).
+    // Mismo esquema que usa ese endpoint (CrearCuentaMunicipioDto.ts), nunca
+    // el formulario público de /auth/registro.
+    return CrearCuentaMunicipioSchema;
   }
 }
 
