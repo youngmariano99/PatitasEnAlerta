@@ -19,3 +19,13 @@ export class PayloadInvalidoError extends ErrorDominio {
     super('PEA-SIS-005', detalle ?? 'Revisá los datos ingresados, algo no tiene el formato esperado.', 400);
   }
 }
+
+export class MatriculaYaRegistradaError extends ErrorDominio {
+  constructor() {
+    super(
+      'PEA-AUTH-006',
+      'Ya existe una matrícula registrada con esos datos para este colegio. Verificá el número ingresado.',
+      409,
+    );
+  }
+}
