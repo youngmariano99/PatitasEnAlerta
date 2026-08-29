@@ -46,6 +46,7 @@ model Usuario {
   turnosComoProveedor    Turno[]                  @relation("TurnoProveedor")
   turnosReservados       Turno[]                  @relation("TurnoReservadoPor")
   vitrinaAdopcion        VitrinaAdopcion[]
+  verificaciones         Verificacion[]
 
   @@map("usuarios")
   @@index([rolId])
@@ -88,6 +89,12 @@ model Verificacion {
   revisadoPor    String?   @map("revisado_por") @db.Uuid
   resueltoEn     DateTime? @map("resuelto_en")
   createdAt      DateTime  @default(now()) @map("created_at")
+
+  // Relación agregada en AUTH-08: la cola de verificaciones necesita el
+  // email/perfil del solicitante (join), no solo el usuario_id crudo.
+  // `revisado_por` queda como escalar simple a propósito — no se necesita
+  // navegarlo desde acá todavía.
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
 
   @@map("verificaciones")
   @@index([estado])
