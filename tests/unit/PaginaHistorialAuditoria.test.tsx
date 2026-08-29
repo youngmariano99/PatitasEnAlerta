@@ -41,8 +41,9 @@ describe('PaginaHistorialAuditoria (app/admin/auditoria)', () => {
     expect(fila).not.toBeNull();
     const celdas = fila!.querySelectorAll('td');
     const celdaResueltoEn = celdas[celdas.length - 2];
+    expect(celdaResueltoEn).not.toBeUndefined();
     expect(celdaResueltoEn).toHaveClass('font-mono');
-    expect(celdaResueltoEn.textContent).not.toBe('—');
+    expect(celdaResueltoEn!.textContent).not.toBe('—');
   });
 
   it('muestra el motivo de rechazo cuando la verificación fue rechazada', async () => {
