@@ -20,6 +20,29 @@ export interface PaginaVerificacionesPendientes {
   porPagina: number;
 }
 
+/** Fila del historial de auditoría — verificaciones ya resueltas (aprobado/rechazado). Solo lectura. */
+export interface FilaHistorialVerificacion {
+  id: string;
+  usuarioId: string;
+  tipo: TipoVerificacion;
+  email: string;
+  estado: DecisionVerificacion;
+  motivoRechazo: string | null;
+  revisadoPor: string | null;
+  resueltoEn: Date | null;
+  createdAt: Date;
+  matricula: string | null;
+  colegioEmisor: string | null;
+  nombreInstitucional: string | null;
+}
+
+export interface PaginaHistorialVerificaciones {
+  items: FilaHistorialVerificacion[];
+  total: number;
+  pagina: number;
+  porPagina: number;
+}
+
 export interface VerificacionResueltaResultado {
   verificacionId: string;
   usuarioId: string;

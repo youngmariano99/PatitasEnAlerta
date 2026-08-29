@@ -73,6 +73,57 @@ registroOpenApi.registerPath({
   },
 });
 
+export const FilaHistorialVerificacionSchema = registroOpenApi.register(
+  'FilaHistorialVerificacion',
+  z
+    .object({
+      id: z.string().uuid(),
+      usuarioId: z.string().uuid(),
+      tipo: z.enum(['veterinario', 'municipio']),
+      email: z.string().email(),
+      estado: z.enum(['aprobado', 'rechazado']),
+      motivoRechazo: z.string().nullable(),
+      revisadoPor: z.string().uuid().nullable(),
+      resueltoEn: z.string().datetime().nullable().openapi({ description: 'ISO 8601' }),
+      createdAt: z.string().datetime().openapi({ description: 'ISO 8601' }),
+      matricula: z.string().nullable(),
+      colegioEmisor: z.string().nullable(),
+      nombreInstitucional: z.string().nullable(),
+    })
+    .openapi('FilaHistorialVerificacion'),
+);
+
+export const PaginaHistorialVerificacionesSchema = registroOpenApi.register(
+  'PaginaHistorialVerificaciones',
+  z
+    .object({
+      items: z.array(FilaHistorialVerificacionSchema),
+      total: z.number().int(),
+      pagina: z.number().int(),
+      porPagina: z.number().int().max(50),
+    })
+    .openapi('PaginaHistorialVerificaciones'),
+);
+
+registroOpenApi.registerPath({
+  method: 'get',
+  path: '/admin/auditoria',
+  tags: ['Administración'],
+  summary:
+    'Historial de auditoría — verificaciones ya resueltas (aprobado/rechazado), paginado (tope 50), exclusivo de rol administrador. Vista de solo lectura.',
+  request: {
+    query: z.object({
+      pagina: z.coerce.number().int().min(1).optional(),
+      porPagina: z.coerce.number().int().min(1).max(50).optional(),
+    }),
+  },
+  responses: {
+    200: { description: 'Página del historial de verificaciones resueltas.', content: { 'application/json': { schema: PaginaHistorialVerificacionesSchema } } },
+    401: { description: 'No hay sesión activa (PEA-SIS-001).', content: { 'application/json': { schema: ErrorApiSchema } } },
+    403: { description: 'Quien invoca no tiene rol administrador (PEA-SIS-002).', content: { 'application/json': { schema: ErrorApiSchema } } },
+  },
+});
+
 registroOpenApi.registerPath({
   method: 'patch',
   path: '/admin/verificaciones/{id}',

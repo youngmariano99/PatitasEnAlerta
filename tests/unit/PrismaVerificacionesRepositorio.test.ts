@@ -97,6 +97,103 @@ describe('PrismaVerificacionesRepositorio', () => {
     });
   });
 
+  describe('listarResueltas', () => {
+    it('pagina, ordena por resuelto_en descendente y filtra estado <> pendiente (veterinario)', async () => {
+      verificacionFindManyMock.mockResolvedValue([
+        {
+          id: 'v1',
+          usuarioId: 'vet-1',
+          tipo: 'veterinario',
+          estado: 'aprobado',
+          motivoRechazo: null,
+          revisadoPor: 'admin-1',
+          resueltoEn: new Date('2024-02-01'),
+          createdAt: new Date('2024-01-01'),
+          usuario: { email: 'vet1@ejemplo.test', perfilVeterinario: { matricula: 'MP-1', colegioEmisor: 'Colegio X' }, perfilMunicipio: null },
+        },
+      ]);
+      verificacionCountMock.mockResolvedValue(1);
+      const repo = new PrismaVerificacionesRepositorio();
+
+      const pagina = await repo.listarResueltas(1, 50);
+
+      expect(verificacionFindManyMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { estado: { not: 'pendiente' } },
+          orderBy: { resueltoEn: 'desc' },
+          skip: 0,
+          take: 50,
+        }),
+      );
+      expect(pagina).toEqual({
+        items: [
+          {
+            id: 'v1',
+            usuarioId: 'vet-1',
+            tipo: 'veterinario',
+            email: 'vet1@ejemplo.test',
+            estado: 'aprobado',
+            motivoRechazo: null,
+            revisadoPor: 'admin-1',
+            resueltoEn: new Date('2024-02-01'),
+            createdAt: new Date('2024-01-01'),
+            matricula: 'MP-1',
+            colegioEmisor: 'Colegio X',
+            nombreInstitucional: null,
+          },
+        ],
+        total: 1,
+        pagina: 1,
+        porPagina: 50,
+      });
+    });
+
+    it('mapea una fila rechazada de un municipio, incluyendo el motivo de rechazo', async () => {
+      verificacionFindManyMock.mockResolvedValue([
+        {
+          id: 'v2',
+          usuarioId: 'municipio-1',
+          tipo: 'municipio',
+          estado: 'rechazado',
+          motivoRechazo: 'Documentación incompleta',
+          revisadoPor: 'admin-2',
+          resueltoEn: new Date('2024-03-01'),
+          createdAt: new Date('2024-02-15'),
+          usuario: { email: 'municipio1@ejemplo.test', perfilVeterinario: null, perfilMunicipio: { nombreInstitucional: 'Municipio de Pringles' } },
+        },
+      ]);
+      verificacionCountMock.mockResolvedValue(1);
+      const repo = new PrismaVerificacionesRepositorio();
+
+      const pagina = await repo.listarResueltas(1, 50);
+
+      expect(pagina.items[0]).toEqual({
+        id: 'v2',
+        usuarioId: 'municipio-1',
+        tipo: 'municipio',
+        email: 'municipio1@ejemplo.test',
+        estado: 'rechazado',
+        motivoRechazo: 'Documentación incompleta',
+        revisadoPor: 'admin-2',
+        resueltoEn: new Date('2024-03-01'),
+        createdAt: new Date('2024-02-15'),
+        matricula: null,
+        colegioEmisor: null,
+        nombreInstitucional: 'Municipio de Pringles',
+      });
+    });
+
+    it('calcula el offset a partir de la página pedida', async () => {
+      verificacionFindManyMock.mockResolvedValue([]);
+      verificacionCountMock.mockResolvedValue(0);
+      const repo = new PrismaVerificacionesRepositorio();
+
+      await repo.listarResueltas(3, 20);
+
+      expect(verificacionFindManyMock).toHaveBeenCalledWith(expect.objectContaining({ skip: 40, take: 20 }));
+    });
+  });
+
   describe('resolver', () => {
     it('rechaza (PEA-AUTH-013) si la verificación ya no está pendiente, sin tocar usuarios/perfiles', async () => {
       verificacionFindUniqueMock.mockResolvedValue({ id: 'v1', usuarioId: 'vet-1', tipo: 'veterinario', estado: 'aprobado' });

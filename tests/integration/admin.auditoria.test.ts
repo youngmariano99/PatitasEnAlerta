@@ -1,15 +1,16 @@
 /**
  * @jest-environment node
  *
- * Paso 1 del ticket AUTH-08: lista paginada (tope 50) de verificaciones
- * pendientes, ordenadas por created_at. AC: rol distinto de administrador
- * recibe 403.
+ * Paso 1/2 del ticket AUTH-09: historial de auditoría de verificaciones ya
+ * resueltas (estado <> 'pendiente'), exclusivo de rol administrador.
+ * Paso 4: test de integración que confirma 403 (PEA-SIS-002) para un usuario
+ * no administrador.
  */
 import { NextRequest } from 'next/server';
 import { container } from '@aplicacion/contenedor-di';
 import type { IRepositorioPerfil, ResumenPerfilPropio } from '@dominio/puertos/IRepositorioPerfil';
 import type { IRepositorioVerificaciones } from '@dominio/puertos/IRepositorioVerificaciones';
-import type { PaginaVerificacionesPendientes, FilaVerificacionPendiente } from '@dominio/entidades/Verificacion';
+import type { PaginaHistorialVerificaciones, FilaHistorialVerificacion } from '@dominio/entidades/Verificacion';
 
 const getUserMock = jest.fn();
 
@@ -17,7 +18,7 @@ jest.mock('@supabase/ssr', () => ({
   createServerClient: jest.fn(() => ({ auth: { getUser: getUserMock } })),
 }));
 
-import { GET } from '@app/api/admin/verificaciones/route';
+import { GET } from '@app/api/admin/auditoria/route';
 
 class RepositorioPerfilFalso implements IRepositorioPerfil {
   constructor(private readonly perfiles: Record<string, ResumenPerfilPropio>) {}
@@ -27,12 +28,16 @@ class RepositorioPerfilFalso implements IRepositorioPerfil {
   }
 }
 
-function filaDePrueba(id: string): FilaVerificacionPendiente {
+function filaDePrueba(id: string): FilaHistorialVerificacion {
   return {
     id,
     usuarioId: `usuario-${id}`,
     tipo: 'veterinario',
     email: `${id}@ejemplo.test`,
+    estado: 'aprobado',
+    motivoRechazo: null,
+    revisadoPor: 'admin-1',
+    resueltoEn: new Date('2024-02-01T00:00:00.000Z'),
     createdAt: new Date('2024-01-01T00:00:00.000Z'),
     matricula: 'MP-1000',
     colegioEmisor: 'Colegio X',
@@ -44,14 +49,14 @@ class RepositorioVerificacionesFalso implements IRepositorioVerificaciones {
   llamadaPagina: number | null = null;
   llamadaPorPagina: number | null = null;
 
-  async listarPendientes(pagina: number, porPagina: number): Promise<PaginaVerificacionesPendientes> {
-    this.llamadaPagina = pagina;
-    this.llamadaPorPagina = porPagina;
-    return { items: [filaDePrueba('v1'), filaDePrueba('v2')], total: 2, pagina, porPagina };
+  async listarPendientes(): Promise<never> {
+    throw new Error('no usado en este test');
   }
 
-  async listarResueltas(): Promise<never> {
-    throw new Error('no usado en este test');
+  async listarResueltas(pagina: number, porPagina: number): Promise<PaginaHistorialVerificaciones> {
+    this.llamadaPagina = pagina;
+    this.llamadaPorPagina = porPagina;
+    return { items: [filaDePrueba('h1'), filaDePrueba('h2')], total: 2, pagina, porPagina };
   }
 
   async resolver(): Promise<never> {
@@ -64,16 +69,16 @@ function autenticarComo(usuarioId: string) {
 }
 
 function crearRequest(query = ''): NextRequest {
-  return new NextRequest(`http://localhost/api/admin/verificaciones${query}`, { method: 'GET' });
+  return new NextRequest(`http://localhost/api/admin/auditoria${query}`, { method: 'GET' });
 }
 
-describe('GET /api/admin/verificaciones (AUTH-08)', () => {
+describe('GET /api/admin/auditoria (AUTH-09)', () => {
   beforeEach(() => {
     getUserMock.mockReset();
     container.reset();
   });
 
-  it('lista las verificaciones pendientes para un administrador, con paginación server-side', async () => {
+  it('lista el historial de verificaciones resueltas para un administrador, con revisadoPor/motivoRechazo/resueltoEn', async () => {
     autenticarComo('admin-1');
     container.registerInstance<IRepositorioPerfil>(
       'IRepositorioPerfil',
@@ -90,6 +95,9 @@ describe('GET /api/admin/verificaciones (AUTH-08)', () => {
     const cuerpo = await respuesta.json();
     expect(cuerpo.items).toHaveLength(2);
     expect(cuerpo.total).toBe(2);
+    expect(cuerpo.items[0].revisadoPor).toBe('admin-1');
+    expect(cuerpo.items[0].motivoRechazo).toBeNull();
+    expect(cuerpo.items[0].resueltoEn).toBe('2024-02-01T00:00:00.000Z');
     expect(repositorioVerificaciones.llamadaPagina).toBe(1);
     expect(repositorioVerificaciones.llamadaPorPagina).toBe(50);
   });
