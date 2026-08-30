@@ -1,0 +1,2 @@
+# No editar manualmente. Fija el proveedor con el que Prisma generó las migraciones.
+provider = "postgresql"
