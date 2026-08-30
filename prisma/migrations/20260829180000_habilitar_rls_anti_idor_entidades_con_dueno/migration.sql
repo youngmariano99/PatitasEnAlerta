@@ -15,6 +15,35 @@
 -- sobre datos explícitamente públicos (reportes, vitrina_adopcion).
 
 -- ============================================================
+-- Shim de compatibilidad — SOLO para Postgres vanilla (Docker local, CI):
+-- en Supabase real el schema `auth` (con `auth.uid()`) y el rol `anon` ya
+-- existen, provistos por el proveedor; este bloque nunca debe tocarlos y
+-- por eso cada pieza se crea solo si todavía no existe. Sin este shim,
+-- `CREATE POLICY`/`CREATE FUNCTION`/`GRANT ... TO anon` más abajo fallan al
+-- no poder resolver `auth.uid()` ni el rol `anon` contra un Postgres sin
+-- Supabase (ver docker-compose.yml: "pgvector/pgvector:pg15 ... sin
+-- depender de Supabase cloud", el mismo motor que usa la base de test en CI).
+-- `auth.uid()` devuelve NULL por default; un test que necesite simular un
+-- usuario autenticado puede fijarlo con `SET LOCAL request.jwt.claim.sub =
+-- '<uuid>'`.
+-- ============================================================
+
+DO $shim$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_namespace WHERE nspname = 'auth') THEN
+    CREATE SCHEMA auth;
+    CREATE FUNCTION auth.uid() RETURNS UUID AS $body$
+      SELECT NULLIF(current_setting('request.jwt.claim.sub', true), '')::UUID
+    $body$ LANGUAGE sql STABLE;
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
+    CREATE ROLE anon NOLOGIN;
+  END IF;
+END
+$shim$;
+
+-- ============================================================
 -- 3.1 — Funciones auxiliares (SECURITY DEFINER, evitan recursión de política)
 -- ============================================================
 
