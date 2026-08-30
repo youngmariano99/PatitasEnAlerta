@@ -9,6 +9,8 @@ import type { IRepositorioPerfil } from '@dominio/puertos/IRepositorioPerfil';
 import type { IRepositorioMunicipios } from '@dominio/puertos/IRepositorioMunicipios';
 import type { IRepositorioVerificaciones } from '@dominio/puertos/IRepositorioVerificaciones';
 import type { INotificacionesRepositorio } from '@dominio/puertos/INotificacionesRepositorio';
+import type { IRepositorioReportes } from '@dominio/puertos/IRepositorioReportes';
+import type { IControlDeTasa } from '@dominio/puertos/IControlDeTasa';
 import { PrismaUsuarioRepositorio } from '@infraestructura/adaptadores/PrismaUsuarioRepositorio';
 import { SupabaseAuthAdapter } from '@infraestructura/adaptadores/SupabaseAuthAdapter';
 import { PrismaMascotaRepositorio } from '@infraestructura/adaptadores/PrismaMascotaRepositorio';
@@ -18,6 +20,8 @@ import { PrismaPerfilRepositorio } from '@infraestructura/adaptadores/PrismaPerf
 import { PrismaMunicipioRepositorio } from '@infraestructura/adaptadores/PrismaMunicipioRepositorio';
 import { PrismaVerificacionesRepositorio } from '@infraestructura/adaptadores/PrismaVerificacionesRepositorio';
 import { PrismaNotificacionesRepositorio } from '@infraestructura/adaptadores/PrismaNotificacionesRepositorio';
+import { PrismaReporteRepositorio } from '@infraestructura/adaptadores/PrismaReporteRepositorio';
+import { UpstashControlDeTasa } from '@infraestructura/adaptadores/UpstashControlDeTasa';
 
 /**
  * Punto único de registro de dependencias (patrón Singleton para el propio
@@ -39,5 +43,7 @@ container.registerSingleton<IRepositorioPerfil>('IRepositorioPerfil', PrismaPerf
 container.registerSingleton<IRepositorioMunicipios>('IRepositorioMunicipios', PrismaMunicipioRepositorio);
 container.registerSingleton<IRepositorioVerificaciones>('IRepositorioVerificaciones', PrismaVerificacionesRepositorio);
 container.registerSingleton<INotificacionesRepositorio>('INotificacionesRepositorio', PrismaNotificacionesRepositorio);
+container.registerSingleton<IRepositorioReportes>('IRepositorioReportes', PrismaReporteRepositorio);
+container.registerSingleton<IControlDeTasa>('IControlDeTasa', UpstashControlDeTasa);
 
 export { container };
