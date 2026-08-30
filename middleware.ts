@@ -6,15 +6,26 @@ import { SesionExpiradaError } from '@dominio/errores/erroresAutenticacion';
 // Páginas que requieren sesión — el usuario sin sesión se redirige a
 // /auth/login. Ampliar a medida que se agreguen módulos.
 // Las rutas de solo-lectura pública (ej. /reportes, /adopciones, /municipio/eventos)
-// se dejan deliberadamente fuera de esta lista.
-const RUTAS_PAGINA_PROTEGIDAS = ['/panel', '/mascotas', '/municipio', '/veterinario', '/turnos', '/admin'];
+// se dejan deliberadamente fuera de esta lista. '/reportes/nuevo' es la
+// única subruta protegida de /reportes: publicar un reporte exige sesión
+// (el `reportadoPor` sale de ella), pero el listado público en '/reportes'
+// tiene que seguir siendo accesible sin login.
+const RUTAS_PAGINA_PROTEGIDAS = [
+  '/panel',
+  '/mascotas',
+  '/municipio',
+  '/veterinario',
+  '/turnos',
+  '/admin',
+  '/reportes/nuevo',
+];
 
 // Endpoints de API que requieren sesión — a diferencia de una página, una
 // API nunca debe responder con una redirección HTML: el usuario sin sesión
 // recibe 401 en JSON (PEA-SIS-001 / PEA-AUTH-005), que el cliente interpreta
 // (ver src/presentacion/lib/fetchConSesion.ts) para redirigir él mismo.
 // /api/auth/* y /api/openapi quedan deliberadamente fuera: son de acceso público.
-const RUTAS_API_PROTEGIDAS = ['/api/mascotas', '/api/perfil', '/api/admin'];
+const RUTAS_API_PROTEGIDAS = ['/api/mascotas', '/api/perfil', '/api/admin', '/api/reportes'];
 
 function esRutaProtegida(pathname: string, rutas: string[]): boolean {
   return rutas.some((ruta) => pathname.startsWith(ruta));
