@@ -11,11 +11,15 @@ export interface DatosReporte {
   estado: string;
 }
 
+/** Todos los estados válidos de un reporte (docs/SCHEMA.md, CHECK estado). */
+export const ESTADOS_REPORTE_SOPORTADOS = ['reportado', 'en_revision', 'en_atencion', 'resuelto', 'cerrado'] as const;
+export type EstadoReporte = (typeof ESTADOS_REPORTE_SOPORTADOS)[number];
+
 /**
- * Estados de un reporte que todavía representan un caso abierto (docs/SCHEMA.md,
- * CHECK estado). Único criterio de "activo" reutilizado tanto por
- * EvaluarCoincidenciaReporte (solo matchea contra 'perdido' activos) como por
- * cualquier listado futuro que necesite excluir casos ya cerrados.
+ * Estados de un reporte que todavía representan un caso abierto. Único
+ * criterio de "activo" reutilizado tanto por EvaluarCoincidenciaReporte
+ * (solo matchea contra 'perdido' activos) como por ListarReportes (filtro
+ * por defecto del listado público cuando no se pide un `estado` puntual).
  */
 export const ESTADOS_REPORTE_ACTIVOS = ['reportado', 'en_revision', 'en_atencion'] as const;
 

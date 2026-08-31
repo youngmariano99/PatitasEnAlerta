@@ -6,7 +6,9 @@ import { container } from '@aplicacion/contenedor-di';
 import type {
   CriteriosCoincidenciaReporte,
   DatosNuevoReporte,
+  FiltrosListadoReportes,
   IRepositorioReportes,
+  PaginaReportes,
   ReporteActivoResumen,
 } from '@dominio/puertos/IRepositorioReportes';
 import type { IAlmacenamientoImagenes } from '@dominio/puertos/IAlmacenamientoImagenes';
@@ -42,6 +44,10 @@ class RepositorioReportesFalso implements IRepositorioReportes {
   async buscarPerdidosActivosPorZonaYEspecie(criterios: CriteriosCoincidenciaReporte): Promise<ReporteActivoResumen[]> {
     this.llamadasBusquedaCoincidencias.push(criterios);
     return this.coincidenciasARetornar;
+  }
+
+  async listar(_filtros: FiltrosListadoReportes, _pagina: number, _porPagina: number): Promise<PaginaReportes> {
+    throw new Error('no usado en este test — ver tests/integration/reportes.listar.test.ts');
   }
 }
 
