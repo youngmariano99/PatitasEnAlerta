@@ -77,15 +77,32 @@ SELECT 'encontrado', NULL,
        -37.9995, -61.3560, 'perro', 'reportado', now() - interval '1 day'
 WHERE EXISTS (SELECT 1 FROM usuarios WHERE rol_id = 1 AND deleted_at IS NULL);
 
--- Historial de transiciones (1 a 3 por reporte, docs/SEED.md): un renglón
--- 'reportado' → estado final para cada reporte que ya no está en 'reportado',
--- usando al propio reportante como autor del cambio para no depender de un
--- usuario con rol municipio/administrador ya sembrado. El par garantizado de
--- arriba queda deliberadamente en 'reportado' (activo) y no genera historial.
+-- Historial de transiciones (1 a 3 por reporte, docs/SEED.md), siguiendo el
+-- mismo camino lineal sin atajos que valida CambiarEstadoReporteCommand vía
+-- ReporteEstado (State): reportado → en_revision → en_atencion → resuelto →
+-- cerrado. Usa al propio reportante como autor del cambio para no depender
+-- de un usuario con rol municipio/administrador ya sembrado. El par
+-- garantizado de arriba queda deliberadamente en 'reportado' (activo) y no
+-- genera historial.
+WITH config AS (
+  SELECT id AS reporte_id, reportado_por, created_at AS base,
+         1 + floor(random() * 3)::int AS cantidad_pasos
+  FROM reportes
+  WHERE estado <> 'reportado'
+    AND created_at > now() - interval '56 days'
+),
+pasos AS (
+  SELECT reporte_id, reportado_por, base, gs AS paso
+  FROM config
+  CROSS JOIN LATERAL generate_series(1, cantidad_pasos) AS gs
+)
 INSERT INTO reportes_historial_estado (reporte_id, estado_anterior, estado_nuevo, usuario_id, registrado_en)
-SELECT r.id, 'reportado', r.estado, r.reportado_por, r.created_at + interval '1 day'
-FROM reportes r
-WHERE r.estado <> 'reportado'
-  AND r.created_at > now() - interval '56 days';
+SELECT
+  p.reporte_id,
+  (ARRAY['reportado', 'en_revision', 'en_atencion', 'resuelto'])[p.paso],
+  (ARRAY['en_revision', 'en_atencion', 'resuelto', 'cerrado'])[p.paso],
+  p.reportado_por,
+  p.base + (p.paso || ' days')::interval
+FROM pasos p;
 
 COMMIT;

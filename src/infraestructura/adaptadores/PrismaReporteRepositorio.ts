@@ -176,7 +176,7 @@ export class PrismaReporteRepositorio implements IRepositorioReportes {
   async actualizarEstado(reporteId: string, estadoNuevo: string, actualizadoPor: string): Promise<ReporteEstadoActualizado> {
     return prisma.$transaction(async (tx) => {
       // Re-lee el estado DENTRO de la transacción (no confía en el que
-      // ActualizarEstadoReporte.ts ya validó afuera): entre esa lectura y
+      // CambiarEstadoReporteCommand.ts ya validó afuera): entre esa lectura y
       // esta escritura pudo haber cambiado por otra request concurrente.
       const actual = await tx.reporte.findFirstOrThrow({
         where: { id: reporteId, deletedAt: null },

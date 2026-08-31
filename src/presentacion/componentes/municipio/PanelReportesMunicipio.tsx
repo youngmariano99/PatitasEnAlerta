@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { TIPOS_REPORTE_SOPORTADOS, type TipoReporte } from '@aplicacion/dtos/reportes/CrearReporteDto';
-import { ESTADOS_REPORTE_SOPORTADOS, TRANSICIONES_VALIDAS_REPORTE, type EstadoReporte } from '@dominio/entidades/Reporte';
+import { ESTADOS_REPORTE_SOPORTADOS, type EstadoReporte } from '@dominio/entidades/Reporte';
+import { ReporteEstado } from '@dominio/estados/ReporteEstado';
 
 const POR_PAGINA = 50;
 const ROLES_CON_CONTROL_DE_ESTADO = ['municipio', 'administrador'];
@@ -67,7 +68,7 @@ interface ControlCambioEstadoProps {
 
 /** Selector + confirmación, acotado a las transiciones válidas desde el estado actual (PEA-REP-006, "mostrar solo las transiciones válidas"). */
 function ControlCambioEstado({ reporte, onCambiar }: ControlCambioEstadoProps) {
-  const transicionesValidas = TRANSICIONES_VALIDAS_REPORTE[reporte.estado as EstadoReporte] ?? [];
+  const transicionesValidas = ReporteEstado.desde(reporte.estado as EstadoReporte).transicionesValidas;
   const [seleccion, setSeleccion] = useState<EstadoReporte | ''>('');
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState<string | null>(null);
