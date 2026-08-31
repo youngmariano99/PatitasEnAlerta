@@ -55,7 +55,7 @@ export interface FiltrosListadoReportes {
   fechaHasta?: Date;
 }
 
-/** Resultado de un cambio de estado exitoso — ver ActualizarEstadoReporte.ts. */
+/** Resultado de un cambio de estado exitoso — ver CambiarEstadoReporteCommand.ts. */
 export interface ReporteEstadoActualizado {
   id: string;
   estado: string;
@@ -94,7 +94,7 @@ export interface IRepositorioReportes {
   buscarPerdidosActivosPorZonaYEspecie(criterios: CriteriosCoincidenciaReporte): Promise<ReporteActivoResumen[]>;
   /** Listado público paginado (tope 50) — reportes 'reportado'/'en_revision'/'en_atencion' vinculados por soft delete. */
   listar(filtros: FiltrosListadoReportes, pagina: number, porPagina: number): Promise<PaginaReportes>;
-  /** `null` si no existe o está soft-deleted — ActualizarEstadoReporte.ts decide ahí mismo si es 404 o una transición válida. */
+  /** `null` si no existe o está soft-deleted — CambiarEstadoReporteCommand.ts decide ahí mismo si es 404 o una transición válida. */
   obtenerEstadoActual(id: string): Promise<string | null>;
   /** UPDATE + INSERT en `reportes_historial_estado` en una misma transacción (docs/SCHEMA.md). */
   actualizarEstado(reporteId: string, estadoNuevo: string, actualizadoPor: string): Promise<ReporteEstadoActualizado>;

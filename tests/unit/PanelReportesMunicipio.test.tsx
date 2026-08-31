@@ -74,8 +74,9 @@ describe('PanelReportesMunicipio', () => {
     const select = screen.getByLabelText(`Cambiar estado del reporte ${reporteBase.id}`);
     const opciones = Array.from(select.querySelectorAll('option')).map((o) => o.textContent);
 
-    // reporteBase.estado === 'reportado' → transiciones válidas: en_revision, cerrado
-    expect(opciones).toEqual(['Cambiar a…', 'En revisión', 'Cerrado']);
+    // reporteBase.estado === 'reportado' → única transición válida: en_revision
+    // ('cerrado' solo se alcanza desde 'resuelto', sin atajos — PEA-REP-006).
+    expect(opciones).toEqual(['Cambiar a…', 'En revisión']);
   });
 
   it('confirmar el cambio de estado llama a PATCH y refleja el nuevo estado en la fila', async () => {
@@ -103,7 +104,7 @@ describe('PanelReportesMunicipio', () => {
 
   it('un rechazo del PATCH muestra el mensaje de error sin alert nativo', async () => {
     mockearFetch({
-      listado: { status: 200, body: { items: [reporteBase], total: 1, pagina: 1, porPagina: 50 } },
+      listado: { status: 200, body: { items: [{ ...reporteBase, estado: 'resuelto' }], total: 1, pagina: 1, porPagina: 50 } },
       patch: { status: 409, body: { codigo: 'PEA-REP-006', mensaje: 'Ese cambio de estado no es válido en este momento.' } },
     });
     const usuario = userEvent.setup();
