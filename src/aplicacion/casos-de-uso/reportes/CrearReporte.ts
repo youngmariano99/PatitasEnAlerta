@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import { injectable, inject } from 'tsyringe';
 import { CasoDeUsoBase } from '@aplicacion/casos-de-uso/CasoDeUsoBase';
+import { EvaluarCoincidenciaReporte } from '@aplicacion/casos-de-uso/reportes/EvaluarCoincidenciaReporte';
 import { crearPipelineValidacionReporte } from '@aplicacion/pipelines/ValidacionReporte';
 import type { ComandoCrearReporte, ReporteCreado } from '@aplicacion/dtos/reportes/CrearReporteDto';
 import type { IRepositorioReportes } from '@dominio/puertos/IRepositorioReportes';
@@ -20,7 +21,15 @@ export interface EntradaCrearReporte {
  * de imagen → geolocalización) → autorizar (no-op: cualquier usuario
  * autenticado puede reportar, sin verificación de propiedad de por medio) →
  * persistir (insert en `reportes` con `estado='reportado'`, ver
- * IRepositorioReportes) → publicarEvento (Observer: emite `ReporteCreado`).
+ * IRepositorioReportes) → publicarEvento (Observer: emite `ReporteCreado` y,
+ * cuando `tipo === 'encontrado'`, dispara EvaluarCoincidenciaReporte).
+ *
+ * Un único caso de uso cubre tanto REP-01 (reporte exprés de mascota
+ * perdida) como REP-02 (reporte de mascota encontrada): `tipo` es el único
+ * parámetro que cambia entre ambos flujos — ver CrearReporteDto,
+ * TIPOS_REPORTE_SOPORTADOS. No hay ninguna rama de código específica de
+ * 'perdido' vs. 'encontrado' en este archivo más allá de qué evento dispara
+ * publicarEvento().
  */
 @injectable()
 export class CrearReporte extends CasoDeUsoBase<EntradaCrearReporte, ReporteCreado, ComandoCrearReporte> {
@@ -28,6 +37,7 @@ export class CrearReporte extends CasoDeUsoBase<EntradaCrearReporte, ReporteCrea
     @inject('IRepositorioReportes') private readonly repositorioReportes: IRepositorioReportes,
     @inject('IAlmacenamientoImagenes') private readonly almacenamientoImagenes: IAlmacenamientoImagenes,
     @inject('IControlDeTasa') private readonly controlDeTasa: IControlDeTasa,
+    private readonly evaluarCoincidencia: EvaluarCoincidenciaReporte,
   ) {
     super();
   }
@@ -44,7 +54,8 @@ export class CrearReporte extends CasoDeUsoBase<EntradaCrearReporte, ReporteCrea
     // Sin verificación de propiedad: a diferencia de mascotas/libreta
     // sanitaria, cualquier usuario autenticado puede reportar (la
     // pertenencia opcional a `mascotaId` no exige ser su dueño — un vecino
-    // puede reportar como "encontrado" la mascota de otra persona).
+    // puede reportar como "encontrado" la mascota de otra persona, sin
+    // siquiera tener una mascota propia registrada).
   }
 
   protected async persistir(dato: ComandoCrearReporte): Promise<ReporteCreado> {
@@ -57,6 +68,7 @@ export class CrearReporte extends CasoDeUsoBase<EntradaCrearReporte, ReporteCrea
       fotoUrl: dato.fotoUrl,
       latitud: dato.latitud,
       longitud: dato.longitud,
+      especie: dato.especie ?? null,
     });
 
     return {
@@ -68,17 +80,25 @@ export class CrearReporte extends CasoDeUsoBase<EntradaCrearReporte, ReporteCrea
       fotoUrl: reporte.fotoUrl,
       latitud: reporte.latitud,
       longitud: reporte.longitud,
+      especie: reporte.especie,
       estado: reporte.estado,
       createdAt: reporte.createdAt.toISOString(),
     };
   }
 
   protected override async publicarEvento(resultado: ReporteCreado): Promise<void> {
-    // Todavía no existe un consumidor real del evento (ej. matching contra
-    // reportes 'encontrado' — Módulo 5/9 post-MVP). Se emite igual, vía
-    // logging estructurado (mismo transporte que el resto del proyecto usa
-    // para trazabilidad — ver CasoDeUsoBase), para que un listener futuro
-    // pueda engancharse sin tocar CrearReporte otra vez.
     logger.info({ evento: 'ReporteCreado', reporteId: resultado.id, tipo: resultado.tipo }, 'Evento de dominio publicado');
+
+    if (resultado.tipo !== 'encontrado') return;
+
+    // Igual que la notificación en ResolverVerificacionCommand: un problema
+    // al evaluar coincidencias es un incidente aparte, nunca un motivo para
+    // que el vecino vea un error sobre un reporte que en realidad sí se
+    // publicó.
+    try {
+      await this.evaluarCoincidencia.ejecutar(resultado);
+    } catch (error) {
+      logger.error({ err: error, reporteId: resultado.id }, 'No se pudo evaluar coincidencias del reporte "encontrado"');
+    }
   }
 }

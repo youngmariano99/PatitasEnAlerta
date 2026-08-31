@@ -7,8 +7,17 @@ export interface DatosReporte {
   fotoUrl: string;
   latitud: number;
   longitud: number;
+  especie: string | null;
   estado: string;
 }
+
+/**
+ * Estados de un reporte que todavía representan un caso abierto (docs/SCHEMA.md,
+ * CHECK estado). Único criterio de "activo" reutilizado tanto por
+ * EvaluarCoincidenciaReporte (solo matchea contra 'perdido' activos) como por
+ * cualquier listado futuro que necesite excluir casos ya cerrados.
+ */
+export const ESTADOS_REPORTE_ACTIVOS = ['reportado', 'en_revision', 'en_atencion'] as const;
 
 /**
  * Entidad de dominio Reporte. Representa siempre un reporte ya persistido
@@ -26,6 +35,7 @@ export class Reporte {
     public readonly fotoUrl: string,
     public readonly latitud: number,
     public readonly longitud: number,
+    public readonly especie: string | null,
     public readonly estado: string,
     public readonly createdAt: Date,
   ) {}
@@ -41,6 +51,7 @@ export class Reporte {
       datos.fotoUrl,
       datos.latitud,
       datos.longitud,
+      datos.especie,
       datos.estado,
       createdAt,
     );
