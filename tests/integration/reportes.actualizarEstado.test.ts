@@ -40,6 +40,14 @@ class RepositorioReportesFalso implements IRepositorioReportes {
     this.estadoActual = estadoNuevo;
     return { id, estado: estadoNuevo, estadoAnterior };
   }
+
+  async obtenerPropietario(): Promise<string | null> {
+    throw new Error('no usado en este test');
+  }
+
+  async listarHistorialEstado(): Promise<never[]> {
+    throw new Error('no usado en este test');
+  }
 }
 
 class RepositorioPerfilFalso implements IRepositorioPerfil {

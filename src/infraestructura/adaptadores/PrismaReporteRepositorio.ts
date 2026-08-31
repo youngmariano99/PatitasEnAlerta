@@ -5,6 +5,7 @@ import type {
   DatosNuevoReporte,
   FiltrosListadoReportes,
   FiltroZona,
+  HistorialEstadoItem,
   IRepositorioReportes,
   PaginaReportes,
   ReporteActivoResumen,
@@ -195,5 +196,22 @@ export class PrismaReporteRepositorio implements IRepositorioReportes {
 
       return { id: reporteId, estado: estadoNuevo, estadoAnterior: actual.estado };
     });
+  }
+
+  async obtenerPropietario(id: string): Promise<string | null> {
+    const fila = await prisma.reporte.findFirst({
+      where: { id, deletedAt: null },
+      select: { reportadoPor: true },
+    });
+    return fila?.reportadoPor ?? null;
+  }
+
+  async listarHistorialEstado(reporteId: string): Promise<HistorialEstadoItem[]> {
+    const filas = await prisma.reporteHistorialEstado.findMany({
+      where: { reporteId },
+      orderBy: { registradoEn: 'asc' },
+      select: { id: true, estadoAnterior: true, estadoNuevo: true, usuarioId: true, registradoEn: true },
+    });
+    return filas;
   }
 }

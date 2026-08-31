@@ -39,6 +39,14 @@ class RepositorioReportesFalso implements IRepositorioReportes {
   async actualizarEstado(): Promise<never> {
     throw new Error('no usado en este test');
   }
+
+  async obtenerPropietario(): Promise<never> {
+    throw new Error('no usado en este test');
+  }
+
+  async listarHistorialEstado(): Promise<never[]> {
+    throw new Error('no usado en este test');
+  }
 }
 
 function crearRequest(query: string): NextRequest {

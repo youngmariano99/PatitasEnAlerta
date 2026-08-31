@@ -22,6 +22,8 @@ function crearFakes(opciones?: { permitirTasa?: boolean; fotoValida?: boolean })
     listar: jest.fn(),
     obtenerEstadoActual: jest.fn(),
     actualizarEstado: jest.fn(),
+    obtenerPropietario: jest.fn(),
+    listarHistorialEstado: jest.fn(),
   };
   const almacenamientoImagenes: jest.Mocked<IAlmacenamientoImagenes> = {
     esUrlDeImagenValida: jest.fn().mockReturnValue(opciones?.fotoValida ?? true),
