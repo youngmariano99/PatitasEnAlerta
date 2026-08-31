@@ -239,4 +239,5 @@ CREATE POLICY verificaciones_resolver_admin ON verificaciones FOR UPDATE
 | entradas_libreta_sanitaria, autorizaciones_libreta, historiales_compartidos | C |
 | turnos, colaboraciones, pedidos_producto, solicitudes_recurso, inscripciones_curso | D |
 | verificaciones, comercios (verificación) | E |
-| roles, reportes_historial_estado, notificaciones, sugerencias_compatibilidad | Solo lectura filtrada por pertenencia (`usuario_id`/`reporte_id` propio) o `rol_actual() = 'administrador'`; sin escritura directa de usuario final (generadas por la aplicación) |
+| roles, reportes_historial_estado, sugerencias_compatibilidad | Solo lectura filtrada por pertenencia (`usuario_id`/`reporte_id` propio) o `rol_actual() = 'administrador'`; sin escritura directa de usuario final (generadas por la aplicación) |
+| notificaciones | Igual que la fila anterior para SELECT/INSERT (generadas por la aplicación, nunca insertadas directo por el usuario final) — más un UPDATE propio acotado a "marcarla como leída": `USING/WITH CHECK (usuario_id = auth.uid())`, coherente con la columna RU(p) de la matriz de la Sección 2 |

@@ -25,7 +25,7 @@ const RUTAS_PAGINA_PROTEGIDAS = [
 // recibe 401 en JSON (PEA-SIS-001 / PEA-AUTH-005), que el cliente interpreta
 // (ver src/presentacion/lib/fetchConSesion.ts) para redirigir él mismo.
 // /api/auth/* y /api/openapi quedan deliberadamente fuera: son de acceso público.
-const RUTAS_API_PROTEGIDAS = ['/api/mascotas', '/api/perfil', '/api/admin', '/api/reportes'];
+const RUTAS_API_PROTEGIDAS = ['/api/mascotas', '/api/perfil', '/api/admin', '/api/reportes', '/api/notificaciones'];
 
 // Excepción de método sobre RUTAS_API_PROTEGIDAS: un GET a estas rutas es
 // público (consulta de solo lectura, docs/ROLES.md 3.2 — RLS

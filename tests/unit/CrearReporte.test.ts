@@ -2,7 +2,7 @@
  * @jest-environment node
  */
 import { CrearReporte } from '@aplicacion/casos-de-uso/reportes/CrearReporte';
-import type { EvaluarCoincidenciaReporte } from '@aplicacion/casos-de-uso/reportes/EvaluarCoincidenciaReporte';
+import type { DetectarCoincidenciaReporteJob } from '@infraestructura/jobs/DetectarCoincidenciaReporteJob';
 import type { DatosNuevoReporte, IRepositorioReportes } from '@dominio/puertos/IRepositorioReportes';
 import type { IAlmacenamientoImagenes } from '@dominio/puertos/IAlmacenamientoImagenes';
 import type { IControlDeTasa } from '@dominio/puertos/IControlDeTasa';
@@ -27,10 +27,12 @@ function crearFakes(opciones?: { permitirTasa?: boolean; fotoValida?: boolean })
   const controlDeTasa: jest.Mocked<IControlDeTasa> = {
     permitir: jest.fn().mockResolvedValue(opciones?.permitirTasa ?? true),
   };
-  const evaluarCoincidencia = {
-    ejecutar: jest.fn().mockResolvedValue(undefined),
-  } as jest.Mocked<Pick<EvaluarCoincidenciaReporte, 'ejecutar'>> as jest.Mocked<EvaluarCoincidenciaReporte>;
-  return { repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia };
+  // `programar` es síncrono y no devuelve nada (fire-and-forget real) — ver
+  // DetectarCoincidenciaReporteJob.ts. El fake refleja exactamente eso.
+  const detectarCoincidenciaJob = {
+    programar: jest.fn(),
+  } as jest.Mocked<Pick<DetectarCoincidenciaReporteJob, 'programar'>> as jest.Mocked<DetectarCoincidenciaReporteJob>;
+  return { repositorioReportes, almacenamientoImagenes, controlDeTasa, detectarCoincidenciaJob };
 }
 
 const datosCrudosValidos = {
@@ -43,8 +45,8 @@ const datosCrudosValidos = {
 
 describe('CrearReporte', () => {
   it('crea el reporte con estado inicial "reportado" y mascotaId/especie=null cuando no se declaran', async () => {
-    const { repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia } = crearFakes();
-    const caso = new CrearReporte(repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia);
+    const { repositorioReportes, almacenamientoImagenes, controlDeTasa, detectarCoincidenciaJob } = crearFakes();
+    const caso = new CrearReporte(repositorioReportes, almacenamientoImagenes, controlDeTasa, detectarCoincidenciaJob);
 
     const resultado = await caso.ejecutar({ datosCrudos: datosCrudosValidos, reportadoPor: 'usuario-1' });
 
@@ -66,8 +68,8 @@ describe('CrearReporte', () => {
   });
 
   it('persiste mascotaId y especie cuando se declaran', async () => {
-    const { repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia } = crearFakes();
-    const caso = new CrearReporte(repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia);
+    const { repositorioReportes, almacenamientoImagenes, controlDeTasa, detectarCoincidenciaJob } = crearFakes();
+    const caso = new CrearReporte(repositorioReportes, almacenamientoImagenes, controlDeTasa, detectarCoincidenciaJob);
     const mascotaId = '11111111-1111-1111-1111-111111111111';
 
     await caso.ejecutar({ datosCrudos: { ...datosCrudosValidos, mascotaId, especie: 'perro' }, reportadoPor: 'usuario-1' });
@@ -76,8 +78,8 @@ describe('CrearReporte', () => {
   });
 
   it('rechaza fail-fast (pipeline) sin categoría antes de tocar el repositorio', async () => {
-    const { repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia } = crearFakes();
-    const caso = new CrearReporte(repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia);
+    const { repositorioReportes, almacenamientoImagenes, controlDeTasa, detectarCoincidenciaJob } = crearFakes();
+    const caso = new CrearReporte(repositorioReportes, almacenamientoImagenes, controlDeTasa, detectarCoincidenciaJob);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { tipo: _tipo, ...sinTipo } = datosCrudosValidos;
 
@@ -88,10 +90,10 @@ describe('CrearReporte', () => {
   });
 
   it('rechaza una fotoUrl que no pertenece a nuestra cuenta de Cloudinary, sin persistir nada', async () => {
-    const { repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia } = crearFakes({
+    const { repositorioReportes, almacenamientoImagenes, controlDeTasa, detectarCoincidenciaJob } = crearFakes({
       fotoValida: false,
     });
-    const caso = new CrearReporte(repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia);
+    const caso = new CrearReporte(repositorioReportes, almacenamientoImagenes, controlDeTasa, detectarCoincidenciaJob);
 
     await expect(caso.ejecutar({ datosCrudos: datosCrudosValidos, reportadoPor: 'usuario-1' })).rejects.toBeInstanceOf(
       FotoReporteObligatoriaError,
@@ -100,8 +102,8 @@ describe('CrearReporte', () => {
   });
 
   it('reutiliza el mismo caso de uso para tipo=\'encontrado\' sin exigir mascotaId', async () => {
-    const { repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia } = crearFakes();
-    const caso = new CrearReporte(repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia);
+    const { repositorioReportes, almacenamientoImagenes, controlDeTasa, detectarCoincidenciaJob } = crearFakes();
+    const caso = new CrearReporte(repositorioReportes, almacenamientoImagenes, controlDeTasa, detectarCoincidenciaJob);
 
     const resultado = await caso.ejecutar({
       datosCrudos: { ...datosCrudosValidos, tipo: 'encontrado', especie: 'perro' },
@@ -112,40 +114,34 @@ describe('CrearReporte', () => {
     expect(resultado.mascotaId).toBeNull();
   });
 
-  it('dispara EvaluarCoincidenciaReporte tras persistir un reporte "encontrado"', async () => {
-    const { repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia } = crearFakes();
-    const caso = new CrearReporte(repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia);
+  it('programa DetectarCoincidenciaReporteJob tras persistir un reporte "encontrado", sin esperarlo', async () => {
+    const { repositorioReportes, almacenamientoImagenes, controlDeTasa, detectarCoincidenciaJob } = crearFakes();
+    const caso = new CrearReporte(repositorioReportes, almacenamientoImagenes, controlDeTasa, detectarCoincidenciaJob);
 
     const resultado = await caso.ejecutar({
       datosCrudos: { ...datosCrudosValidos, tipo: 'encontrado', especie: 'perro' },
       reportadoPor: 'usuario-1',
     });
 
-    expect(evaluarCoincidencia.ejecutar).toHaveBeenCalledWith(resultado);
+    expect(detectarCoincidenciaJob.programar).toHaveBeenCalledWith(resultado);
+    // `programar` no devuelve una Promise — si CrearReporte lo esperara,
+    // TypeScript ya lo hubiera rechazado en tiempo de compilación (el fake
+    // tipa `programar(): void`), pero se deja explícito acá también.
+    expect(detectarCoincidenciaJob.programar).toHaveReturnedWith(undefined);
   });
 
-  it('NO dispara EvaluarCoincidenciaReporte para un reporte "perdido"', async () => {
-    const { repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia } = crearFakes();
-    const caso = new CrearReporte(repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia);
+  it('NO programa DetectarCoincidenciaReporteJob para un reporte "perdido"', async () => {
+    const { repositorioReportes, almacenamientoImagenes, controlDeTasa, detectarCoincidenciaJob } = crearFakes();
+    const caso = new CrearReporte(repositorioReportes, almacenamientoImagenes, controlDeTasa, detectarCoincidenciaJob);
 
     await caso.ejecutar({ datosCrudos: datosCrudosValidos, reportadoPor: 'usuario-1' });
 
-    expect(evaluarCoincidencia.ejecutar).not.toHaveBeenCalled();
-  });
-
-  it('no falla la creación del reporte si la evaluación de coincidencias rechaza (no bloqueante)', async () => {
-    const { repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia } = crearFakes();
-    evaluarCoincidencia.ejecutar.mockRejectedValue(new Error('el job de coincidencias está caído'));
-    const caso = new CrearReporte(repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia);
-
-    await expect(
-      caso.ejecutar({ datosCrudos: { ...datosCrudosValidos, tipo: 'encontrado', especie: 'perro' }, reportadoPor: 'usuario-1' }),
-    ).resolves.toMatchObject({ tipo: 'encontrado', estado: 'reportado' });
+    expect(detectarCoincidenciaJob.programar).not.toHaveBeenCalled();
   });
 
   it('reutiliza el mismo caso de uso para tipo=\'problematica\' con subtipo válido (REP-03)', async () => {
-    const { repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia } = crearFakes();
-    const caso = new CrearReporte(repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia);
+    const { repositorioReportes, almacenamientoImagenes, controlDeTasa, detectarCoincidenciaJob } = crearFakes();
+    const caso = new CrearReporte(repositorioReportes, almacenamientoImagenes, controlDeTasa, detectarCoincidenciaJob);
 
     const resultado = await caso.ejecutar({
       datosCrudos: { ...datosCrudosValidos, tipo: 'problematica', subtipo: 'animal_suelto' },
@@ -158,8 +154,8 @@ describe('CrearReporte', () => {
   });
 
   it('fuerza mascotaId=null en un reporte "problematica" aunque el cliente declare uno', async () => {
-    const { repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia } = crearFakes();
-    const caso = new CrearReporte(repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia);
+    const { repositorioReportes, almacenamientoImagenes, controlDeTasa, detectarCoincidenciaJob } = crearFakes();
+    const caso = new CrearReporte(repositorioReportes, almacenamientoImagenes, controlDeTasa, detectarCoincidenciaJob);
     const mascotaId = '11111111-1111-1111-1111-111111111111';
 
     const resultado = await caso.ejecutar({
@@ -172,8 +168,8 @@ describe('CrearReporte', () => {
   });
 
   it('persiste subtipo=null para \'perdido\'/\'encontrado\' aunque el cliente lo declare', async () => {
-    const { repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia } = crearFakes();
-    const caso = new CrearReporte(repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia);
+    const { repositorioReportes, almacenamientoImagenes, controlDeTasa, detectarCoincidenciaJob } = crearFakes();
+    const caso = new CrearReporte(repositorioReportes, almacenamientoImagenes, controlDeTasa, detectarCoincidenciaJob);
 
     await caso.ejecutar({
       datosCrudos: { ...datosCrudosValidos, subtipo: 'animal_suelto' },
@@ -184,8 +180,8 @@ describe('CrearReporte', () => {
   });
 
   it('rechaza fail-fast (pipeline) un reporte "problematica" sin subtipo, sin persistir nada', async () => {
-    const { repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia } = crearFakes();
-    const caso = new CrearReporte(repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia);
+    const { repositorioReportes, almacenamientoImagenes, controlDeTasa, detectarCoincidenciaJob } = crearFakes();
+    const caso = new CrearReporte(repositorioReportes, almacenamientoImagenes, controlDeTasa, detectarCoincidenciaJob);
 
     await expect(
       caso.ejecutar({ datosCrudos: { ...datosCrudosValidos, tipo: 'problematica' }, reportadoPor: 'usuario-1' }),
@@ -193,15 +189,15 @@ describe('CrearReporte', () => {
     expect(repositorioReportes.crear).not.toHaveBeenCalled();
   });
 
-  it('NO dispara EvaluarCoincidenciaReporte para un reporte "problematica"', async () => {
-    const { repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia } = crearFakes();
-    const caso = new CrearReporte(repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia);
+  it('NO programa DetectarCoincidenciaReporteJob para un reporte "problematica"', async () => {
+    const { repositorioReportes, almacenamientoImagenes, controlDeTasa, detectarCoincidenciaJob } = crearFakes();
+    const caso = new CrearReporte(repositorioReportes, almacenamientoImagenes, controlDeTasa, detectarCoincidenciaJob);
 
     await caso.ejecutar({
       datosCrudos: { ...datosCrudosValidos, tipo: 'problematica', subtipo: 'accidente_vial' },
       reportadoPor: 'usuario-1',
     });
 
-    expect(evaluarCoincidencia.ejecutar).not.toHaveBeenCalled();
+    expect(detectarCoincidenciaJob.programar).not.toHaveBeenCalled();
   });
 });
