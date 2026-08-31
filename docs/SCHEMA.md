@@ -109,9 +109,15 @@ CREATE INDEX ix_mascotas_dueño ON mascotas (dueño_id) WHERE deleted_at IS NULL
 CREATE TABLE reportes (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   tipo TEXT NOT NULL CHECK (tipo IN ('perdido','encontrado','problematica')),
-  subtipo TEXT NULL,
+  -- Solo obligatorio (y solo válido) para tipo='problematica' — REP-03.
+  -- Para 'perdido'/'encontrado' CrearReporte.ts fuerza subtipo=NULL.
+  subtipo TEXT NULL
+    CHECK (subtipo IS NULL OR subtipo IN ('animal_suelto','foco_sanitario','accidente_vial'))
+    CHECK (tipo <> 'problematica' OR subtipo IS NOT NULL),
   reportado_por UUID NOT NULL REFERENCES usuarios(id),
-  mascota_id UUID NULL REFERENCES mascotas(id),
+  -- 'problematica' nunca está vinculada a una mascota registrada.
+  mascota_id UUID NULL REFERENCES mascotas(id)
+    CHECK (tipo <> 'problematica' OR mascota_id IS NULL),
   descripcion TEXT NOT NULL,
   descripcion_embedding VECTOR(1536) NULL, -- poblado desde el MVP; consumido recién en Módulo 5/9
   foto_url TEXT NOT NULL,

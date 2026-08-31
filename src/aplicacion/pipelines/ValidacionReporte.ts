@@ -66,6 +66,11 @@ export class ValidadorEsquemaZod extends ValidadorReporte {
     const primerIssue = error.errors[0];
     switch (primerIssue?.path[0]) {
       case 'tipo':
+      // `subtipo` es la sub-categoría de una 'problematica' (docs/SCHEMA.md,
+      // CHECK subtipo) — mismo código que la categoría principal: ausente,
+      // vacío o fuera de SUBTIPOS_PROBLEMATICA_SOPORTADOS es, en los tres
+      // casos, "no elegiste una categoría válida para tu reporte".
+      case 'subtipo':
         return new CategoriaReporteObligatoriaError();
       case 'fotoUrl':
         return new FotoReporteObligatoriaError();
