@@ -27,14 +27,21 @@ const RUTAS_PAGINA_PROTEGIDAS = [
 // /api/auth/* y /api/openapi quedan deliberadamente fuera: son de acceso público.
 const RUTAS_API_PROTEGIDAS = ['/api/mascotas', '/api/perfil', '/api/admin', '/api/reportes', '/api/notificaciones'];
 
-// Excepción de método sobre RUTAS_API_PROTEGIDAS: un GET a estas rutas es
-// público (consulta de solo lectura, docs/ROLES.md 3.2 — RLS
+// Excepción de método sobre RUTAS_API_PROTEGIDAS: un GET a estas rutas
+// exactas es público (consulta de solo lectura, docs/ROLES.md 3.2 — RLS
 // `reportes_select_publico` + `GRANT SELECT ON reportes TO anon`); POST
 // (y cualquier otro método) sobre la misma ruta sigue protegido. GET
 // /api/reportes/route.ts no depende de esta excepción para autorizar — la
 // RLS pública ya lo permite — pero sin ella el usuario `anon` nunca llega a
-// ejecutar el caso de uso.
+// ejecutar el caso de uso. Coincidencia EXACTA (no por prefijo): subrutas
+// como GET /api/reportes/[id]/historial (dueño/municipio/administrador,
+// ListarHistorialReporte) NO son públicas y deben seguir cayendo en
+// RUTAS_API_PROTEGIDAS.
 const RUTAS_API_LECTURA_PUBLICA = ['/api/reportes'];
+
+function esLecturaPublicaExacta(pathname: string, method: string): boolean {
+  return method === 'GET' && RUTAS_API_LECTURA_PUBLICA.includes(pathname);
+}
 
 // Páginas que, además de sesión, exigen un rol puntual — Panel municipal de
 // reportes activos (Módulo 2): '/municipio' completo (dashboard, eventos,
@@ -109,7 +116,7 @@ export async function middleware(request: NextRequest) {
   const response = NextResponse.next();
   const { pathname } = request.nextUrl;
 
-  const esLecturaPublica = request.method === 'GET' && esRutaProtegida(pathname, RUTAS_API_LECTURA_PUBLICA);
+  const esLecturaPublica = esLecturaPublicaExacta(pathname, request.method);
   const esApiProtegida = esRutaProtegida(pathname, RUTAS_API_PROTEGIDAS) && !esLecturaPublica;
   const esPaginaProtegida = esRutaProtegida(pathname, RUTAS_PAGINA_PROTEGIDAS);
   if (!esApiProtegida && !esPaginaProtegida) return response;

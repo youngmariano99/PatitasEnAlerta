@@ -14,6 +14,7 @@ import '@aplicacion/dtos/mascotas/ActualizarMascotaDto';
 import '@aplicacion/dtos/reportes/CrearReporteDto';
 import '@aplicacion/dtos/reportes/ListarReportesDto';
 import '@aplicacion/dtos/reportes/ActualizarEstadoReporteDto';
+import '@aplicacion/dtos/reportes/HistorialReporteDto';
 import '@aplicacion/dtos/notificaciones/NotificacionesDto';
 
 export const dynamic = 'force-dynamic';

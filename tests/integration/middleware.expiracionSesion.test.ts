@@ -170,6 +170,21 @@ describe('middleware — expiración automática de sesión', () => {
 
       expect(respuesta.status).toBe(200);
     });
+
+    // La excepción de lectura pública es de coincidencia EXACTA con
+    // '/api/reportes', no por prefijo: GET a una subruta (ej. el historial
+    // de un reporte puntual, exclusivo del dueño/municipio/administrador)
+    // sigue exigiendo sesión.
+    it('GET /api/reportes/[id]/historial SÍ exige sesión (no es la misma ruta que el listado público)', async () => {
+      getUserMock.mockResolvedValue({ data: { user: null }, error: { message: 'sin sesión' } });
+      getSessionMock.mockResolvedValue(sinSesionLocal());
+
+      const respuesta = await middleware(crearRequest('/api/reportes/11111111-1111-1111-1111-111111111111/historial', 'GET'));
+
+      expect(respuesta.status).toBe(401);
+      const cuerpo = await respuesta.json();
+      expect(cuerpo.codigo).toBe('PEA-SIS-001');
+    });
   });
 
   describe('Panel municipal — /municipio exige rol municipio/administrador (Paso 1)', () => {

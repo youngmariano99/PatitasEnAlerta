@@ -12,6 +12,8 @@ function crearFakes(pagina: PaginaReportes) {
     listar: jest.fn().mockResolvedValue(pagina),
     obtenerEstadoActual: jest.fn(),
     actualizarEstado: jest.fn(),
+    obtenerPropietario: jest.fn(),
+    listarHistorialEstado: jest.fn(),
   };
   return { repositorioReportes };
 }
