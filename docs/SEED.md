@@ -210,13 +210,29 @@ VALUES
    'https://res.cloudinary.com/patitas-en-alerta/reportes/seed-match-encontrado.jpg',
    -37.9995, -61.3560, 'perro', 'reportado', now() - interval '1 day');
 
--- 11. Historial de estado de reportes (1 a 3 transiciones por reporte)
+-- 11. Historial de estado de reportes (1 a 3 transiciones por reporte,
+-- siguiendo el mismo camino lineal sin atajos que valida
+-- CambiarEstadoReporteCommand vía ReporteEstado — State, sin condicionales
+-- dispersos: reportado → en_revision → en_atencion → resuelto → cerrado.
+-- Saltar directo de 'reportado' a 'cerrado' se rechaza con PEA-REP-006, así
+-- que el historial nunca puede registrar ese salto tampoco.
 INSERT INTO reportes_historial_estado (reporte_id, estado_anterior, estado_nuevo, usuario_id, registrado_en)
-SELECT r.id, 'reportado', r.estado,
-       (SELECT id FROM tmp_municipio),
-       now() - (random() * 40 || ' days')::interval
-FROM tmp_reportes r
-WHERE r.estado <> 'reportado';
+SELECT
+  p.reporte_id,
+  (ARRAY['reportado', 'en_revision', 'en_atencion', 'resuelto'])[p.paso],
+  (ARRAY['en_revision', 'en_atencion', 'resuelto', 'cerrado'])[p.paso],
+  (SELECT id FROM tmp_municipio),
+  p.base + (p.paso || ' days')::interval
+FROM (
+  SELECT r.id AS reporte_id, r.base, gs AS paso
+  FROM (
+    SELECT id, now() - (random() * 40 || ' days')::interval AS base,
+           1 + floor(random() * 3)::int AS cantidad_pasos
+    FROM tmp_reportes
+    WHERE estado <> 'reportado'
+  ) r
+  CROSS JOIN LATERAL generate_series(1, r.cantidad_pasos) AS gs
+) p;
 
 -- 12. Notificaciones
 INSERT INTO notificaciones (usuario_id, tipo, referencia_tabla, referencia_id, leido, created_at)

@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { ZodError } from 'zod';
 import { container } from '@aplicacion/contenedor-di';
-import { ActualizarEstadoReporte } from '@aplicacion/casos-de-uso/reportes/ActualizarEstadoReporte';
+import { CambiarEstadoReporteCommand } from '@aplicacion/casos-de-uso/reportes/CambiarEstadoReporteCommand';
 import { ActualizarEstadoReporteBodySchema } from '@aplicacion/dtos/reportes/ActualizarEstadoReporteDto';
 import { ErrorDominio } from '@dominio/errores/ErrorDominio';
 import { PayloadInvalidoError } from '@dominio/errores/erroresAutenticacion';
@@ -20,8 +20,8 @@ interface ContextoRuta {
 /**
  * Cambia el estado de un reporte — Panel municipal (Módulo 2). Exclusivo de
  * rol municipio/administrador, verificado en
- * ActualizarEstadoReporte.autorizar() (PEA-REP-007) — nunca en este route
- * handler ni confiando en nada que venga del cliente además del body
+ * CambiarEstadoReporteCommand.autorizar() (PEA-REP-007) — nunca en este
+ * route handler ni confiando en nada que venga del cliente además del body
  * `{ estado }`.
  */
 export async function PATCH(request: NextRequest, { params }: ContextoRuta) {
@@ -42,7 +42,7 @@ export async function PATCH(request: NextRequest, { params }: ContextoRuta) {
   try {
     const { estado } = ActualizarEstadoReporteBodySchema.parse(cuerpo);
 
-    const casoDeUso = container.resolve(ActualizarEstadoReporte);
+    const casoDeUso = container.resolve(CambiarEstadoReporteCommand);
     const resultado = await casoDeUso.ejecutar({
       reporteId: params.id,
       estadoNuevo: estado,
