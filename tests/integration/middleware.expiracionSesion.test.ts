@@ -18,8 +18,8 @@ jest.mock('@supabase/ssr', () => ({
 
 import { middleware } from '../../middleware';
 
-function crearRequest(pathname: string): NextRequest {
-  return new NextRequest(`http://localhost${pathname}`, { method: 'GET' });
+function crearRequest(pathname: string, method: string = 'GET'): NextRequest {
+  return new NextRequest(`http://localhost${pathname}`, { method });
 }
 
 function sesionExpiradaHaceUnaHora() {
@@ -118,14 +118,50 @@ describe('middleware — expiración automática de sesión', () => {
   });
 
   describe('rutas públicas', () => {
-    it.each(['/auth/login', '/reportes', '/adopciones', '/api/auth/registro', '/api/auth/recuperar-password', '/api/openapi'])(
-      'no exige sesión en %s (ni siquiera invoca a Supabase Auth)',
-      async (ruta) => {
-        const respuesta = await middleware(crearRequest(ruta));
+    it.each([
+      '/auth/login',
+      '/reportes',
+      '/adopciones',
+      '/api/auth/registro',
+      '/api/auth/recuperar-password',
+      '/api/openapi',
+      '/api/reportes',
+    ])('no exige sesión en %s (ni siquiera invoca a Supabase Auth)', async (ruta) => {
+      const respuesta = await middleware(crearRequest(ruta));
 
-        expect(respuesta.status).toBe(200);
-        expect(getUserMock).not.toHaveBeenCalled();
-      },
-    );
+      expect(respuesta.status).toBe(200);
+      expect(getUserMock).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('excepción de método sobre /api/reportes (GET-only-público)', () => {
+    // Listado y mapa de reportes activos: GET es público (RLS
+    // reportes_select_publico + GRANT SELECT a anon), pero publicar un
+    // reporte (POST) sigue exigiendo sesión — el `reportadoPor` sale de ahí.
+    it('GET /api/reportes no exige sesión', async () => {
+      const respuesta = await middleware(crearRequest('/api/reportes', 'GET'));
+
+      expect(respuesta.status).toBe(200);
+      expect(getUserMock).not.toHaveBeenCalled();
+    });
+
+    it('POST /api/reportes sigue exigiendo sesión (401 / PEA-SIS-001 sin sesión)', async () => {
+      getUserMock.mockResolvedValue({ data: { user: null }, error: { message: 'sin sesión' } });
+      getSessionMock.mockResolvedValue(sinSesionLocal());
+
+      const respuesta = await middleware(crearRequest('/api/reportes', 'POST'));
+
+      expect(respuesta.status).toBe(401);
+      const cuerpo = await respuesta.json();
+      expect(cuerpo.codigo).toBe('PEA-SIS-001');
+    });
+
+    it('POST /api/reportes deja pasar con sesión válida', async () => {
+      getUserMock.mockResolvedValue({ data: { user: { id: 'user-1' } }, error: null });
+
+      const respuesta = await middleware(crearRequest('/api/reportes', 'POST'));
+
+      expect(respuesta.status).toBe(200);
+    });
   });
 });
