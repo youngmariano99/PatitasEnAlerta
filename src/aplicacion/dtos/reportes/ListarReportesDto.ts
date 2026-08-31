@@ -30,6 +30,10 @@ export const ListarReportesQuerySchema = z
     latitud: z.coerce.number().finite().optional(),
     longitud: z.coerce.number().finite().optional(),
     radioKm: z.coerce.number().positive().optional(),
+    // Panel municipal (Módulo 2): rango de fechas sobre `created_at`,
+    // combinable con tipo/estado/zona — nunca en su lugar.
+    fechaDesde: z.coerce.date({ invalid_type_error: 'La fecha "desde" no es válida.' }).optional(),
+    fechaHasta: z.coerce.date({ invalid_type_error: 'La fecha "hasta" no es válida.' }).optional(),
   })
   .superRefine((datos, ctx) => {
     const campos = [datos.latitud, datos.longitud, datos.radioKm];
@@ -39,6 +43,13 @@ export const ListarReportesQuerySchema = z
         code: z.ZodIssueCode.custom,
         path: ['zona'],
         message: 'Para filtrar por zona, indicá latitud, longitud y radioKm juntos.',
+      });
+    }
+    if (datos.fechaDesde && datos.fechaHasta && datos.fechaDesde > datos.fechaHasta) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['fechaDesde'],
+        message: 'La fecha "desde" tiene que ser anterior a la fecha "hasta".',
       });
     }
   });
@@ -94,6 +105,8 @@ registroOpenApi.registerPath({
       latitud: z.coerce.number().optional(),
       longitud: z.coerce.number().optional(),
       radioKm: z.coerce.number().optional().openapi({ description: 'Requiere latitud y longitud también.' }),
+      fechaDesde: z.coerce.date().optional().openapi({ description: 'Filtra por created_at >= fechaDesde (ISO 8601).' }),
+      fechaHasta: z.coerce.date().optional().openapi({ description: 'Filtra por created_at <= fechaHasta (ISO 8601).' }),
     }),
   },
   responses: {

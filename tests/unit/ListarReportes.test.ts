@@ -10,6 +10,8 @@ function crearFakes(pagina: PaginaReportes) {
     crear: jest.fn(),
     buscarPerdidosActivosPorZonaYEspecie: jest.fn(),
     listar: jest.fn().mockResolvedValue(pagina),
+    obtenerEstadoActual: jest.fn(),
+    actualizarEstado: jest.fn(),
   };
   return { repositorioReportes };
 }

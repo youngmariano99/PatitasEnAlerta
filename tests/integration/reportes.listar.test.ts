@@ -31,6 +31,14 @@ class RepositorioReportesFalso implements IRepositorioReportes {
     this.llamadas.push({ filtros, pagina, porPagina });
     return this.paginaARetornar;
   }
+
+  async obtenerEstadoActual(): Promise<never> {
+    throw new Error('no usado en este test');
+  }
+
+  async actualizarEstado(): Promise<never> {
+    throw new Error('no usado en este test');
+  }
 }
 
 function crearRequest(query: string): NextRequest {
