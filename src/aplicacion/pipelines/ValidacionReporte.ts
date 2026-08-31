@@ -104,19 +104,27 @@ export class ValidadorRateLimit extends ValidadorReporte {
 }
 
 /**
- * Tercer eslabón: la `fotoUrl` recibida tiene que pertenecer a nuestra
- * cuenta de Cloudinary (mismo criterio que RegistrarMascota) — nunca se
+ * Tercer eslabón: la `fotoUrl` recibida tiene que (a) pertenecer a nuestra
+ * cuenta de Cloudinary (mismo criterio base que RegistrarMascota) y (b)
+ * corresponder a una subida hecha por el propio `reportadoPor` — nunca se
  * persiste a ciegas una URL arbitraria armada a mano por un cliente que se
- * salteó la subida real.
+ * salteó la subida real, ni la URL de una foto que en los hechos subió otra
+ * persona (ej. reutilizar la foto de un reporte ajeno). Ambos chequeos
+ * cortan la cadena con el mismo código (PEA-REP-002): del lado del cliente
+ * la experiencia es idéntica ("necesitamos una foto válida"), sin exponer
+ * cuál de las dos razones específicas fue.
  */
 export class ValidadorContenidoImagen extends ValidadorReporte {
   constructor(private readonly almacenamientoImagenes: IAlmacenamientoImagenes) {
     super();
   }
 
-  protected async validar(_contexto: ContextoValidacionReporte, entrada: unknown): Promise<unknown> {
+  protected async validar(contexto: ContextoValidacionReporte, entrada: unknown): Promise<unknown> {
     const comando = entrada as ComandoCrearReporte;
     if (!this.almacenamientoImagenes.esUrlDeImagenValida(comando.fotoUrl)) {
+      throw new FotoReporteObligatoriaError();
+    }
+    if (!(await this.almacenamientoImagenes.fueSubidaPor(comando.fotoUrl, contexto.reportadoPor))) {
       throw new FotoReporteObligatoriaError();
     }
     return comando;

@@ -8,6 +8,7 @@ import {
   type SubtipoProblematica,
   type TipoReporte,
 } from '@aplicacion/dtos/reportes/CrearReporteDto';
+import { crearClienteSupabaseNavegador } from '@infraestructura/adaptadores/ClienteSupabaseNavegador';
 
 // Leaflet toca `window` al inicializarse — dynamic import con ssr:false es
 // obligatorio (no un simple import estático) para que Next.js no intente
@@ -77,6 +78,16 @@ const ETIQUETAS_SUBTIPO: Record<SubtipoProblematica, string> = {
   accidente_vial: 'Accidente vial',
 };
 
+/**
+ * Adjunta `context=usuario_id=<id>` a la subida — metadata que
+ * ValidadorContenidoImagen.ts (vía CloudinaryStorageAdapter.fueSubidaPor)
+ * lee del lado del servidor con el Admin API para confirmar que la
+ * `fotoUrl` que llega en el POST /api/reportes realmente la subió quien
+ * dice reportar, y no la URL de la foto de un reporte ajeno. Requiere sesión
+ * activa: esta página ya está protegida por middleware.ts, así que llegar
+ * acá sin `user` sería un estado inesperado, no un flujo normal a manejar
+ * en silencio.
+ */
 async function subirImagenACloudinary(archivo: File): Promise<string> {
   const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
   const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
@@ -84,9 +95,18 @@ async function subirImagenACloudinary(archivo: File): Promise<string> {
     throw new Error('Cloudinary no está configurado en este entorno.');
   }
 
+  const supabase = crearClienteSupabaseNavegador();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    throw new Error('Necesitás iniciar sesión para subir una foto.');
+  }
+
   const formData = new FormData();
   formData.append('file', archivo);
   formData.append('upload_preset', uploadPreset);
+  formData.append('context', `usuario_id=${user.id}`);
 
   const respuesta = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
     method: 'POST',

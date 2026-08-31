@@ -19,6 +19,13 @@ jest.mock('@presentacion/componentes/mapas/SelectorUbicacionMapa', () => ({
   ),
 }));
 
+// subirImagenACloudinary consulta la sesión actual (crearClienteSupabaseNavegador)
+// para taguear la subida con `context=usuario_id=<id>` — ver ese archivo.
+const getUserMock = jest.fn().mockResolvedValue({ data: { user: { id: 'usuario-1' } } });
+jest.mock('@infraestructura/adaptadores/ClienteSupabaseNavegador', () => ({
+  crearClienteSupabaseNavegador: () => ({ auth: { getUser: getUserMock } }),
+}));
+
 const URL_CLOUDINARY = 'https://api.cloudinary.com/v1_1/patitas-en-alerta/image/upload';
 const FOTO_SUBIDA = 'https://res.cloudinary.com/patitas-en-alerta/image/upload/v1/reportes/toby.jpg';
 
@@ -56,6 +63,7 @@ describe('FormularioReporteWizard', () => {
     }
     jest.spyOn(global.URL, 'createObjectURL').mockReturnValue('blob:preview');
     pushMock.mockReset();
+    getUserMock.mockReset().mockResolvedValue({ data: { user: { id: 'usuario-1' } } });
     // Default: la subida a Cloudinary siempre resuelve — los tests que
     // necesitan una respuesta puntual de POST /api/reportes llaman a
     // mockearFetch(...) de nuevo con ese body/status antes de enviar.

@@ -49,6 +49,10 @@ class AlmacenamientoImagenesFalso implements IAlmacenamientoImagenes {
   esUrlDeImagenValida(url: string): boolean {
     return url.startsWith('https://res.cloudinary.com/patitas-en-alerta/');
   }
+
+  async fueSubidaPor(): Promise<boolean> {
+    return true;
+  }
 }
 
 function autenticarComo(usuarioId: string | null) {

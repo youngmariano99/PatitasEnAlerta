@@ -86,8 +86,14 @@ class NotificacionesRepositorioFalso implements INotificacionesRepositorio {
 }
 
 class AlmacenamientoImagenesFalso implements IAlmacenamientoImagenes {
+  public subidaPorElUsuario = true;
+
   esUrlDeImagenValida(url: string): boolean {
     return url.startsWith('https://res.cloudinary.com/patitas-en-alerta/');
+  }
+
+  async fueSubidaPor(): Promise<boolean> {
+    return this.subidaPorElUsuario;
   }
 }
 
@@ -156,6 +162,7 @@ describe('POST /api/reportes (REP-01/REP-02/REP-03, CrearReporte)', () => {
   let controlDeTasa: ControlDeTasaFalso;
   let controlDeTasaAntiSaturacion: ControlDeTasaAntiSaturacionFalso;
   let repositorioPerfil: RepositorioPerfilFalso;
+  let almacenamientoImagenes: AlmacenamientoImagenesFalso;
 
   beforeEach(() => {
     getUserMock.mockReset();
@@ -164,13 +171,14 @@ describe('POST /api/reportes (REP-01/REP-02/REP-03, CrearReporte)', () => {
     controlDeTasa = new ControlDeTasaFalso();
     controlDeTasaAntiSaturacion = new ControlDeTasaAntiSaturacionFalso();
     repositorioPerfil = new RepositorioPerfilFalso();
+    almacenamientoImagenes = new AlmacenamientoImagenesFalso();
     container.reset();
     container.registerInstance<IRepositorioReportes>('IRepositorioReportes', repositorioReportes);
     container.registerInstance<INotificacionesRepositorio>('INotificacionesRepositorio', repositorioNotificaciones);
     container.registerInstance<IControlDeTasa>('IControlDeTasa', controlDeTasa);
     container.registerInstance<IControlDeTasaConReintento>('IControlDeTasaConReintento', controlDeTasaAntiSaturacion);
     container.registerInstance<IRepositorioPerfil>('IRepositorioPerfil', repositorioPerfil);
-    container.registerSingleton<IAlmacenamientoImagenes>('IAlmacenamientoImagenes', AlmacenamientoImagenesFalso);
+    container.registerInstance<IAlmacenamientoImagenes>('IAlmacenamientoImagenes', almacenamientoImagenes);
   });
 
   it('rechaza sin sesión activa (401 / PEA-SIS-001), sin persistir nada', async () => {
@@ -203,6 +211,22 @@ describe('POST /api/reportes (REP-01/REP-02/REP-03, CrearReporte)', () => {
     const { fotoUrl: _fotoUrl, ...sinFoto } = reporteValido;
 
     const respuesta = await POST(crearRequest(sinFoto));
+
+    expect(respuesta.status).toBe(400);
+    const cuerpo = await respuesta.json();
+    expect(cuerpo.codigo).toBe('PEA-REP-002');
+    expect(repositorioReportes.creados).toHaveLength(0);
+  });
+
+  // Paso 4 del checklist + AC explícito: una fotoUrl que pertenece a nuestra
+  // cuenta de Cloudinary pero NO fue subida por el usuario autenticado
+  // (ej. reutilizar la foto de un reporte ajeno) corta la cadena ANTES del
+  // INSERT en `reportes`.
+  it('rechaza una fotoUrl que no corresponde a una subida del usuario autenticado (400 / PEA-REP-002)', async () => {
+    autenticarComo('usuario-1');
+    almacenamientoImagenes.subidaPorElUsuario = false;
+
+    const respuesta = await POST(crearRequest(reporteValido));
 
     expect(respuesta.status).toBe(400);
     const cuerpo = await respuesta.json();

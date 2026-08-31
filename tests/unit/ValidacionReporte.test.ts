@@ -12,12 +12,13 @@ import {
 } from '@dominio/errores/erroresReportes';
 import { PayloadInvalidoError } from '@dominio/errores/erroresAutenticacion';
 
-function crearFakes(opciones?: { permitirTasa?: boolean; fotoValida?: boolean }) {
+function crearFakes(opciones?: { permitirTasa?: boolean; fotoValida?: boolean; fueSubidaPorElUsuario?: boolean }) {
   const controlDeTasa: jest.Mocked<IControlDeTasa> = {
     permitir: jest.fn().mockResolvedValue(opciones?.permitirTasa ?? true),
   };
   const almacenamientoImagenes: jest.Mocked<IAlmacenamientoImagenes> = {
     esUrlDeImagenValida: jest.fn().mockReturnValue(opciones?.fotoValida ?? true),
+    fueSubidaPor: jest.fn().mockResolvedValue(opciones?.fueSubidaPorElUsuario ?? true),
   };
   return { controlDeTasa, almacenamientoImagenes };
 }
@@ -40,6 +41,7 @@ describe('pipeline ValidacionReporte (Chain of Responsibility)', () => {
     expect(resultado).toEqual({ ...datosValidos, reportadoPor: 'usuario-1' });
     expect(controlDeTasa.permitir).toHaveBeenCalledWith('usuario-1');
     expect(almacenamientoImagenes.esUrlDeImagenValida).toHaveBeenCalledWith(datosValidos.fotoUrl);
+    expect(almacenamientoImagenes.fueSubidaPor).toHaveBeenCalledWith(datosValidos.fotoUrl, 'usuario-1');
   });
 
   it('ValidadorEsquemaZod corta la cadena con PEA-REP-001 si falta la categoría, antes de invocar cualquier otro eslabón', async () => {
@@ -159,6 +161,18 @@ describe('pipeline ValidacionReporte (Chain of Responsibility)', () => {
     await expect(
       pipeline.manejar({ datosCrudos: datosValidos, reportadoPor: 'usuario-1' }, datosValidos),
     ).rejects.toBeInstanceOf(FotoReporteObligatoriaError);
+    // No llega a consultar el uploader si ni siquiera es de nuestra cuenta.
+    expect(almacenamientoImagenes.fueSubidaPor).not.toHaveBeenCalled();
+  });
+
+  it('ValidadorContenidoImagen corta la cadena con PEA-REP-002 si la fotoUrl no corresponde a una subida del usuario autenticado (AC)', async () => {
+    const { controlDeTasa, almacenamientoImagenes } = crearFakes({ fueSubidaPorElUsuario: false });
+    const pipeline = crearPipelineValidacionReporte({ controlDeTasa, almacenamientoImagenes });
+
+    await expect(
+      pipeline.manejar({ datosCrudos: datosValidos, reportadoPor: 'usuario-1' }, datosValidos),
+    ).rejects.toBeInstanceOf(FotoReporteObligatoriaError);
+    expect(almacenamientoImagenes.fueSubidaPor).toHaveBeenCalledWith(datosValidos.fotoUrl, 'usuario-1');
   });
 
   it.each([

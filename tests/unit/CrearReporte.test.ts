@@ -27,6 +27,7 @@ function crearFakes(opciones?: { permitirTasa?: boolean; fotoValida?: boolean })
   };
   const almacenamientoImagenes: jest.Mocked<IAlmacenamientoImagenes> = {
     esUrlDeImagenValida: jest.fn().mockReturnValue(opciones?.fotoValida ?? true),
+    fueSubidaPor: jest.fn().mockResolvedValue(true),
   };
   const controlDeTasa: jest.Mocked<IControlDeTasa> = {
     permitir: jest.fn().mockResolvedValue(opciones?.permitirTasa ?? true),
