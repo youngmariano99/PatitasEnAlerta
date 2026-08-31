@@ -62,6 +62,15 @@ export interface ReporteEstadoActualizado {
   estadoAnterior: string;
 }
 
+/** Una fila de `reportes_historial_estado` — ver ListarHistorialReporte.ts. */
+export interface HistorialEstadoItem {
+  id: string;
+  estadoAnterior: string;
+  estadoNuevo: string;
+  usuarioId: string;
+  registradoEn: Date;
+}
+
 /** Proyección pública de un reporte — sin `reportadoPor` (no es necesario para la tabla/mapa público). */
 export interface ReporteListado {
   id: string;
@@ -98,4 +107,8 @@ export interface IRepositorioReportes {
   obtenerEstadoActual(id: string): Promise<string | null>;
   /** UPDATE + INSERT en `reportes_historial_estado` en una misma transacción (docs/SCHEMA.md). */
   actualizarEstado(reporteId: string, estadoNuevo: string, actualizadoPor: string): Promise<ReporteEstadoActualizado>;
+  /** `reportadoPor` del reporte, o `null` si no existe o está soft-deleted — ver ListarHistorialReporte.ts. */
+  obtenerPropietario(id: string): Promise<string | null>;
+  /** Historial completo de transiciones, ordenado cronológicamente por `registrado_en` (ascendente). */
+  listarHistorialEstado(reporteId: string): Promise<HistorialEstadoItem[]>;
 }
