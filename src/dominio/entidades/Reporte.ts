@@ -24,6 +24,24 @@ export type EstadoReporte = (typeof ESTADOS_REPORTE_SOPORTADOS)[number];
 export const ESTADOS_REPORTE_ACTIVOS = ['reportado', 'en_revision', 'en_atencion'] as const;
 
 /**
+ * Máquina de estados (State, PLANIFICACION.md Sección 4.2) de un reporte:
+ * progresión lineal reportado → en_revision → en_atencion → resuelto, con
+ * la posibilidad de cerrar desde cualquier estado no terminal (ej. un
+ * reporte descartado por duplicado o sin sustento). `cerrado` es terminal —
+ * ninguna transición sale de ahí. Único punto de verdad de "qué transición
+ * es válida", usado tanto por ActualizarEstadoReporte.ts (PEA-REP-006) como
+ * por PanelReportesMunicipio.tsx para no ofrecer en la UI un estado que el
+ * backend va a rechazar.
+ */
+export const TRANSICIONES_VALIDAS_REPORTE: Readonly<Record<EstadoReporte, readonly EstadoReporte[]>> = {
+  reportado: ['en_revision', 'cerrado'],
+  en_revision: ['en_atencion', 'cerrado'],
+  en_atencion: ['resuelto', 'cerrado'],
+  resuelto: ['cerrado'],
+  cerrado: [],
+};
+
+/**
  * Entidad de dominio Reporte. Representa siempre un reporte ya persistido
  * (con `id` y `createdAt`) — el alta se modela con `DatosReporte` (sin id)
  * en el puerto del repositorio, mismo criterio que Mascota.ts.

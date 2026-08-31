@@ -44,6 +44,8 @@ export class ListarReportes extends CasoDeUsoBase<ParametrosListarReportes, Pagi
         dato.latitud !== undefined && dato.longitud !== undefined && dato.radioKm !== undefined
           ? { latitud: dato.latitud, longitud: dato.longitud, radioKm: dato.radioKm }
           : undefined,
+      fechaDesde: dato.fechaDesde,
+      fechaHasta: dato.fechaHasta,
     };
 
     return this.repositorioReportes.listar(filtros, dato.pagina, dato.porPagina);

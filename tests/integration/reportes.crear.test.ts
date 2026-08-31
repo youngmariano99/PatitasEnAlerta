@@ -49,6 +49,14 @@ class RepositorioReportesFalso implements IRepositorioReportes {
   async listar(_filtros: FiltrosListadoReportes, _pagina: number, _porPagina: number): Promise<PaginaReportes> {
     throw new Error('no usado en este test — ver tests/integration/reportes.listar.test.ts');
   }
+
+  async obtenerEstadoActual(): Promise<never> {
+    throw new Error('no usado en este test');
+  }
+
+  async actualizarEstado(): Promise<never> {
+    throw new Error('no usado en este test');
+  }
 }
 
 class NotificacionesRepositorioFalso implements INotificacionesRepositorio {

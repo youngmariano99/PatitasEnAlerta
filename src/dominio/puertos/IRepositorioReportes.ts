@@ -43,12 +43,23 @@ export interface ReporteActivoResumen {
  * activos (ESTADOS_REPORTE_ACTIVOS) — mismo criterio que "Listado y mapa de
  * reportes activos" (historia de este ticket); un `estado` explícito
  * (incluido 'resuelto'/'cerrado') lo reemplaza por completo, nunca se
- * combinan ambos.
+ * combinan ambos. `fechaDesde`/`fechaHasta` filtran por `created_at`
+ * (Panel municipal, Módulo 2) y se combinan simultáneamente con
+ * `tipo`/`estado`/`zona`, no en lugar de ellos.
  */
 export interface FiltrosListadoReportes {
   tipo?: string;
   estado?: string;
   zona?: FiltroZona;
+  fechaDesde?: Date;
+  fechaHasta?: Date;
+}
+
+/** Resultado de un cambio de estado exitoso — ver ActualizarEstadoReporte.ts. */
+export interface ReporteEstadoActualizado {
+  id: string;
+  estado: string;
+  estadoAnterior: string;
 }
 
 /** Proyección pública de un reporte — sin `reportadoPor` (no es necesario para la tabla/mapa público). */
@@ -83,4 +94,8 @@ export interface IRepositorioReportes {
   buscarPerdidosActivosPorZonaYEspecie(criterios: CriteriosCoincidenciaReporte): Promise<ReporteActivoResumen[]>;
   /** Listado público paginado (tope 50) — reportes 'reportado'/'en_revision'/'en_atencion' vinculados por soft delete. */
   listar(filtros: FiltrosListadoReportes, pagina: number, porPagina: number): Promise<PaginaReportes>;
+  /** `null` si no existe o está soft-deleted — ActualizarEstadoReporte.ts decide ahí mismo si es 404 o una transición válida. */
+  obtenerEstadoActual(id: string): Promise<string | null>;
+  /** UPDATE + INSERT en `reportes_historial_estado` en una misma transacción (docs/SCHEMA.md). */
+  actualizarEstado(reporteId: string, estadoNuevo: string, actualizadoPor: string): Promise<ReporteEstadoActualizado>;
 }
