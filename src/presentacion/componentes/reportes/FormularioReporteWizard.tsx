@@ -3,7 +3,11 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
-import type { TipoReporte } from '@aplicacion/dtos/reportes/CrearReporteDto';
+import {
+  SUBTIPOS_PROBLEMATICA_SOPORTADOS,
+  type SubtipoProblematica,
+  type TipoReporte,
+} from '@aplicacion/dtos/reportes/CrearReporteDto';
 
 // Leaflet toca `window` al inicializarse — dynamic import con ssr:false es
 // obligatorio (no un simple import estático) para que Next.js no intente
@@ -35,10 +39,10 @@ interface CopiaPorTipo {
 }
 
 /**
- * Único punto donde el texto difiere entre REP-01 ('perdido') y REP-02
- * ('encontrado') — todo lo demás (validación, pasos, componentes) es
- * exactamente el mismo flujo (ver CrearReporte.ts, "un único caso de uso
- * cubre ambos tipos").
+ * Único punto donde el texto difiere entre REP-01 ('perdido'), REP-02
+ * ('encontrado') y REP-03 ('problematica') — todo lo demás (validación,
+ * pasos, componentes) es exactamente el mismo flujo (ver CrearReporte.ts,
+ * "un único caso de uso cubre los tres tipos").
  */
 const COPIA_POR_TIPO: Record<TipoReporte, CopiaPorTipo> = {
   perdido: {
@@ -57,6 +61,20 @@ const COPIA_POR_TIPO: Record<TipoReporte, CopiaPorTipo> = {
     ayudaDescripcion: 'Contá dónde y cuándo la encontraste, y cualquier detalle que ayude a identificarla.',
     etiquetaEspecie: 'Especie del animal (opcional)',
   },
+  problematica: {
+    titulo: 'Reportá una problemática urbana',
+    bajada: 'Municipio recibe tu reporte para actuar sobre animales sueltos, focos sanitarios o accidentes viales.',
+    etiquetaFoto: 'Foto de la situación',
+    placeholderDescripcion: 'Hay un perro suelto en la esquina, sin dueño a la vista, riesgo para el tránsito…',
+    ayudaDescripcion: 'Contá dónde y cuándo ocurrió, y cualquier detalle que ayude a dimensionar la urgencia.',
+    etiquetaEspecie: 'Especie del animal involucrado, si aplica (opcional)',
+  },
+};
+
+const ETIQUETAS_SUBTIPO: Record<SubtipoProblematica, string> = {
+  animal_suelto: 'Animal suelto',
+  foco_sanitario: 'Foco sanitario',
+  accidente_vial: 'Accidente vial',
 };
 
 async function subirImagenACloudinary(archivo: File): Promise<string> {
@@ -89,15 +107,19 @@ interface FormularioReporteWizardProps {
 }
 
 /**
- * Wizard de 3 pasos (foto → descripción/especie → ubicación + publicar)
- * compartido por REP-01 (mascota perdida) y REP-02 (mascota encontrada,
- * Módulo 2). `tipoInicial` es el único parámetro que cambia el
- * comportamiento — mismo componente, mismo endpoint POST /api/reportes,
- * mismo caso de uso CrearReporte del lado del servidor.
+ * Wizard de 3 pasos (foto → descripción/especie[/subtipo] → ubicación +
+ * publicar) compartido por REP-01 (mascota perdida), REP-02 (mascota
+ * encontrada) y REP-03 (problemática urbana, Módulo 2). `tipoInicial` es el
+ * parámetro que cambia el comportamiento — mismo componente, mismo endpoint
+ * POST /api/reportes, mismo caso de uso CrearReporte del lado del servidor.
+ * Para 'problematica' el paso 2 agrega el selector visual de `subtipo`
+ * (radiogroup, nunca texto libre — NFR de validación estricta) y el paso no
+ * avanza sin una selección.
  */
 export function FormularioReporteWizard({ tipoInicial }: FormularioReporteWizardProps) {
   const router = useRouter();
   const copia = COPIA_POR_TIPO[tipoInicial];
+  const esProblematica = tipoInicial === 'problematica';
 
   const [paso, setPaso] = useState<1 | 2 | 3>(1);
 
@@ -108,6 +130,8 @@ export function FormularioReporteWizard({ tipoInicial }: FormularioReporteWizard
 
   const [descripcion, setDescripcion] = useState('');
   const [especie, setEspecie] = useState('');
+  const [subtipo, setSubtipo] = useState<SubtipoProblematica | null>(null);
+  const [errorSubtipo, setErrorSubtipo] = useState<string | null>(null);
 
   const [estadoUbicacion, setEstadoUbicacion] = useState<EstadoUbicacion>('buscando');
   const [posicion, setPosicion] = useState<[number, number] | null>(null);
@@ -163,6 +187,10 @@ export function FormularioReporteWizard({ tipoInicial }: FormularioReporteWizard
       return;
     }
     if (paso === 2) {
+      if (esProblematica && !subtipo) {
+        setErrorSubtipo('Elegí un motivo para tu reporte de problemática.');
+        return;
+      }
       if (!descripcion.trim()) return;
       setPaso(3);
     }
@@ -176,6 +204,7 @@ export function FormularioReporteWizard({ tipoInicial }: FormularioReporteWizard
     evento.preventDefault();
     setErrorGeneral(null);
     if (!fotoUrl || !descripcion.trim() || !posicion) return;
+    if (esProblematica && !subtipo) return;
 
     setEnviando(true);
     try {
@@ -184,6 +213,7 @@ export function FormularioReporteWizard({ tipoInicial }: FormularioReporteWizard
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           tipo: tipoInicial,
+          subtipo: esProblematica ? subtipo : undefined,
           descripcion,
           fotoUrl,
           latitud: posicion[0],
@@ -247,6 +277,50 @@ export function FormularioReporteWizard({ tipoInicial }: FormularioReporteWizard
 
         {paso === 2 ? (
           <div className="flex flex-col gap-4">
+            {esProblematica ? (
+              <div className="flex flex-col gap-1.5">
+                <span className="text-sm font-medium text-slate-50" id="subtipo-label">
+                  ¿De qué se trata?
+                </span>
+                <div
+                  role="radiogroup"
+                  aria-labelledby="subtipo-label"
+                  aria-invalid={Boolean(errorSubtipo)}
+                  aria-describedby={errorSubtipo ? 'subtipo-error' : undefined}
+                  className="flex flex-wrap gap-2"
+                >
+                  {SUBTIPOS_PROBLEMATICA_SOPORTADOS.map((valor) => {
+                    const seleccionado = subtipo === valor;
+                    return (
+                      <button
+                        key={valor}
+                        type="button"
+                        role="radio"
+                        aria-checked={seleccionado}
+                        onClick={() => {
+                          setSubtipo(valor);
+                          setErrorSubtipo(null);
+                        }}
+                        className={
+                          seleccionado
+                            ? 'h-11 min-h-[44px] rounded-md border border-blue-500 bg-blue-500 px-4 text-[15px] font-medium text-slate-50'
+                            : 'h-11 min-h-[44px] rounded-md border border-slate-700 bg-slate-800 px-4 text-[15px] font-medium text-slate-50'
+                        }
+                      >
+                        {ETIQUETAS_SUBTIPO[valor]}
+                      </button>
+                    );
+                  })}
+                </div>
+                {errorSubtipo ? (
+                  <p id="subtipo-error" className="flex items-center gap-1.5 text-sm text-red-500">
+                    <span aria-hidden="true">⚠️</span>
+                    {errorSubtipo}
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
+
             <div className="flex flex-col gap-1.5">
               <label htmlFor="descripcion" className="text-sm font-medium text-slate-50">
                 ¿Qué pasó?
