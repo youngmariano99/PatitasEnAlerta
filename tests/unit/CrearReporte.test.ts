@@ -19,6 +19,7 @@ function crearFakes(opciones?: { permitirTasa?: boolean; fotoValida?: boolean })
       return Reporte.reconstruir('reporte-1', entidad, FECHA_FIJA);
     }),
     buscarPerdidosActivosPorZonaYEspecie: jest.fn().mockResolvedValue([]),
+    listar: jest.fn(),
   };
   const almacenamientoImagenes: jest.Mocked<IAlmacenamientoImagenes> = {
     esUrlDeImagenValida: jest.fn().mockReturnValue(opciones?.fotoValida ?? true),

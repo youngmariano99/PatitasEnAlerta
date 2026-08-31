@@ -12,6 +12,7 @@ import '@aplicacion/dtos/auth/VerificacionesDto';
 import '@aplicacion/dtos/mascotas/RegistrarMascotaDto';
 import '@aplicacion/dtos/mascotas/ActualizarMascotaDto';
 import '@aplicacion/dtos/reportes/CrearReporteDto';
+import '@aplicacion/dtos/reportes/ListarReportesDto';
 
 export const dynamic = 'force-dynamic';
 

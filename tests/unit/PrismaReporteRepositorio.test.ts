@@ -8,12 +8,26 @@ jest.mock('@infraestructura/adaptadores/prisma-client', () => ({
     reporte: {
       create: jest.fn(),
       findMany: jest.fn(),
+      count: jest.fn(),
     },
   },
 }));
 
 const { prisma } = jest.requireMock('@infraestructura/adaptadores/prisma-client') as {
-  prisma: { reporte: { create: jest.Mock; findMany: jest.Mock } };
+  prisma: { reporte: { create: jest.Mock; findMany: jest.Mock; count: jest.Mock } };
+};
+
+const SELECT_REPORTE_LISTADO = {
+  id: true,
+  tipo: true,
+  subtipo: true,
+  descripcion: true,
+  fotoUrl: true,
+  latitud: true,
+  longitud: true,
+  especie: true,
+  estado: true,
+  createdAt: true,
 };
 
 const SELECT_REPORTE = {
@@ -50,6 +64,7 @@ describe('PrismaReporteRepositorio', () => {
   beforeEach(() => {
     prisma.reporte.create.mockReset();
     prisma.reporte.findMany.mockReset();
+    prisma.reporte.count.mockReset();
   });
 
   describe('crear', () => {
@@ -152,6 +167,76 @@ describe('PrismaReporteRepositorio', () => {
       });
 
       expect(resultado).toEqual([]);
+    });
+  });
+
+  describe('listar', () => {
+    beforeEach(() => {
+      prisma.reporte.findMany.mockResolvedValue([filaReporte]);
+      prisma.reporte.count.mockResolvedValue(1);
+    });
+
+    it('sin `estado` explícito, filtra por los tres estados activos', async () => {
+      const repo = new PrismaReporteRepositorio();
+
+      const pagina = await repo.listar({}, 1, 50);
+
+      const wherePasado = prisma.reporte.findMany.mock.calls[0][0].where;
+      expect(wherePasado).toEqual({
+        deletedAt: null,
+        estado: { in: ['reportado', 'en_revision', 'en_atencion'] },
+      });
+      expect(prisma.reporte.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ orderBy: { createdAt: 'desc' }, skip: 0, take: 50, select: SELECT_REPORTE_LISTADO }),
+      );
+      expect(prisma.reporte.count).toHaveBeenCalledWith({ where: wherePasado });
+      expect(pagina).toEqual({ items: [filaReporte], total: 1, pagina: 1, porPagina: 50 });
+    });
+
+    it('un `estado` explícito reemplaza por completo el filtro de activos (incluye resuelto/cerrado)', async () => {
+      const repo = new PrismaReporteRepositorio();
+
+      await repo.listar({ estado: 'resuelto' }, 1, 50);
+
+      const wherePasado = prisma.reporte.findMany.mock.calls[0][0].where;
+      expect(wherePasado.estado).toBe('resuelto');
+    });
+
+    it('combina tipo + estado + zona simultáneamente', async () => {
+      const repo = new PrismaReporteRepositorio();
+
+      await repo.listar(
+        { tipo: 'perdido', estado: 'reportado', zona: { latitud: -37.9989, longitud: -61.3565, radioKm: 5 } },
+        1,
+        50,
+      );
+
+      const wherePasado = prisma.reporte.findMany.mock.calls[0][0].where;
+      expect(wherePasado).toMatchObject({
+        deletedAt: null,
+        estado: 'reportado',
+        tipo: 'perdido',
+        latitud: { gte: expect.any(Number), lte: expect.any(Number) },
+        longitud: { gte: expect.any(Number), lte: expect.any(Number) },
+      });
+    });
+
+    it('pagina 2 con porPagina 20 pide skip=20, take=20', async () => {
+      const repo = new PrismaReporteRepositorio();
+
+      await repo.listar({}, 2, 20);
+
+      expect(prisma.reporte.findMany).toHaveBeenCalledWith(expect.objectContaining({ skip: 20, take: 20 }));
+    });
+
+    it('nunca selecciona `reportadoPor` (proyección pública)', async () => {
+      const repo = new PrismaReporteRepositorio();
+
+      await repo.listar({}, 1, 50);
+
+      const selectPasado = prisma.reporte.findMany.mock.calls[0][0].select;
+      expect(selectPasado).not.toHaveProperty('reportadoPor');
+      expect(selectPasado).not.toHaveProperty('mascotaId');
     });
   });
 });
