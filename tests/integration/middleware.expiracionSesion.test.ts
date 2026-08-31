@@ -11,15 +11,21 @@ import { NextRequest } from 'next/server';
 
 const getUserMock = jest.fn();
 const getSessionMock = jest.fn();
+const rpcMock = jest.fn();
 
 jest.mock('@supabase/ssr', () => ({
-  createServerClient: jest.fn(() => ({ auth: { getUser: getUserMock, getSession: getSessionMock } })),
+  createServerClient: jest.fn(() => ({ auth: { getUser: getUserMock, getSession: getSessionMock }, rpc: rpcMock })),
 }));
 
 import { middleware } from '../../middleware';
 
 function crearRequest(pathname: string, method: string = 'GET'): NextRequest {
   return new NextRequest(`http://localhost${pathname}`, { method });
+}
+
+function autenticadoComoRol(rol: string) {
+  getUserMock.mockResolvedValue({ data: { user: { id: 'user-1' } }, error: null });
+  rpcMock.mockResolvedValue({ data: rol, error: null });
 }
 
 function sesionExpiradaHaceUnaHora() {
@@ -34,6 +40,7 @@ describe('middleware — expiración automática de sesión', () => {
   beforeEach(() => {
     getUserMock.mockReset();
     getSessionMock.mockReset();
+    rpcMock.mockReset();
   });
 
   describe('endpoints de API protegidos', () => {
@@ -162,6 +169,69 @@ describe('middleware — expiración automática de sesión', () => {
       const respuesta = await middleware(crearRequest('/api/reportes', 'POST'));
 
       expect(respuesta.status).toBe(200);
+    });
+  });
+
+  describe('Panel municipal — /municipio exige rol municipio/administrador (Paso 1)', () => {
+    it.each(['dueño', 'veterinario'])(
+      'redirige a "/" (no a /auth/login) a un usuario autenticado con rol %s',
+      async (rol) => {
+        autenticadoComoRol(rol);
+
+        const respuesta = await middleware(crearRequest('/municipio/dashboard'));
+
+        expect(respuesta.status).toBe(307);
+        const location = new URL(respuesta.headers.get('location')!);
+        expect(location.pathname).toBe('/');
+      },
+    );
+
+    it.each(['municipio', 'administrador'])('deja pasar a un usuario con rol %s', async (rol) => {
+      autenticadoComoRol(rol);
+
+      const respuesta = await middleware(crearRequest('/municipio/dashboard'));
+
+      expect(respuesta.status).toBe(200);
+    });
+
+    it('reutiliza rol_actual() vía RPC — no consulta la tabla usuarios a mano', async () => {
+      autenticadoComoRol('municipio');
+
+      await middleware(crearRequest('/municipio/dashboard'));
+
+      expect(rpcMock).toHaveBeenCalledWith('rol_actual');
+    });
+
+    it('redirige si rol_actual() no devuelve un rol resoluble (RPC falla o devuelve null)', async () => {
+      getUserMock.mockResolvedValue({ data: { user: { id: 'user-1' } }, error: null });
+      rpcMock.mockResolvedValue({ data: null, error: { message: 'función no disponible' } });
+
+      const respuesta = await middleware(crearRequest('/municipio/dashboard'));
+
+      expect(respuesta.status).toBe(307);
+      const location = new URL(respuesta.headers.get('location')!);
+      expect(location.pathname).toBe('/');
+    });
+
+    it('un usuario sin sesión sigue yendo a /auth/login (el chequeo de rol nunca corre antes que el de sesión)', async () => {
+      getUserMock.mockResolvedValue({ data: { user: null }, error: { message: 'sin sesión' } });
+      getSessionMock.mockResolvedValue(sinSesionLocal());
+
+      const respuesta = await middleware(crearRequest('/municipio/dashboard'));
+
+      expect(respuesta.status).toBe(307);
+      const location = new URL(respuesta.headers.get('location')!);
+      expect(location.pathname).toBe('/auth/login');
+      expect(rpcMock).not.toHaveBeenCalled();
+    });
+
+    it('otras rutas de página (ej. /mascotas) no exigen rol, solo sesión', async () => {
+      getUserMock.mockResolvedValue({ data: { user: { id: 'user-1' } }, error: null });
+
+      const respuesta = await middleware(crearRequest('/mascotas'));
+
+      expect(respuesta.status).toBe(200);
+      expect(rpcMock).not.toHaveBeenCalled();
     });
   });
 });

@@ -71,6 +71,14 @@ class RepositorioReportesEnMemoria implements IRepositorioReportes {
   async listar(_filtros: FiltrosListadoReportes, _pagina: number, _porPagina: number): Promise<PaginaReportes> {
     throw new Error('no usado en este test');
   }
+
+  async obtenerEstadoActual(): Promise<never> {
+    throw new Error('no usado en este test');
+  }
+
+  async actualizarEstado(): Promise<never> {
+    throw new Error('no usado en este test');
+  }
 }
 
 class NotificacionesRepositorioFalso implements INotificacionesRepositorio {

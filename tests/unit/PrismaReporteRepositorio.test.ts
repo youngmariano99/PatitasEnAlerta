@@ -3,19 +3,38 @@
  */
 import { PrismaReporteRepositorio } from '@infraestructura/adaptadores/PrismaReporteRepositorio';
 
+const txReporteFindFirstOrThrow = jest.fn();
+const txReporteUpdate = jest.fn();
+const txHistorialCreate = jest.fn();
+
 jest.mock('@infraestructura/adaptadores/prisma-client', () => ({
   prisma: {
     reporte: {
       create: jest.fn(),
       findMany: jest.fn(),
+      findFirst: jest.fn(),
       count: jest.fn(),
     },
+    $transaction: jest.fn(),
   },
 }));
 
 const { prisma } = jest.requireMock('@infraestructura/adaptadores/prisma-client') as {
-  prisma: { reporte: { create: jest.Mock; findMany: jest.Mock; count: jest.Mock } };
+  prisma: {
+    reporte: { create: jest.Mock; findMany: jest.Mock; findFirst: jest.Mock; count: jest.Mock };
+    $transaction: jest.Mock;
+  };
 };
+
+/** Simula prisma.$transaction ejecutando el callback contra un `tx` fake propio. */
+function mockearTransaccion() {
+  prisma.$transaction.mockImplementation(async (callback: (tx: unknown) => unknown) =>
+    callback({
+      reporte: { findFirstOrThrow: txReporteFindFirstOrThrow, update: txReporteUpdate },
+      reporteHistorialEstado: { create: txHistorialCreate },
+    }),
+  );
+}
 
 const SELECT_REPORTE_LISTADO = {
   id: true,
@@ -64,7 +83,12 @@ describe('PrismaReporteRepositorio', () => {
   beforeEach(() => {
     prisma.reporte.create.mockReset();
     prisma.reporte.findMany.mockReset();
+    prisma.reporte.findFirst.mockReset();
     prisma.reporte.count.mockReset();
+    prisma.$transaction.mockReset();
+    txReporteFindFirstOrThrow.mockReset();
+    txReporteUpdate.mockReset();
+    txHistorialCreate.mockReset();
   });
 
   describe('crear', () => {
@@ -237,6 +261,92 @@ describe('PrismaReporteRepositorio', () => {
       const selectPasado = prisma.reporte.findMany.mock.calls[0][0].select;
       expect(selectPasado).not.toHaveProperty('reportadoPor');
       expect(selectPasado).not.toHaveProperty('mascotaId');
+    });
+
+    it('combina tipo + estado + rango de fechas simultáneamente (Panel municipal)', async () => {
+      const repo = new PrismaReporteRepositorio();
+      const fechaDesde = new Date('2026-07-01T00:00:00.000Z');
+      const fechaHasta = new Date('2026-07-31T23:59:59.999Z');
+
+      await repo.listar({ tipo: 'problematica', estado: 'en_atencion', fechaDesde, fechaHasta }, 1, 50);
+
+      const wherePasado = prisma.reporte.findMany.mock.calls[0][0].where;
+      expect(wherePasado).toEqual({
+        deletedAt: null,
+        estado: 'en_atencion',
+        tipo: 'problematica',
+        createdAt: { gte: fechaDesde, lte: fechaHasta },
+      });
+    });
+
+    it('con un solo extremo del rango (solo fechaDesde), igual arma el filtro createdAt', async () => {
+      const repo = new PrismaReporteRepositorio();
+      const fechaDesde = new Date('2026-07-01T00:00:00.000Z');
+
+      await repo.listar({ fechaDesde }, 1, 50);
+
+      const wherePasado = prisma.reporte.findMany.mock.calls[0][0].where;
+      expect(wherePasado.createdAt).toEqual({ gte: fechaDesde, lte: undefined });
+    });
+
+    it('sin rango de fechas, no agrega la clave createdAt al WHERE', async () => {
+      const repo = new PrismaReporteRepositorio();
+
+      await repo.listar({}, 1, 50);
+
+      const wherePasado = prisma.reporte.findMany.mock.calls[0][0].where;
+      expect(wherePasado).not.toHaveProperty('createdAt');
+    });
+  });
+
+  describe('obtenerEstadoActual', () => {
+    it('devuelve el estado cuando el reporte existe y no está soft-deleted', async () => {
+      prisma.reporte.findFirst.mockResolvedValue({ estado: 'en_revision' });
+      const repo = new PrismaReporteRepositorio();
+
+      const estado = await repo.obtenerEstadoActual('reporte-1');
+
+      expect(prisma.reporte.findFirst).toHaveBeenCalledWith({
+        where: { id: 'reporte-1', deletedAt: null },
+        select: { estado: true },
+      });
+      expect(estado).toBe('en_revision');
+    });
+
+    it('devuelve null si no existe o está soft-deleted', async () => {
+      prisma.reporte.findFirst.mockResolvedValue(null);
+      const repo = new PrismaReporteRepositorio();
+
+      await expect(repo.obtenerEstadoActual('reporte-inexistente')).resolves.toBeNull();
+    });
+  });
+
+  describe('actualizarEstado', () => {
+    it('actualiza el reporte e inserta el historial en la misma transacción', async () => {
+      mockearTransaccion();
+      txReporteFindFirstOrThrow.mockResolvedValue({ estado: 'reportado' });
+      const repo = new PrismaReporteRepositorio();
+
+      const resultado = await repo.actualizarEstado('reporte-1', 'en_revision', 'municipio-1');
+
+      expect(txReporteUpdate).toHaveBeenCalledWith({ where: { id: 'reporte-1' }, data: { estado: 'en_revision' } });
+      expect(txHistorialCreate).toHaveBeenCalledWith({
+        data: { reporteId: 'reporte-1', estadoAnterior: 'reportado', estadoNuevo: 'en_revision', usuarioId: 'municipio-1' },
+      });
+      expect(resultado).toEqual({ id: 'reporte-1', estado: 'en_revision', estadoAnterior: 'reportado' });
+    });
+
+    it('re-lee el estado adentro de la transacción (no confía en un valor ya validado afuera)', async () => {
+      mockearTransaccion();
+      txReporteFindFirstOrThrow.mockResolvedValue({ estado: 'en_atencion' });
+      const repo = new PrismaReporteRepositorio();
+
+      await repo.actualizarEstado('reporte-1', 'resuelto', 'municipio-1');
+
+      expect(txReporteFindFirstOrThrow).toHaveBeenCalledWith({
+        where: { id: 'reporte-1', deletedAt: null },
+        select: { estado: true },
+      });
     });
   });
 });

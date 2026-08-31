@@ -8,6 +8,7 @@ import type {
   IRepositorioReportes,
   PaginaReportes,
   ReporteActivoResumen,
+  ReporteEstadoActualizado,
   ReporteListado,
 } from '@dominio/puertos/IRepositorioReportes';
 import type { DatosReporte } from '@dominio/entidades/Reporte';
@@ -144,6 +145,9 @@ export class PrismaReporteRepositorio implements IRepositorioReportes {
       estado: filtros.estado ?? { in: [...ESTADOS_REPORTE_ACTIVOS] },
       ...(filtros.tipo ? { tipo: filtros.tipo } : {}),
       ...(filtros.zona ? calcularRangoGeografico(filtros.zona) : {}),
+      ...(filtros.fechaDesde || filtros.fechaHasta
+        ? { createdAt: { gte: filtros.fechaDesde, lte: filtros.fechaHasta } }
+        : {}),
     };
 
     const [filas, total] = await Promise.all([
@@ -159,5 +163,37 @@ export class PrismaReporteRepositorio implements IRepositorioReportes {
 
     const items: ReporteListado[] = filas;
     return { items, total, pagina, porPagina };
+  }
+
+  async obtenerEstadoActual(id: string): Promise<string | null> {
+    const fila = await prisma.reporte.findFirst({
+      where: { id, deletedAt: null },
+      select: { estado: true },
+    });
+    return fila?.estado ?? null;
+  }
+
+  async actualizarEstado(reporteId: string, estadoNuevo: string, actualizadoPor: string): Promise<ReporteEstadoActualizado> {
+    return prisma.$transaction(async (tx) => {
+      // Re-lee el estado DENTRO de la transacción (no confía en el que
+      // ActualizarEstadoReporte.ts ya validó afuera): entre esa lectura y
+      // esta escritura pudo haber cambiado por otra request concurrente.
+      const actual = await tx.reporte.findFirstOrThrow({
+        where: { id: reporteId, deletedAt: null },
+        select: { estado: true },
+      });
+
+      await tx.reporte.update({ where: { id: reporteId }, data: { estado: estadoNuevo } });
+      await tx.reporteHistorialEstado.create({
+        data: {
+          reporteId,
+          estadoAnterior: actual.estado,
+          estadoNuevo,
+          usuarioId: actualizadoPor,
+        },
+      });
+
+      return { id: reporteId, estado: estadoNuevo, estadoAnterior: actual.estado };
+    });
   }
 }

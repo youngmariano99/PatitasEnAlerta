@@ -36,8 +36,35 @@ const RUTAS_API_PROTEGIDAS = ['/api/mascotas', '/api/perfil', '/api/admin', '/ap
 // ejecutar el caso de uso.
 const RUTAS_API_LECTURA_PUBLICA = ['/api/reportes'];
 
+// Páginas que, además de sesión, exigen un rol puntual — Panel municipal de
+// reportes activos (Módulo 2): '/municipio' completo (dashboard, eventos,
+// turnera, adopciones) es exclusivo de municipio/administrador, igual que
+// ya lo son las políticas RLS de esas tablas (docs/ROLES.md — `rol_actual()
+// IN ('municipio','administrador')`). El checklist pide reforzarlo también
+// acá, antes de que el panel llegue a renderizar.
+const RUTAS_PAGINA_CON_ROL_REQUERIDO: Array<{ prefijo: string; roles: readonly string[] }> = [
+  { prefijo: '/municipio', roles: ['municipio', 'administrador'] },
+];
+
 function esRutaProtegida(pathname: string, rutas: string[]): boolean {
   return rutas.some((ruta) => pathname.startsWith(ruta));
+}
+
+function rolesRequeridosPara(pathname: string): readonly string[] | null {
+  const entrada = RUTAS_PAGINA_CON_ROL_REQUERIDO.find((r) => pathname.startsWith(r.prefijo));
+  return entrada?.roles ?? null;
+}
+
+/**
+ * Reutiliza `rol_actual()` (misma función SQL que ya evalúan las políticas
+ * RLS — docs/ROLES.md 3.1) vía RPC, en vez de duplicar la lógica de
+ * "usuario → rol_id → nombre del rol" acá. `SECURITY DEFINER` la hace
+ * funcionar sin depender de que `usuarios` tenga (o no) RLS propia.
+ */
+async function obtenerRolActual(supabase: ReturnType<typeof createServerClient>): Promise<string | null> {
+  const { data, error } = await supabase.rpc('rol_actual');
+  if (error || typeof data !== 'string') return null;
+  return data;
 }
 
 /**
@@ -67,6 +94,15 @@ function redirigirALogin(request: NextRequest): NextResponse {
   const loginUrl = new URL('/auth/login', request.url);
   loginUrl.searchParams.set('redirectTo', request.nextUrl.pathname);
   return NextResponse.redirect(loginUrl);
+}
+
+/**
+ * A diferencia de "sin sesión" (→ /auth/login), un usuario autenticado con
+ * el rol equivocado no tiene nada que iniciar sesión de nuevo — se lo manda
+ * a la raíz en vez de mostrarle el panel municipal que no le corresponde.
+ */
+function redirigirPorRolInsuficiente(request: NextRequest): NextResponse {
+  return NextResponse.redirect(new URL('/', request.url));
 }
 
 export async function middleware(request: NextRequest) {
@@ -108,6 +144,14 @@ export async function middleware(request: NextRequest) {
 
     if (esApiProtegida) return respuestaJson401(errorAuth);
     return redirigirALogin(request);
+  }
+
+  const rolesRequeridos = rolesRequeridosPara(pathname);
+  if (rolesRequeridos) {
+    const rol = await obtenerRolActual(supabase);
+    if (!rol || !rolesRequeridos.includes(rol)) {
+      return redirigirPorRolInsuficiente(request);
+    }
   }
 
   return response;

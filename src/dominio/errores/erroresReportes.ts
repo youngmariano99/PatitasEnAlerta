@@ -27,3 +27,21 @@ export class LimiteDeReportesExcedidoError extends ErrorDominio {
     super('PEA-REP-004', 'Hiciste varios reportes en poco tiempo. Esperá unos minutos antes de enviar otro.', 429);
   }
 }
+
+export class ReporteNoEncontradoError extends ErrorDominio {
+  constructor() {
+    super('PEA-REP-005', 'No encontramos ese reporte o ya no está disponible.', 404);
+  }
+}
+
+export class CambioDeEstadoInvalidoError extends ErrorDominio {
+  constructor() {
+    super('PEA-REP-006', 'Ese cambio de estado no es válido en este momento.', 409);
+  }
+}
+
+export class SoloMunicipioActualizaEstadoError extends ErrorDominio {
+  constructor() {
+    super('PEA-REP-007', 'Solo el municipio puede actualizar el estado de un reporte.', 403);
+  }
+}
