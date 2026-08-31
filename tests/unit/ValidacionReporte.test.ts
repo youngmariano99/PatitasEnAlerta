@@ -55,14 +55,35 @@ describe('pipeline ValidacionReporte (Chain of Responsibility)', () => {
     expect(almacenamientoImagenes.esUrlDeImagenValida).not.toHaveBeenCalled();
   });
 
-  it('ValidadorEsquemaZod rechaza un tipo distinto de "perdido" con PEA-REP-001', async () => {
+  it('ValidadorEsquemaZod rechaza un tipo fuera de TIPOS_REPORTE_SOPORTADOS con PEA-REP-001', async () => {
     const { controlDeTasa, almacenamientoImagenes } = crearFakes();
     const pipeline = crearPipelineValidacionReporte({ controlDeTasa, almacenamientoImagenes });
-    const otroTipo = { ...datosValidos, tipo: 'encontrado' };
+    const tipoNoSoportado = { ...datosValidos, tipo: 'problematica' };
 
-    await expect(pipeline.manejar({ datosCrudos: otroTipo, reportadoPor: 'usuario-1' }, otroTipo)).rejects.toBeInstanceOf(
-      CategoriaReporteObligatoriaError,
-    );
+    await expect(
+      pipeline.manejar({ datosCrudos: tipoNoSoportado, reportadoPor: 'usuario-1' }, tipoNoSoportado),
+    ).rejects.toBeInstanceOf(CategoriaReporteObligatoriaError);
+  });
+
+  it('acepta tipo="encontrado" (mismo pipeline reutilizado, REP-02) y propaga especie', async () => {
+    const { controlDeTasa, almacenamientoImagenes } = crearFakes();
+    const pipeline = crearPipelineValidacionReporte({ controlDeTasa, almacenamientoImagenes });
+    const encontrado = { ...datosValidos, tipo: 'encontrado', especie: 'perro' };
+
+    const resultado = await pipeline.manejar({ datosCrudos: encontrado, reportadoPor: 'vecino-1' }, encontrado);
+
+    expect(resultado).toEqual({ ...encontrado, reportadoPor: 'vecino-1' });
+  });
+
+  it('acepta tipo="encontrado" sin mascotaId ni especie (vecino sin mascota propia registrada)', async () => {
+    const { controlDeTasa, almacenamientoImagenes } = crearFakes();
+    const pipeline = crearPipelineValidacionReporte({ controlDeTasa, almacenamientoImagenes });
+    const encontrado = { ...datosValidos, tipo: 'encontrado' };
+
+    const resultado = await pipeline.manejar({ datosCrudos: encontrado, reportadoPor: 'vecino-1' }, encontrado);
+
+    expect(resultado.mascotaId).toBeUndefined();
+    expect(resultado.especie).toBeUndefined();
   });
 
   it('ValidadorEsquemaZod corta la cadena con PEA-REP-002 si falta la foto', async () => {

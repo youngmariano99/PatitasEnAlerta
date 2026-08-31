@@ -1,6 +1,6 @@
 -- Siembra del Módulo 2 (Motor de Reportes Unificado): 220 reportes para
 -- poder probar paginación, filtros por tipo/estado y el mapa de calor antes
--- de ejercitar el alta manual (REP-01, CrearReporte).
+-- de ejercitar el alta manual (REP-01/REP-02, CrearReporte).
 -- Adaptado del bloque "reportes" de docs/SEED.md (mismo volumen, misma
 -- distribución de tipo/estado y el mismo jitter geográfico alrededor de
 -- Coronel Pringles) — a diferencia del script maestro, este no depende de
@@ -16,8 +16,9 @@
 
 BEGIN;
 
+-- 218 reportes aleatorios + 2 garantizados (bloque siguiente) = 220 en total.
 INSERT INTO reportes (tipo, subtipo, reportado_por, mascota_id, descripcion, foto_url,
-                       latitud, longitud, estado, created_at)
+                       latitud, longitud, especie, estado, created_at)
 SELECT
   t.tipo,
   CASE WHEN t.tipo = 'problematica'
@@ -35,9 +36,15 @@ SELECT
   'https://res.cloudinary.com/patitas-en-alerta/image/upload/v1/reportes/seed-' || gs || '.jpg',
   -37.9989 + (random() - 0.5) * 0.08,
   -61.3565 + (random() - 0.5) * 0.08,
+  -- 10% sin especie declarada (texto libre, mismo criterio que un reporte
+  -- real donde el vecino no la completó) — EvaluarCoincidenciaReporte omite
+  -- la búsqueda de coincidencias para esos casos, ver ERRORS.md.
+  CASE WHEN t.tipo IN ('perdido', 'encontrado') AND random() < 0.9
+       THEN (ARRAY['perro', 'gato'])[1 + floor(random() * 2)::int]
+       ELSE NULL END,
   t.estado,
   now() - (random() * 56 || ' days')::interval
-FROM generate_series(1, 220) AS gs
+FROM generate_series(1, 218) AS gs
 CROSS JOIN LATERAL (
   SELECT
     (ARRAY['perdido', 'encontrado', 'problematica'])[1 + floor(random() * 3)::int] AS tipo,
@@ -45,10 +52,33 @@ CROSS JOIN LATERAL (
 ) t
 WHERE EXISTS (SELECT 1 FROM usuarios WHERE rol_id = 1 AND deleted_at IS NULL);
 
+-- Par garantizado 'perdido' ↔ 'encontrado' coincidente en zona (a ~100m,
+-- muy por debajo del radio de 5km de EvaluarCoincidenciaReporte) y especie
+-- ('perro'), ambos activos ('reportado') — para poder demostrar/probar la
+-- notificación reporte_coincidente sin depender del azar del bloque anterior.
+INSERT INTO reportes (tipo, subtipo, reportado_por, mascota_id, descripcion, foto_url,
+                       latitud, longitud, especie, estado, created_at)
+SELECT 'perdido', NULL,
+       (SELECT id FROM usuarios WHERE rol_id = 1 AND deleted_at IS NULL ORDER BY random() LIMIT 1),
+       NULL, 'Mi perro Toby se perdió cerca de la plaza central, es muy sociable.',
+       'https://res.cloudinary.com/patitas-en-alerta/image/upload/v1/reportes/seed-match-perdido.jpg',
+       -37.9989, -61.3565, 'perro', 'reportado', now() - interval '2 days'
+WHERE EXISTS (SELECT 1 FROM usuarios WHERE rol_id = 1 AND deleted_at IS NULL);
+
+INSERT INTO reportes (tipo, subtipo, reportado_por, mascota_id, descripcion, foto_url,
+                       latitud, longitud, especie, estado, created_at)
+SELECT 'encontrado', NULL,
+       (SELECT id FROM usuarios WHERE rol_id = 1 AND deleted_at IS NULL ORDER BY random() LIMIT 1),
+       NULL, 'Encontré un perro suelto cerca de la plaza central, parece perdido.',
+       'https://res.cloudinary.com/patitas-en-alerta/image/upload/v1/reportes/seed-match-encontrado.jpg',
+       -37.9995, -61.3560, 'perro', 'reportado', now() - interval '1 day'
+WHERE EXISTS (SELECT 1 FROM usuarios WHERE rol_id = 1 AND deleted_at IS NULL);
+
 -- Historial de transiciones (1 a 3 por reporte, docs/SEED.md): un renglón
 -- 'reportado' → estado final para cada reporte que ya no está en 'reportado',
 -- usando al propio reportante como autor del cambio para no depender de un
--- usuario con rol municipio/administrador ya sembrado.
+-- usuario con rol municipio/administrador ya sembrado. El par garantizado de
+-- arriba queda deliberadamente en 'reportado' (activo) y no genera historial.
 INSERT INTO reportes_historial_estado (reporte_id, estado_anterior, estado_nuevo, usuario_id, registrado_en)
 SELECT r.id, 'reportado', r.estado, r.reportado_por, r.created_at + interval '1 day'
 FROM reportes r

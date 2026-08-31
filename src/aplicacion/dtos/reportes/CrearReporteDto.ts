@@ -1,13 +1,29 @@
 import { z } from 'zod';
 import { registroOpenApi, ErrorApiSchema } from '@aplicacion/dtos/openapi-registry';
+import { opcionalDeTexto } from '@aplicacion/dtos/zod-helpers';
 
 /**
- * Contrato de entrada del "Reporte exprés de mascota perdida" (Módulo 2).
- * `tipo` es un literal 'perdido' a propósito: este endpoint/formulario cubre
- * únicamente el flujo de mascota perdida de esta actividad — 'encontrado' y
- * 'problematica' (docs/SCHEMA.md, CHECK tipo) se habilitan en un ticket
- * posterior reutilizando el mismo pipeline. Enviar el campo `tipo` con
- * cualquier otro valor (o ausente) corta la cadena en ValidadorEsquemaZod.
+ * Tipos de reporte que este endpoint acepta. 'problematica' (docs/SCHEMA.md,
+ * CHECK tipo) queda para un ticket posterior reutilizando el mismo pipeline
+ * — no es un reporte sobre una mascota concreta, así que no encaja con
+ * `mascotaId`/`especie` tal como están modelados acá.
+ */
+export const TIPOS_REPORTE_SOPORTADOS = ['perdido', 'encontrado'] as const;
+export type TipoReporte = (typeof TIPOS_REPORTE_SOPORTADOS)[number];
+
+/**
+ * Contrato de entrada compartido por "Reporte exprés de mascota perdida"
+ * (REP-01) y "Reporte de mascota encontrada" (REP-02) — mismo caso de uso
+ * CrearReporte, mismo pipeline de validación, solo cambia `tipo`. Enviar el
+ * campo `tipo` ausente o con cualquier valor fuera de TIPOS_REPORTE_SOPORTADOS
+ * corta la cadena en ValidadorEsquemaZod con PEA-REP-001.
+ *
+ * `mascotaId` es opcional en ambos flujos: quien encuentra una mascota
+ * ajena no tiene (ni debería tener) una ficha propia que vincular.
+ * `especie` también es opcional (texto libre, mismo criterio que
+ * Mascota.especie) — cuando está presente, EvaluarCoincidenciaReporte la usa
+ * junto con la zona para notificar coincidencias 'perdido' ↔ 'encontrado'
+ * (REP-U-06); si se omite, ese reporte simplemente no participa del matching.
  *
  * `latitud`/`longitud` solo se tipan acá (número finito) — el rango
  * geográfico plausible lo verifica el eslabón ValidadorGeolocalizacion del
@@ -21,7 +37,7 @@ export const CrearReporteSchema = registroOpenApi.register(
   'CrearReporteDto',
   z
     .object({
-      tipo: z.literal('perdido', {
+      tipo: z.enum(TIPOS_REPORTE_SOPORTADOS, {
         required_error: 'Elegí una categoría para tu reporte antes de continuar.',
         invalid_type_error: 'Elegí una categoría para tu reporte antes de continuar.',
       }),
@@ -41,6 +57,7 @@ export const CrearReporteSchema = registroOpenApi.register(
         .number({ required_error: 'No pudimos obtener tu ubicación automáticamente. Marcala en el mapa.' })
         .finite('No pudimos obtener tu ubicación automáticamente. Marcala en el mapa.'),
       mascotaId: z.string().uuid('El identificador de la mascota no es válido.').optional(),
+      especie: opcionalDeTexto(40).openapi({ example: 'perro' }),
     })
     .openapi('CrearReporteDto'),
 );
@@ -67,6 +84,7 @@ export const ReporteCreadoSchema = registroOpenApi.register(
       fotoUrl: z.string(),
       latitud: z.number(),
       longitud: z.number(),
+      especie: z.string().nullable(),
       estado: z.string(),
       createdAt: z.string(),
     })
@@ -79,7 +97,7 @@ registroOpenApi.registerPath({
   method: 'post',
   path: '/reportes',
   tags: ['Reportes'],
-  summary: 'Publica un reporte exprés de mascota perdida (REP-01)',
+  summary: 'Publica un reporte exprés de mascota perdida o encontrada (REP-01 / REP-02)',
   request: {
     body: { content: { 'application/json': { schema: CrearReporteSchema } } },
   },
