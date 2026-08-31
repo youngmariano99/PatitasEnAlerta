@@ -1,17 +1,26 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { ZodError } from 'zod';
 import { container } from '@aplicacion/contenedor-di';
-import { CrearReporte } from '@aplicacion/casos-de-uso/reportes/CrearReporte';
 import { ListarReportes } from '@aplicacion/casos-de-uso/reportes/ListarReportes';
 import { ListarReportesQuerySchema } from '@aplicacion/dtos/reportes/ListarReportesDto';
+import { ConRateLimitDecorator } from '@infraestructura/decoradores/ConRateLimitDecorator';
 import { ErrorDominio } from '@dominio/errores/ErrorDominio';
+import { LimiteDeReportesExcedidoError } from '@dominio/errores/erroresReportes';
 import { PayloadInvalidoError } from '@dominio/errores/erroresAutenticacion';
 import { NoAutenticadoError } from '@dominio/errores/erroresTransversales';
 import { obtenerUsuarioAutenticado } from '@infraestructura/adaptadores/ContextoAutenticacionSupabase';
 import { logger } from '@infraestructura/logging/logger';
 
-function respuestaDeError(codigo: string, mensaje: string, statusHttp: number) {
-  return NextResponse.json({ codigo, mensaje }, { status: statusHttp });
+function respuestaDeError(codigo: string, mensaje: string, statusHttp: number, headers?: HeadersInit) {
+  return NextResponse.json({ codigo, mensaje }, { status: statusHttp, headers });
+}
+
+/** PEA-REP-004 (429): cabecera Retry-After cuando ConRateLimitDecorator.ts la informó (Paso 3 del ticket). */
+function cabecerasDeError(error: ErrorDominio): HeadersInit | undefined {
+  if (error instanceof LimiteDeReportesExcedidoError && error.reintentarEnSegundos !== undefined) {
+    return { 'Retry-After': String(error.reintentarEnSegundos) };
+  }
+  return undefined;
 }
 
 /**
@@ -63,7 +72,10 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const casoDeUso = container.resolve(CrearReporte);
+    // ConRateLimitDecorator (Decorator, GoF) en vez de CrearReporte directo:
+    // suma el límite anti-saturación (5/hora, usuarios no verificados) por
+    // fuera del caso de uso, sin que este último se entere de su existencia.
+    const casoDeUso = container.resolve(ConRateLimitDecorator);
     const resultado = await casoDeUso.ejecutar({
       datosCrudos: cuerpo,
       reportadoPor: usuarioAutenticado.id,
@@ -71,7 +83,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(resultado, { status: 201 });
   } catch (error) {
     if (error instanceof ErrorDominio) {
-      return respuestaDeError(error.codigo, error.message, error.statusHttp);
+      return respuestaDeError(error.codigo, error.message, error.statusHttp, cabecerasDeError(error));
     }
 
     logger.error({ err: error }, 'Error no controlado en POST /api/reportes');

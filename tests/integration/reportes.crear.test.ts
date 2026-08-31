@@ -13,6 +13,8 @@ import type {
 } from '@dominio/puertos/IRepositorioReportes';
 import type { IAlmacenamientoImagenes } from '@dominio/puertos/IAlmacenamientoImagenes';
 import type { IControlDeTasa } from '@dominio/puertos/IControlDeTasa';
+import type { IControlDeTasaConReintento, ResultadoControlDeTasa } from '@dominio/puertos/IControlDeTasaConReintento';
+import type { IRepositorioPerfil, ResumenPerfilPropio } from '@dominio/puertos/IRepositorioPerfil';
 import type { DatosNotificacion, INotificacionesRepositorio } from '@dominio/puertos/INotificacionesRepositorio';
 import type { DatosReporte } from '@dominio/entidades/Reporte';
 import { Reporte } from '@dominio/entidades/Reporte';
@@ -97,6 +99,34 @@ class ControlDeTasaFalso implements IControlDeTasa {
   }
 }
 
+const MAXIMO_ANTI_SATURACION_POR_HORA = 5;
+
+/**
+ * Simula la ventana deslizante real de UpstashControlDeTasaAntiSaturacion
+ * (5/hora) contando intentos por identificador — suficiente para el Paso 4
+ * del ticket ("agota el límite y verifica el rechazo del sexto intento en
+ * la misma hora") sin depender de Redis real.
+ */
+class ControlDeTasaAntiSaturacionFalso implements IControlDeTasaConReintento {
+  private intentosPorUsuario = new Map<string, number>();
+  public reintentarEnSegundos = 3600;
+
+  async evaluar(identificador: string): Promise<ResultadoControlDeTasa> {
+    const intentos = (this.intentosPorUsuario.get(identificador) ?? 0) + 1;
+    this.intentosPorUsuario.set(identificador, intentos);
+    const permitido = intentos <= MAXIMO_ANTI_SATURACION_POR_HORA;
+    return { permitido, reintentarEnSegundos: permitido ? 0 : this.reintentarEnSegundos };
+  }
+}
+
+class RepositorioPerfilFalso implements IRepositorioPerfil {
+  public estadoVerificacion = 'no_requerido';
+
+  async obtenerPerfilPropio(usuarioId: string): Promise<ResumenPerfilPropio | null> {
+    return { id: usuarioId, email: 'usuario@ejemplo.test', rol: 'dueño', estadoVerificacion: this.estadoVerificacion, verificadoEn: null };
+  }
+}
+
 function autenticarComo(usuarioId: string | null) {
   getUserMock.mockResolvedValue(
     usuarioId ? { data: { user: { id: usuarioId } }, error: null } : { data: { user: null }, error: { message: 'sin sesión' } },
@@ -124,16 +154,22 @@ describe('POST /api/reportes (REP-01/REP-02/REP-03, CrearReporte)', () => {
   let repositorioReportes: RepositorioReportesFalso;
   let repositorioNotificaciones: NotificacionesRepositorioFalso;
   let controlDeTasa: ControlDeTasaFalso;
+  let controlDeTasaAntiSaturacion: ControlDeTasaAntiSaturacionFalso;
+  let repositorioPerfil: RepositorioPerfilFalso;
 
   beforeEach(() => {
     getUserMock.mockReset();
     repositorioReportes = new RepositorioReportesFalso();
     repositorioNotificaciones = new NotificacionesRepositorioFalso();
     controlDeTasa = new ControlDeTasaFalso();
+    controlDeTasaAntiSaturacion = new ControlDeTasaAntiSaturacionFalso();
+    repositorioPerfil = new RepositorioPerfilFalso();
     container.reset();
     container.registerInstance<IRepositorioReportes>('IRepositorioReportes', repositorioReportes);
     container.registerInstance<INotificacionesRepositorio>('INotificacionesRepositorio', repositorioNotificaciones);
     container.registerInstance<IControlDeTasa>('IControlDeTasa', controlDeTasa);
+    container.registerInstance<IControlDeTasaConReintento>('IControlDeTasaConReintento', controlDeTasaAntiSaturacion);
+    container.registerInstance<IRepositorioPerfil>('IRepositorioPerfil', repositorioPerfil);
     container.registerSingleton<IAlmacenamientoImagenes>('IAlmacenamientoImagenes', AlmacenamientoImagenesFalso);
   });
 
@@ -195,6 +231,40 @@ describe('POST /api/reportes (REP-01/REP-02/REP-03, CrearReporte)', () => {
     const cuerpo = await respuesta.json();
     expect(cuerpo.codigo).toBe('PEA-REP-004');
     expect(repositorioReportes.creados).toHaveLength(0);
+  });
+
+  describe('ConRateLimitDecorator — límite anti-saturación (5/hora, usuarios no verificados)', () => {
+    // Paso 4 del checklist: agota el límite y verifica el rechazo del sexto intento en la misma hora.
+    it('permite los primeros 5 reportes en la hora y rechaza el sexto con 429 / PEA-REP-004 + Retry-After', async () => {
+      autenticarComo('usuario-no-verificado');
+      repositorioPerfil.estadoVerificacion = 'no_requerido';
+      controlDeTasaAntiSaturacion.reintentarEnSegundos = 1800;
+
+      for (let intento = 1; intento <= 5; intento += 1) {
+        const respuesta = await POST(crearRequest(reporteValido));
+        expect(respuesta.status).toBe(201);
+      }
+
+      const sextoIntento = await POST(crearRequest(reporteValido));
+
+      expect(sextoIntento.status).toBe(429);
+      const cuerpo = await sextoIntento.json();
+      expect(cuerpo.codigo).toBe('PEA-REP-004');
+      expect(sextoIntento.headers.get('Retry-After')).toBe('1800');
+      expect(repositorioReportes.creados).toHaveLength(5);
+    });
+
+    it('un usuario verificado no queda sujeto a este límite (o se documenta explícitamente si lo estuviera): el sexto intento igual se acepta', async () => {
+      autenticarComo('usuario-verificado');
+      repositorioPerfil.estadoVerificacion = 'verificado';
+
+      for (let intento = 1; intento <= 6; intento += 1) {
+        const respuesta = await POST(crearRequest(reporteValido));
+        expect(respuesta.status).toBe(201);
+      }
+
+      expect(repositorioReportes.creados).toHaveLength(6);
+    });
   });
 
   it('publica el reporte "perdido" con éxito, con estado inicial "reportado", y no dispara la búsqueda de coincidencias', async () => {

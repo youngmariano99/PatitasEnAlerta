@@ -11,6 +11,7 @@ import type { IRepositorioVerificaciones } from '@dominio/puertos/IRepositorioVe
 import type { INotificacionesRepositorio } from '@dominio/puertos/INotificacionesRepositorio';
 import type { IRepositorioReportes } from '@dominio/puertos/IRepositorioReportes';
 import type { IControlDeTasa } from '@dominio/puertos/IControlDeTasa';
+import type { IControlDeTasaConReintento } from '@dominio/puertos/IControlDeTasaConReintento';
 import { PrismaUsuarioRepositorio } from '@infraestructura/adaptadores/PrismaUsuarioRepositorio';
 import { SupabaseAuthAdapter } from '@infraestructura/adaptadores/SupabaseAuthAdapter';
 import { PrismaMascotaRepositorio } from '@infraestructura/adaptadores/PrismaMascotaRepositorio';
@@ -22,6 +23,7 @@ import { PrismaVerificacionesRepositorio } from '@infraestructura/adaptadores/Pr
 import { PrismaNotificacionesRepositorio } from '@infraestructura/adaptadores/PrismaNotificacionesRepositorio';
 import { PrismaReporteRepositorio } from '@infraestructura/adaptadores/PrismaReporteRepositorio';
 import { UpstashControlDeTasa } from '@infraestructura/adaptadores/UpstashControlDeTasa';
+import { UpstashControlDeTasaAntiSaturacion } from '@infraestructura/adaptadores/UpstashControlDeTasaAntiSaturacion';
 
 /**
  * Punto único de registro de dependencias (patrón Singleton para el propio
@@ -45,5 +47,6 @@ container.registerSingleton<IRepositorioVerificaciones>('IRepositorioVerificacio
 container.registerSingleton<INotificacionesRepositorio>('INotificacionesRepositorio', PrismaNotificacionesRepositorio);
 container.registerSingleton<IRepositorioReportes>('IRepositorioReportes', PrismaReporteRepositorio);
 container.registerSingleton<IControlDeTasa>('IControlDeTasa', UpstashControlDeTasa);
+container.registerSingleton<IControlDeTasaConReintento>('IControlDeTasaConReintento', UpstashControlDeTasaAntiSaturacion);
 
 export { container };
