@@ -14,6 +14,8 @@ function crearFakes(coincidencias: ReporteActivoResumen[] = []) {
   };
   const repositorioNotificaciones: jest.Mocked<INotificacionesRepositorio> = {
     crear: jest.fn().mockResolvedValue(undefined),
+    listarPorUsuario: jest.fn(),
+    marcarComoLeida: jest.fn(),
   };
   return { repositorioReportes, repositorioNotificaciones };
 }

@@ -31,6 +31,8 @@ function crearFakes(opciones?: { rol?: string }) {
   };
   const repositorioNotificaciones: jest.Mocked<INotificacionesRepositorio> = {
     crear: jest.fn().mockResolvedValue(undefined),
+    listarPorUsuario: jest.fn(),
+    marcarComoLeida: jest.fn(),
   };
   return { repositorioPerfil, repositorioVerificaciones, repositorioNotificaciones };
 }
