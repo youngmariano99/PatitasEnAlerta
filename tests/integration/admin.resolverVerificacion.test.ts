@@ -80,6 +80,14 @@ class RepositorioNotificacionesFalso implements INotificacionesRepositorio {
   async crear(datos: DatosNotificacion): Promise<void> {
     this.creadas.push(datos);
   }
+
+  async listarPorUsuario(): Promise<never> {
+    throw new Error('no usado en este test');
+  }
+
+  async marcarComoLeida(): Promise<boolean> {
+    throw new Error('no usado en este test');
+  }
 }
 
 function autenticarComo(usuarioId: string) {

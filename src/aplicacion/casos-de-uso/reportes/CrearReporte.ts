@@ -1,12 +1,12 @@
 import 'reflect-metadata';
 import { injectable, inject } from 'tsyringe';
 import { CasoDeUsoBase } from '@aplicacion/casos-de-uso/CasoDeUsoBase';
-import { EvaluarCoincidenciaReporte } from '@aplicacion/casos-de-uso/reportes/EvaluarCoincidenciaReporte';
 import { crearPipelineValidacionReporte } from '@aplicacion/pipelines/ValidacionReporte';
 import type { ComandoCrearReporte, ReporteCreado } from '@aplicacion/dtos/reportes/CrearReporteDto';
 import type { IRepositorioReportes } from '@dominio/puertos/IRepositorioReportes';
 import type { IAlmacenamientoImagenes } from '@dominio/puertos/IAlmacenamientoImagenes';
 import type { IControlDeTasa } from '@dominio/puertos/IControlDeTasa';
+import { DetectarCoincidenciaReporteJob } from '@infraestructura/jobs/DetectarCoincidenciaReporteJob';
 import { logger } from '@infraestructura/logging/logger';
 
 /** Payload crudo del formulario + quién reporta, resuelto por el route handler desde la sesión. */
@@ -22,7 +22,9 @@ export interface EntradaCrearReporte {
  * autenticado puede reportar, sin verificación de propiedad de por medio) →
  * persistir (insert en `reportes` con `estado='reportado'`, ver
  * IRepositorioReportes) → publicarEvento (Observer: emite `ReporteCreado` y,
- * cuando `tipo === 'encontrado'`, dispara EvaluarCoincidenciaReporte).
+ * cuando `tipo === 'encontrado'`, programa DetectarCoincidenciaReporteJob —
+ * SIN esperarlo: el job corre asincrónico respecto de esta respuesta HTTP,
+ * ver DetectarCoincidenciaReporteJob.ts).
  *
  * Un único caso de uso cubre REP-01 (mascota perdida), REP-02 (mascota
  * encontrada) y REP-03 (problemática urbana): `tipo` es el parámetro que
@@ -37,7 +39,7 @@ export class CrearReporte extends CasoDeUsoBase<EntradaCrearReporte, ReporteCrea
     @inject('IRepositorioReportes') private readonly repositorioReportes: IRepositorioReportes,
     @inject('IAlmacenamientoImagenes') private readonly almacenamientoImagenes: IAlmacenamientoImagenes,
     @inject('IControlDeTasa') private readonly controlDeTasa: IControlDeTasa,
-    private readonly evaluarCoincidencia: EvaluarCoincidenciaReporte,
+    private readonly detectarCoincidenciaJob: DetectarCoincidenciaReporteJob,
   ) {
     super();
   }
@@ -100,14 +102,9 @@ export class CrearReporte extends CasoDeUsoBase<EntradaCrearReporte, ReporteCrea
 
     if (resultado.tipo !== 'encontrado') return;
 
-    // Igual que la notificación en ResolverVerificacionCommand: un problema
-    // al evaluar coincidencias es un incidente aparte, nunca un motivo para
-    // que el vecino vea un error sobre un reporte que en realidad sí se
-    // publicó.
-    try {
-      await this.evaluarCoincidencia.ejecutar(resultado);
-    } catch (error) {
-      logger.error({ err: error, reporteId: resultado.id }, 'No se pudo evaluar coincidencias del reporte "encontrado"');
-    }
+    // Deliberadamente sin `await`: el job (y sus propios errores, que
+    // maneja internamente) no debe retrasar ni afectar esta respuesta HTTP
+    // — ver DetectarCoincidenciaReporteJob.ts para el porqué es seguro acá.
+    this.detectarCoincidenciaJob.programar(resultado);
   }
 }
