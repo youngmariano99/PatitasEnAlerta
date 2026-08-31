@@ -2,6 +2,7 @@
  * @jest-environment node
  */
 import { CrearReporte } from '@aplicacion/casos-de-uso/reportes/CrearReporte';
+import type { EvaluarCoincidenciaReporte } from '@aplicacion/casos-de-uso/reportes/EvaluarCoincidenciaReporte';
 import type { DatosNuevoReporte, IRepositorioReportes } from '@dominio/puertos/IRepositorioReportes';
 import type { IAlmacenamientoImagenes } from '@dominio/puertos/IAlmacenamientoImagenes';
 import type { IControlDeTasa } from '@dominio/puertos/IControlDeTasa';
@@ -17,6 +18,7 @@ function crearFakes(opciones?: { permitirTasa?: boolean; fotoValida?: boolean })
       const entidad: DatosReporte = { ...datos, estado: 'reportado' };
       return Reporte.reconstruir('reporte-1', entidad, FECHA_FIJA);
     }),
+    buscarPerdidosActivosPorZonaYEspecie: jest.fn().mockResolvedValue([]),
   };
   const almacenamientoImagenes: jest.Mocked<IAlmacenamientoImagenes> = {
     esUrlDeImagenValida: jest.fn().mockReturnValue(opciones?.fotoValida ?? true),
@@ -24,7 +26,10 @@ function crearFakes(opciones?: { permitirTasa?: boolean; fotoValida?: boolean })
   const controlDeTasa: jest.Mocked<IControlDeTasa> = {
     permitir: jest.fn().mockResolvedValue(opciones?.permitirTasa ?? true),
   };
-  return { repositorioReportes, almacenamientoImagenes, controlDeTasa };
+  const evaluarCoincidencia = {
+    ejecutar: jest.fn().mockResolvedValue(undefined),
+  } as jest.Mocked<Pick<EvaluarCoincidenciaReporte, 'ejecutar'>> as jest.Mocked<EvaluarCoincidenciaReporte>;
+  return { repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia };
 }
 
 const datosCrudosValidos = {
@@ -36,14 +41,15 @@ const datosCrudosValidos = {
 };
 
 describe('CrearReporte', () => {
-  it('crea el reporte con estado inicial "reportado" y mascotaId=null cuando no se declara', async () => {
-    const { repositorioReportes, almacenamientoImagenes, controlDeTasa } = crearFakes();
-    const caso = new CrearReporte(repositorioReportes, almacenamientoImagenes, controlDeTasa);
+  it('crea el reporte con estado inicial "reportado" y mascotaId/especie=null cuando no se declaran', async () => {
+    const { repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia } = crearFakes();
+    const caso = new CrearReporte(repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia);
 
     const resultado = await caso.ejecutar({ datosCrudos: datosCrudosValidos, reportadoPor: 'usuario-1' });
 
     expect(resultado.estado).toBe('reportado');
     expect(resultado.mascotaId).toBeNull();
+    expect(resultado.especie).toBeNull();
     expect(resultado.reportadoPor).toBe('usuario-1');
     expect(repositorioReportes.crear).toHaveBeenCalledWith({
       tipo: 'perdido',
@@ -54,22 +60,23 @@ describe('CrearReporte', () => {
       fotoUrl: datosCrudosValidos.fotoUrl,
       latitud: datosCrudosValidos.latitud,
       longitud: datosCrudosValidos.longitud,
+      especie: null,
     });
   });
 
-  it('persiste mascotaId cuando se declara', async () => {
-    const { repositorioReportes, almacenamientoImagenes, controlDeTasa } = crearFakes();
-    const caso = new CrearReporte(repositorioReportes, almacenamientoImagenes, controlDeTasa);
+  it('persiste mascotaId y especie cuando se declaran', async () => {
+    const { repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia } = crearFakes();
+    const caso = new CrearReporte(repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia);
     const mascotaId = '11111111-1111-1111-1111-111111111111';
 
-    await caso.ejecutar({ datosCrudos: { ...datosCrudosValidos, mascotaId }, reportadoPor: 'usuario-1' });
+    await caso.ejecutar({ datosCrudos: { ...datosCrudosValidos, mascotaId, especie: 'perro' }, reportadoPor: 'usuario-1' });
 
-    expect(repositorioReportes.crear).toHaveBeenCalledWith(expect.objectContaining({ mascotaId }));
+    expect(repositorioReportes.crear).toHaveBeenCalledWith(expect.objectContaining({ mascotaId, especie: 'perro' }));
   });
 
   it('rechaza fail-fast (pipeline) sin categoría antes de tocar el repositorio', async () => {
-    const { repositorioReportes, almacenamientoImagenes, controlDeTasa } = crearFakes();
-    const caso = new CrearReporte(repositorioReportes, almacenamientoImagenes, controlDeTasa);
+    const { repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia } = crearFakes();
+    const caso = new CrearReporte(repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { tipo: _tipo, ...sinTipo } = datosCrudosValidos;
 
@@ -80,12 +87,58 @@ describe('CrearReporte', () => {
   });
 
   it('rechaza una fotoUrl que no pertenece a nuestra cuenta de Cloudinary, sin persistir nada', async () => {
-    const { repositorioReportes, almacenamientoImagenes, controlDeTasa } = crearFakes({ fotoValida: false });
-    const caso = new CrearReporte(repositorioReportes, almacenamientoImagenes, controlDeTasa);
+    const { repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia } = crearFakes({
+      fotoValida: false,
+    });
+    const caso = new CrearReporte(repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia);
 
     await expect(caso.ejecutar({ datosCrudos: datosCrudosValidos, reportadoPor: 'usuario-1' })).rejects.toBeInstanceOf(
       FotoReporteObligatoriaError,
     );
     expect(repositorioReportes.crear).not.toHaveBeenCalled();
+  });
+
+  it('reutiliza el mismo caso de uso para tipo=\'encontrado\' sin exigir mascotaId', async () => {
+    const { repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia } = crearFakes();
+    const caso = new CrearReporte(repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia);
+
+    const resultado = await caso.ejecutar({
+      datosCrudos: { ...datosCrudosValidos, tipo: 'encontrado', especie: 'perro' },
+      reportadoPor: 'vecino-sin-mascotas',
+    });
+
+    expect(resultado.tipo).toBe('encontrado');
+    expect(resultado.mascotaId).toBeNull();
+  });
+
+  it('dispara EvaluarCoincidenciaReporte tras persistir un reporte "encontrado"', async () => {
+    const { repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia } = crearFakes();
+    const caso = new CrearReporte(repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia);
+
+    const resultado = await caso.ejecutar({
+      datosCrudos: { ...datosCrudosValidos, tipo: 'encontrado', especie: 'perro' },
+      reportadoPor: 'usuario-1',
+    });
+
+    expect(evaluarCoincidencia.ejecutar).toHaveBeenCalledWith(resultado);
+  });
+
+  it('NO dispara EvaluarCoincidenciaReporte para un reporte "perdido"', async () => {
+    const { repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia } = crearFakes();
+    const caso = new CrearReporte(repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia);
+
+    await caso.ejecutar({ datosCrudos: datosCrudosValidos, reportadoPor: 'usuario-1' });
+
+    expect(evaluarCoincidencia.ejecutar).not.toHaveBeenCalled();
+  });
+
+  it('no falla la creación del reporte si la evaluación de coincidencias rechaza (no bloqueante)', async () => {
+    const { repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia } = crearFakes();
+    evaluarCoincidencia.ejecutar.mockRejectedValue(new Error('el job de coincidencias está caído'));
+    const caso = new CrearReporte(repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia);
+
+    await expect(
+      caso.ejecutar({ datosCrudos: { ...datosCrudosValidos, tipo: 'encontrado', especie: 'perro' }, reportadoPor: 'usuario-1' }),
+    ).resolves.toMatchObject({ tipo: 'encontrado', estado: 'reportado' });
   });
 });

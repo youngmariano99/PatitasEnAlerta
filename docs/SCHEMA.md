@@ -117,13 +117,18 @@ CREATE TABLE reportes (
   foto_url TEXT NOT NULL,
   latitud DOUBLE PRECISION NOT NULL,
   longitud DOUBLE PRECISION NOT NULL,
+  -- Especie del animal (texto libre, mismo criterio que mascotas.especie).
+  -- Nullable: mascota_id es opcional, así que no todo reporte tiene de dónde
+  -- derivarla. Sostiene la coincidencia zona+especie entre 'perdido' y
+  -- 'encontrado' (REP-U-06) — ver EvaluarCoincidenciaReporte.ts.
+  especie TEXT NULL,
   estado TEXT NOT NULL DEFAULT 'reportado'
     CHECK (estado IN ('reportado','en_revision','en_atencion','resuelto','cerrado')),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   deleted_at TIMESTAMPTZ NULL
 );
-CREATE INDEX ix_reportes_tipo_estado ON reportes (tipo, estado) WHERE deleted_at IS NULL;
+CREATE INDEX ix_reportes_tipo_estado_especie ON reportes (tipo, estado, especie) WHERE deleted_at IS NULL;
 CREATE INDEX ix_reportes_geo ON reportes (latitud, longitud);
 CREATE INDEX ix_reportes_reportado_por ON reportes (reportado_por);
 CREATE INDEX ix_reportes_embedding_hnsw ON reportes USING hnsw (descripcion_embedding vector_cosine_ops);

@@ -139,6 +139,11 @@ model Reporte {
   fotoUrl               String    @map("foto_url")
   latitud               Float
   longitud              Float
+  // Especie del animal (texto libre, mismo criterio que Mascota.especie).
+  // Nullable: no todo reporte se vincula a una mascota registrada (mascota_id
+  // opcional). Sostiene la coincidencia zona+especie entre 'perdido' y
+  // 'encontrado' (REP-U-06, docs/PLANIFICACION.md) — ver EvaluarCoincidenciaReporte.
+  especie               String?
   estado                String    @default("reportado")
   createdAt             DateTime  @default(now()) @map("created_at")
   updatedAt             DateTime  @default(now()) @updatedAt @map("updated_at")
@@ -149,7 +154,7 @@ model Reporte {
   historialEstado     ReporteHistorialEstado[]
 
   @@map("reportes")
-  @@index([tipo, estado])
+  @@index([tipo, estado, especie])
   @@index([latitud, longitud])
   @@index([reportadoPor])
 }
