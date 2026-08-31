@@ -90,7 +90,7 @@ const reporteValido = {
   longitud: -61.3565,
 };
 
-describe('POST /api/reportes (REP-01/REP-02, CrearReporte)', () => {
+describe('POST /api/reportes (REP-01/REP-02/REP-03, CrearReporte)', () => {
   let repositorioReportes: RepositorioReportesFalso;
   let repositorioNotificaciones: NotificacionesRepositorioFalso;
   let controlDeTasa: ControlDeTasaFalso;
@@ -244,4 +244,64 @@ describe('POST /api/reportes (REP-01/REP-02, CrearReporte)', () => {
     expect(respuesta.status).toBe(201);
     expect(repositorioReportes.llamadasBusquedaCoincidencias).toHaveLength(0);
   });
+
+  it('rechaza tipo="problematica" sin subtipo (400 / PEA-REP-001)', async () => {
+    autenticarComo('usuario-1');
+
+    const respuesta = await POST(crearRequest({ ...reporteValido, tipo: 'problematica' }));
+
+    expect(respuesta.status).toBe(400);
+    const cuerpo = await respuesta.json();
+    expect(cuerpo.codigo).toBe('PEA-REP-001');
+    expect(repositorioReportes.creados).toHaveLength(0);
+  });
+
+  it('rechaza un subtipo fuera del CHECK (animal_suelto | foco_sanitario | accidente_vial) con 400 / PEA-REP-001', async () => {
+    autenticarComo('usuario-1');
+
+    const respuesta = await POST(
+      crearRequest({ ...reporteValido, tipo: 'problematica', subtipo: 'incendio_forestal' }),
+    );
+
+    expect(respuesta.status).toBe(400);
+    const cuerpo = await respuesta.json();
+    expect(cuerpo.codigo).toBe('PEA-REP-001');
+    expect(repositorioReportes.creados).toHaveLength(0);
+  });
+
+  it('publica un reporte "problematica" con subtipo válido, con mascota_id siempre NULL en la fila persistida', async () => {
+    autenticarComo('usuario-1');
+
+    const respuesta = await POST(
+      crearRequest({
+        ...reporteValido,
+        tipo: 'problematica',
+        subtipo: 'animal_suelto',
+        mascotaId: '11111111-1111-1111-1111-111111111111',
+      }),
+    );
+
+    expect(respuesta.status).toBe(201);
+    const cuerpo = await respuesta.json();
+    expect(cuerpo.tipo).toBe('problematica');
+    expect(cuerpo.subtipo).toBe('animal_suelto');
+    expect(cuerpo.mascotaId).toBeNull();
+    expect(repositorioReportes.creados[0]).toMatchObject({
+      tipo: 'problematica',
+      subtipo: 'animal_suelto',
+      mascotaId: null,
+    });
+    expect(repositorioReportes.llamadasBusquedaCoincidencias).toHaveLength(0);
+  });
+
+  it.each(['animal_suelto', 'foco_sanitario', 'accidente_vial'])(
+    'acepta el subtipo "%s" del CHECK',
+    async (subtipo) => {
+      autenticarComo('usuario-1');
+
+      const respuesta = await POST(crearRequest({ ...reporteValido, tipo: 'problematica', subtipo }));
+
+      expect(respuesta.status).toBe(201);
+    },
+  );
 });

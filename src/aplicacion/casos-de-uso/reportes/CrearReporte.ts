@@ -24,12 +24,12 @@ export interface EntradaCrearReporte {
  * IRepositorioReportes) → publicarEvento (Observer: emite `ReporteCreado` y,
  * cuando `tipo === 'encontrado'`, dispara EvaluarCoincidenciaReporte).
  *
- * Un único caso de uso cubre tanto REP-01 (reporte exprés de mascota
- * perdida) como REP-02 (reporte de mascota encontrada): `tipo` es el único
- * parámetro que cambia entre ambos flujos — ver CrearReporteDto,
- * TIPOS_REPORTE_SOPORTADOS. No hay ninguna rama de código específica de
- * 'perdido' vs. 'encontrado' en este archivo más allá de qué evento dispara
- * publicarEvento().
+ * Un único caso de uso cubre REP-01 (mascota perdida), REP-02 (mascota
+ * encontrada) y REP-03 (problemática urbana): `tipo` es el parámetro que
+ * cambia entre los tres flujos — ver CrearReporteDto, TIPOS_REPORTE_SOPORTADOS.
+ * La única rama de código específica por tipo vive en `persistir()` (forzar
+ * `mascotaId=null` en 'problematica') y en `publicarEvento()` (qué evento
+ * dispara cada tipo) — todo lo demás (validar, autorizar) es idéntico.
  */
 @injectable()
 export class CrearReporte extends CasoDeUsoBase<EntradaCrearReporte, ReporteCreado, ComandoCrearReporte> {
@@ -59,11 +59,19 @@ export class CrearReporte extends CasoDeUsoBase<EntradaCrearReporte, ReporteCrea
   }
 
   protected async persistir(dato: ComandoCrearReporte): Promise<ReporteCreado> {
+    const esProblematica = dato.tipo === 'problematica';
+
     const reporte = await this.repositorioReportes.crear({
       tipo: dato.tipo,
-      subtipo: null,
+      // `subtipo` solo tiene sentido para 'problematica' (ValidadorEsquemaZod
+      // ya lo exigió ahí vía superRefine); para 'perdido'/'encontrado' se
+      // ignora aunque el cliente lo haya enviado.
+      subtipo: esProblematica ? (dato.subtipo ?? null) : null,
       reportadoPor: dato.reportadoPor,
-      mascotaId: dato.mascotaId ?? null,
+      // Una problemática urbana nunca está vinculada a una mascota
+      // registrada — se fuerza null acá aunque el cliente declare
+      // mascotaId, defensa en profundidad más allá de lo que ya impide la UI.
+      mascotaId: esProblematica ? null : dato.mascotaId ?? null,
       descripcion: dato.descripcion,
       fotoUrl: dato.fotoUrl,
       latitud: dato.latitud,
@@ -74,6 +82,7 @@ export class CrearReporte extends CasoDeUsoBase<EntradaCrearReporte, ReporteCrea
     return {
       id: reporte.id,
       tipo: reporte.tipo,
+      subtipo: reporte.subtipo,
       reportadoPor: reporte.reportadoPor,
       mascotaId: reporte.mascotaId,
       descripcion: reporte.descripcion,

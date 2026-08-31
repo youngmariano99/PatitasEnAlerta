@@ -1,6 +1,9 @@
 -- Siembra del Módulo 2 (Motor de Reportes Unificado): 220 reportes para
 -- poder probar paginación, filtros por tipo/estado y el mapa de calor antes
--- de ejercitar el alta manual (REP-01/REP-02, CrearReporte).
+-- de ejercitar el alta manual (REP-01/REP-02/REP-03, CrearReporte).
+-- Los reportes 'problematica' ya distribuían sus 3 subtipos al azar
+-- (animal_suelto/foco_sanitario/accidente_vial) desde el bloque original —
+-- verificado como parte de esta actividad, sin cambios necesarios acá.
 -- Adaptado del bloque "reportes" de docs/SEED.md (mismo volumen, misma
 -- distribución de tipo/estado y el mismo jitter geográfico alrededor de
 -- Coronel Pringles) — a diferencia del script maestro, este no depende de

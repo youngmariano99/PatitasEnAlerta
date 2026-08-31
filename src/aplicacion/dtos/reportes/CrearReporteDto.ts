@@ -2,27 +2,41 @@ import { z } from 'zod';
 import { registroOpenApi, ErrorApiSchema } from '@aplicacion/dtos/openapi-registry';
 import { opcionalDeTexto } from '@aplicacion/dtos/zod-helpers';
 
-/**
- * Tipos de reporte que este endpoint acepta. 'problematica' (docs/SCHEMA.md,
- * CHECK tipo) queda para un ticket posterior reutilizando el mismo pipeline
- * — no es un reporte sobre una mascota concreta, así que no encaja con
- * `mascotaId`/`especie` tal como están modelados acá.
- */
-export const TIPOS_REPORTE_SOPORTADOS = ['perdido', 'encontrado'] as const;
+/** Tipos de reporte que este endpoint acepta (docs/SCHEMA.md, CHECK tipo). */
+export const TIPOS_REPORTE_SOPORTADOS = ['perdido', 'encontrado', 'problematica'] as const;
 export type TipoReporte = (typeof TIPOS_REPORTE_SOPORTADOS)[number];
 
 /**
+ * Subtipos válidos exclusivamente para `tipo='problematica'` (docs/SCHEMA.md,
+ * CHECK subtipo). Selección visual obligatoria en la UI — nunca texto libre
+ * (NFR de validación de esquema estricta, Módulo 2).
+ */
+export const SUBTIPOS_PROBLEMATICA_SOPORTADOS = ['animal_suelto', 'foco_sanitario', 'accidente_vial'] as const;
+export type SubtipoProblematica = (typeof SUBTIPOS_PROBLEMATICA_SOPORTADOS)[number];
+
+/**
  * Contrato de entrada compartido por "Reporte exprés de mascota perdida"
- * (REP-01) y "Reporte de mascota encontrada" (REP-02) — mismo caso de uso
- * CrearReporte, mismo pipeline de validación, solo cambia `tipo`. Enviar el
- * campo `tipo` ausente o con cualquier valor fuera de TIPOS_REPORTE_SOPORTADOS
- * corta la cadena en ValidadorEsquemaZod con PEA-REP-001.
+ * (REP-01), "Reporte de mascota encontrada" (REP-02) y "Reporte de
+ * problemática urbana" (REP-03) — mismo caso de uso CrearReporte, mismo
+ * pipeline de validación, solo cambia `tipo` (y, para 'problematica',
+ * `subtipo`). Enviar el campo `tipo` ausente o con cualquier valor fuera de
+ * TIPOS_REPORTE_SOPORTADOS corta la cadena en ValidadorEsquemaZod con
+ * PEA-REP-001.
  *
- * `mascotaId` es opcional en ambos flujos: quien encuentra una mascota
- * ajena no tiene (ni debería tener) una ficha propia que vincular.
- * `especie` también es opcional (texto libre, mismo criterio que
- * Mascota.especie) — cuando está presente, EvaluarCoincidenciaReporte la usa
- * junto con la zona para notificar coincidencias 'perdido' ↔ 'encontrado'
+ * `mascotaId` es opcional en 'perdido'/'encontrado' (quien encuentra una
+ * mascota ajena no tiene por qué tener una ficha propia que vincular) y
+ * CrearReporte.ts lo fuerza a `null` siempre que `tipo='problematica'` — una
+ * problemática urbana (animal suelto sin dueño identificado, foco sanitario,
+ * accidente vial) nunca está vinculada a una mascota registrada.
+ *
+ * `subtipo` es obligatorio y limitado a SUBTIPOS_PROBLEMATICA_SOPORTADOS
+ * únicamente cuando `tipo='problematica'` (docs/SCHEMA.md, CHECK subtipo) —
+ * ver el `superRefine` más abajo. Para 'perdido'/'encontrado' se ignora si
+ * llega (CrearReporte.ts lo persiste como `null` en esos casos).
+ *
+ * `especie` es opcional (texto libre, mismo criterio que Mascota.especie) —
+ * cuando está presente en un reporte 'encontrado', EvaluarCoincidenciaReporte
+ * la usa junto con la zona para notificar coincidencias con 'perdido'
  * (REP-U-06); si se omite, ese reporte simplemente no participa del matching.
  *
  * `latitud`/`longitud` solo se tipan acá (número finito) — el rango
@@ -41,6 +55,11 @@ export const CrearReporteSchema = registroOpenApi.register(
         required_error: 'Elegí una categoría para tu reporte antes de continuar.',
         invalid_type_error: 'Elegí una categoría para tu reporte antes de continuar.',
       }),
+      subtipo: z
+        .enum(SUBTIPOS_PROBLEMATICA_SOPORTADOS, {
+          invalid_type_error: 'Elegí un motivo válido para tu reporte de problemática.',
+        })
+        .optional(),
       descripcion: z
         .string({ required_error: 'Contanos brevemente qué pasó.' })
         .trim()
@@ -58,6 +77,15 @@ export const CrearReporteSchema = registroOpenApi.register(
         .finite('No pudimos obtener tu ubicación automáticamente. Marcala en el mapa.'),
       mascotaId: z.string().uuid('El identificador de la mascota no es válido.').optional(),
       especie: opcionalDeTexto(40).openapi({ example: 'perro' }),
+    })
+    .superRefine((datos, ctx) => {
+      if (datos.tipo === 'problematica' && !datos.subtipo) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['subtipo'],
+          message: 'Elegí un motivo para tu reporte de problemática.',
+        });
+      }
     })
     .openapi('CrearReporteDto'),
 );
@@ -78,6 +106,7 @@ export const ReporteCreadoSchema = registroOpenApi.register(
     .object({
       id: z.string().uuid(),
       tipo: z.string(),
+      subtipo: z.string().nullable(),
       reportadoPor: z.string().uuid(),
       mascotaId: z.string().uuid().nullable(),
       descripcion: z.string(),
@@ -97,7 +126,7 @@ registroOpenApi.registerPath({
   method: 'post',
   path: '/reportes',
   tags: ['Reportes'],
-  summary: 'Publica un reporte exprés de mascota perdida o encontrada (REP-01 / REP-02)',
+  summary: 'Publica un reporte de mascota perdida, encontrada o de problemática urbana (REP-01 / REP-02 / REP-03)',
   request: {
     body: { content: { 'application/json': { schema: CrearReporteSchema } } },
   },

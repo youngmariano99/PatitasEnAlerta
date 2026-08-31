@@ -58,12 +58,46 @@ describe('pipeline ValidacionReporte (Chain of Responsibility)', () => {
   it('ValidadorEsquemaZod rechaza un tipo fuera de TIPOS_REPORTE_SOPORTADOS con PEA-REP-001', async () => {
     const { controlDeTasa, almacenamientoImagenes } = crearFakes();
     const pipeline = crearPipelineValidacionReporte({ controlDeTasa, almacenamientoImagenes });
-    const tipoNoSoportado = { ...datosValidos, tipo: 'problematica' };
+    const tipoNoSoportado = { ...datosValidos, tipo: 'urgencia_vial' };
 
     await expect(
       pipeline.manejar({ datosCrudos: tipoNoSoportado, reportadoPor: 'usuario-1' }, tipoNoSoportado),
     ).rejects.toBeInstanceOf(CategoriaReporteObligatoriaError);
   });
+
+  it('ValidadorEsquemaZod rechaza tipo="problematica" sin subtipo con PEA-REP-001 (REP-03)', async () => {
+    const { controlDeTasa, almacenamientoImagenes } = crearFakes();
+    const pipeline = crearPipelineValidacionReporte({ controlDeTasa, almacenamientoImagenes });
+    const sinSubtipo = { ...datosValidos, tipo: 'problematica' };
+
+    await expect(
+      pipeline.manejar({ datosCrudos: sinSubtipo, reportadoPor: 'usuario-1' }, sinSubtipo),
+    ).rejects.toBeInstanceOf(CategoriaReporteObligatoriaError);
+    expect(controlDeTasa.permitir).not.toHaveBeenCalled();
+  });
+
+  it('ValidadorEsquemaZod rechaza tipo="problematica" con un subtipo fuera del CHECK con PEA-REP-001', async () => {
+    const { controlDeTasa, almacenamientoImagenes } = crearFakes();
+    const pipeline = crearPipelineValidacionReporte({ controlDeTasa, almacenamientoImagenes });
+    const subtipoInvalido = { ...datosValidos, tipo: 'problematica', subtipo: 'incendio' };
+
+    await expect(
+      pipeline.manejar({ datosCrudos: subtipoInvalido, reportadoPor: 'usuario-1' }, subtipoInvalido),
+    ).rejects.toBeInstanceOf(CategoriaReporteObligatoriaError);
+  });
+
+  it.each(['animal_suelto', 'foco_sanitario', 'accidente_vial'] as const)(
+    'acepta tipo="problematica" con subtipo="%s" válido y fuerza mascotaId ausente',
+    async (subtipo) => {
+      const { controlDeTasa, almacenamientoImagenes } = crearFakes();
+      const pipeline = crearPipelineValidacionReporte({ controlDeTasa, almacenamientoImagenes });
+      const problematica = { ...datosValidos, tipo: 'problematica', subtipo };
+
+      const resultado = await pipeline.manejar({ datosCrudos: problematica, reportadoPor: 'vecino-1' }, problematica);
+
+      expect(resultado).toEqual({ ...problematica, reportadoPor: 'vecino-1' });
+    },
+  );
 
   it('acepta tipo="encontrado" (mismo pipeline reutilizado, REP-02) y propaga especie', async () => {
     const { controlDeTasa, almacenamientoImagenes } = crearFakes();

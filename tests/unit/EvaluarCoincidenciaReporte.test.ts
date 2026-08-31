@@ -20,6 +20,7 @@ function crearFakes(coincidencias: ReporteActivoResumen[] = []) {
 const reporteEncontrado: ReporteCreado = {
   id: 'reporte-encontrado-1',
   tipo: 'encontrado',
+  subtipo: null,
   reportadoPor: 'vecino-1',
   mascotaId: null,
   descripcion: 'Encontré un perro cerca de la plaza.',

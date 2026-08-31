@@ -141,4 +141,66 @@ describe('CrearReporte', () => {
       caso.ejecutar({ datosCrudos: { ...datosCrudosValidos, tipo: 'encontrado', especie: 'perro' }, reportadoPor: 'usuario-1' }),
     ).resolves.toMatchObject({ tipo: 'encontrado', estado: 'reportado' });
   });
+
+  it('reutiliza el mismo caso de uso para tipo=\'problematica\' con subtipo válido (REP-03)', async () => {
+    const { repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia } = crearFakes();
+    const caso = new CrearReporte(repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia);
+
+    const resultado = await caso.ejecutar({
+      datosCrudos: { ...datosCrudosValidos, tipo: 'problematica', subtipo: 'animal_suelto' },
+      reportadoPor: 'usuario-1',
+    });
+
+    expect(resultado.tipo).toBe('problematica');
+    expect(resultado.subtipo).toBe('animal_suelto');
+    expect(resultado.estado).toBe('reportado');
+  });
+
+  it('fuerza mascotaId=null en un reporte "problematica" aunque el cliente declare uno', async () => {
+    const { repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia } = crearFakes();
+    const caso = new CrearReporte(repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia);
+    const mascotaId = '11111111-1111-1111-1111-111111111111';
+
+    const resultado = await caso.ejecutar({
+      datosCrudos: { ...datosCrudosValidos, tipo: 'problematica', subtipo: 'foco_sanitario', mascotaId },
+      reportadoPor: 'usuario-1',
+    });
+
+    expect(resultado.mascotaId).toBeNull();
+    expect(repositorioReportes.crear).toHaveBeenCalledWith(expect.objectContaining({ mascotaId: null }));
+  });
+
+  it('persiste subtipo=null para \'perdido\'/\'encontrado\' aunque el cliente lo declare', async () => {
+    const { repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia } = crearFakes();
+    const caso = new CrearReporte(repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia);
+
+    await caso.ejecutar({
+      datosCrudos: { ...datosCrudosValidos, subtipo: 'animal_suelto' },
+      reportadoPor: 'usuario-1',
+    });
+
+    expect(repositorioReportes.crear).toHaveBeenCalledWith(expect.objectContaining({ subtipo: null }));
+  });
+
+  it('rechaza fail-fast (pipeline) un reporte "problematica" sin subtipo, sin persistir nada', async () => {
+    const { repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia } = crearFakes();
+    const caso = new CrearReporte(repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia);
+
+    await expect(
+      caso.ejecutar({ datosCrudos: { ...datosCrudosValidos, tipo: 'problematica' }, reportadoPor: 'usuario-1' }),
+    ).rejects.toBeInstanceOf(CategoriaReporteObligatoriaError);
+    expect(repositorioReportes.crear).not.toHaveBeenCalled();
+  });
+
+  it('NO dispara EvaluarCoincidenciaReporte para un reporte "problematica"', async () => {
+    const { repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia } = crearFakes();
+    const caso = new CrearReporte(repositorioReportes, almacenamientoImagenes, controlDeTasa, evaluarCoincidencia);
+
+    await caso.ejecutar({
+      datosCrudos: { ...datosCrudosValidos, tipo: 'problematica', subtipo: 'accidente_vial' },
+      reportadoPor: 'usuario-1',
+    });
+
+    expect(evaluarCoincidencia.ejecutar).not.toHaveBeenCalled();
+  });
 });
