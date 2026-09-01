@@ -32,3 +32,9 @@ export class FichaAdopcionNoEncontradaError extends ErrorDominio {
     super('PEA-MUN-008', 'No encontramos esa ficha de adopción o ya no está disponible.', 404);
   }
 }
+
+export class RangoFechasInvalidoExportacionError extends ErrorDominio {
+  constructor() {
+    super('PEA-MUN-007', 'El rango de fechas elegido no es válido para exportar el resumen.', 400);
+  }
+}

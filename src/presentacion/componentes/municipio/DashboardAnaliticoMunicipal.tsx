@@ -215,6 +215,17 @@ export function DashboardAnaliticoMunicipal() {
             ))}
           </select>
         </div>
+
+        {periodoDesde && periodoHasta ? (
+          <a
+            href={`/api/municipio/dashboard/exportar?periodoDesde=${new Date(periodoDesde).toISOString()}&periodoHasta=${new Date(periodoHasta).toISOString()}`}
+            className="inline-flex h-11 min-h-[44px] items-center rounded-md border border-slate-600 px-4 text-[15px] font-medium text-slate-300"
+          >
+            Exportar CSV
+          </a>
+        ) : (
+          <span className="text-xs text-slate-500">Elegí &quot;Desde&quot; y &quot;Hasta&quot; para exportar el resumen a CSV.</span>
+        )}
       </div>
 
       {error ? (
