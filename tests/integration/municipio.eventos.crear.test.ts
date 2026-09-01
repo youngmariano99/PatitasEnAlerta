@@ -3,7 +3,7 @@
  */
 import { NextRequest } from 'next/server';
 import { container } from '@aplicacion/contenedor-di';
-import type { DatosNuevoEvento, IRepositorioEventos } from '@dominio/puertos/IRepositorioEventos';
+import type { DatosNuevoEvento, IRepositorioEventos, PaginaEventos } from '@dominio/puertos/IRepositorioEventos';
 import type { IRepositorioPerfil, ResumenPerfilPropio } from '@dominio/puertos/IRepositorioPerfil';
 import type { DatosNuevoTurno, IRepositorioTurnos, TurnoGenerado } from '@dominio/puertos/IRepositorioTurnos';
 import { TurneraMunicipio, type FuenteDisponibilidadEvento, type ProveedorTurnera } from '@dominio/estrategias/ProveedorTurnera';
@@ -26,6 +26,10 @@ class RepositorioEventosFalso implements IRepositorioEventos {
   async crear(datos: DatosNuevoEvento): Promise<Evento> {
     this.creados.push(datos);
     return Evento.reconstruir(`evento-${this.creados.length}`, datos, new Date('2026-09-01T09:00:00.000Z'));
+  }
+
+  async listar(): Promise<PaginaEventos> {
+    return { items: [], total: 0, pagina: 1, porPagina: 50 };
   }
 }
 
