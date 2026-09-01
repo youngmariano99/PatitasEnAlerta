@@ -249,20 +249,50 @@ CREATE INDEX ix_vitrina_municipio_estado ON vitrina_adopcion (municipio_id, esta
 ```sql
 -- Alcance actual: instancia single-tenant (un municipio). Si se suma multi-municipio
 -- en Post-MVP, agregar municipio_id a reportes/eventos y particionar estas vistas por él.
+--
+-- `zona_lat`/`zona_lng` (lat/long redondeadas a 2 decimales, ~1.1km de lado a esta
+-- latitud) son la grilla que alimenta el mapa de calor del dashboard (MUN-04,
+-- "reportes de problemáticas por zona") — sin ellas, DashboardMunicipalBuilder no
+-- podría ofrecer un filtro por zona ni un mapa de calor sin volver a consultar
+-- `reportes` en vivo. `total` se castea a `INTEGER` (en vez del `bigint` que
+-- devuelve `count(*)` sin castear) para que la fila viaje como JSON sin fricción de
+-- `BigInt` hacia el cliente (`JSON.stringify` no serializa `bigint` nativamente).
 CREATE MATERIALIZED VIEW mv_metricas_reportes_periodo AS
-SELECT date_trunc('week', created_at) AS periodo, tipo, estado, count(*) AS total
+SELECT
+  date_trunc('week', created_at) AS periodo,
+  tipo,
+  estado,
+  round(latitud::numeric, 2) AS zona_lat,
+  round(longitud::numeric, 2) AS zona_lng,
+  count(*)::integer AS total
 FROM reportes
 WHERE deleted_at IS NULL
-GROUP BY periodo, tipo, estado;
+GROUP BY periodo, tipo, estado, zona_lat, zona_lng;
+CREATE UNIQUE INDEX ux_mv_metricas_reportes_periodo
+  ON mv_metricas_reportes_periodo (periodo, tipo, estado, zona_lat, zona_lng);
 
 CREATE MATERIALIZED VIEW mv_metricas_turnos_periodo AS
-SELECT date_trunc('week', franja_inicio) AS periodo, proveedor_tipo, estado, count(*) AS total
+SELECT date_trunc('week', franja_inicio) AS periodo, proveedor_tipo, estado, count(*)::integer AS total
 FROM turnos
 WHERE deleted_at IS NULL
 GROUP BY periodo, proveedor_tipo, estado;
+CREATE UNIQUE INDEX ux_mv_metricas_turnos_periodo
+  ON mv_metricas_turnos_periodo (periodo, proveedor_tipo, estado);
 
--- Refrescar vía job asincrónico (ej. cron de Supabase Edge Function), nunca en el
--- request del dashboard: REFRESH MATERIALIZED VIEW CONCURRENTLY mv_metricas_...;
+-- Los índices UNIQUE de arriba son obligatorios para poder refrescar con
+-- REFRESH MATERIALIZED VIEW CONCURRENTLY (Postgres lo exige) — sin ellos, ese
+-- REFRESH bloquearía las lecturas del dashboard mientras corre.
+
+-- Refrescar vía job asincrónico (Supabase Edge Function programada por Cron, ver
+-- supabase/functions/refresh-metricas-dashboard/), NUNCA en el request del
+-- dashboard. La Edge Function invoca esta función (RPC), en vez de ejecutar SQL
+-- suelto, para no necesitar una conexión Postgres directa desde Deno:
+CREATE OR REPLACE FUNCTION refrescar_metricas_dashboard() RETURNS void AS $$
+BEGIN
+  REFRESH MATERIALIZED VIEW CONCURRENTLY mv_metricas_reportes_periodo;
+  REFRESH MATERIALIZED VIEW CONCURRENTLY mv_metricas_turnos_periodo;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 ```
 
 ## Módulo 4: Veterinarios — Libreta Sanitaria Básica

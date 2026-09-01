@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { PanelReportesMunicipio } from '@presentacion/componentes/municipio/PanelReportesMunicipio';
+import { DashboardAnaliticoMunicipal } from '@presentacion/componentes/municipio/DashboardAnaliticoMunicipal';
 
 interface PerfilApi {
   rol: string;
@@ -13,13 +14,21 @@ interface RespuestaError {
 }
 
 /**
- * Panel municipal de reportes activos (Módulo 2). middleware.ts ya exige rol
+ * Panel municipal (Módulos 2 y 3). middleware.ts ya exige rol
  * municipio/administrador para llegar a esta página (Paso 1) — acá se
  * resuelve el propio rol vía GET /api/perfil (ya existente, mismo criterio
  * que BadgeVerificacion) para pasárselo a PanelReportesMunicipio.tsx, que
  * hace su propia verificación antes de mostrar el control de cambio de
  * estado (defensa en profundidad, y lo que permite testear ese componente
  * de forma aislada sin depender del middleware).
+ *
+ * DashboardAnaliticoMunicipal.tsx (Historia "Dashboard analítico con mapas
+ * de calor") no repite la verificación de rol: middleware.ts ya protege
+ * toda `/municipio/*` con municipio/administrador (a diferencia de
+ * PanelReportesMunicipio, reutilizado en otras páginas con roles mixtos,
+ * este componente vive únicamente acá) — si igual llegara una sesión sin
+ * ese rol, GET /api/municipio/dashboard responde 403/PEA-MUN-005 y el
+ * componente lo muestra como cualquier otro error de carga.
  */
 export default function PaginaDashboardMunicipio() {
   const [rol, setRol] = useState<string | null>(null);
@@ -69,6 +78,8 @@ export default function PaginaDashboardMunicipio() {
       ) : null}
 
       {!cargando && !error && rol ? <PanelReportesMunicipio rol={rol} /> : null}
+
+      <DashboardAnaliticoMunicipal />
     </main>
   );
 }
