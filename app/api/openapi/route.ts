@@ -19,6 +19,7 @@ import '@aplicacion/dtos/notificaciones/NotificacionesDto';
 import '@aplicacion/dtos/municipio/CrearEventoDto';
 import '@aplicacion/dtos/municipio/FichaAdopcionDto';
 import '@aplicacion/dtos/municipio/DashboardMunicipalDto';
+import '@aplicacion/dtos/municipio/ExportarDashboardMunicipalDto';
 
 export const dynamic = 'force-dynamic';
 
