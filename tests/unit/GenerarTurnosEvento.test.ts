@@ -25,6 +25,8 @@ function crearFakes(opciones?: { yaDisponibles?: number }) {
     obtenerActual: jest.fn(),
     reservar: jest.fn(),
     listarPropios: jest.fn(),
+    cancelar: jest.fn(),
+    reprogramar: jest.fn(),
   };
   // Instancia REAL de TurneraMunicipio (no un mock) — verificación técnica
   // del ticket: GenerarTurnosEvento reutiliza el Motor de Turnera compartido

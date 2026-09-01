@@ -51,7 +51,13 @@ import { POST } from '@app/api/turnos/reservar/route';
  * podría (incorrectamente) dejar pasar a los dos usuarios.
  */
 class RepositorioTurnosConcurrencia implements IRepositorioTurnos {
-  private turno = { id: turnoId, estado: 'disponible', version: 0, reservadoPor: null as string | null };
+  private turno = {
+    id: turnoId,
+    estado: 'disponible',
+    version: 0,
+    reservadoPor: null as string | null,
+    proveedorId: 'municipio-1',
+  };
   public intentosDeReserva: Array<{ reservadoPor: string; versionEsperada: number }> = [];
 
   async contarDisponiblesPorEvento(): Promise<number> {
@@ -64,7 +70,13 @@ class RepositorioTurnosConcurrencia implements IRepositorioTurnos {
 
   async obtenerActual(id: string): Promise<TurnoActual | null> {
     if (id !== this.turno.id) return null;
-    return { id: this.turno.id, estado: this.turno.estado, version: this.turno.version };
+    return {
+      id: this.turno.id,
+      estado: this.turno.estado,
+      version: this.turno.version,
+      reservadoPor: this.turno.reservadoPor,
+      proveedorId: this.turno.proveedorId,
+    };
   }
 
   async reservar(id: string, reservadoPor: string, versionEsperada: number): Promise<TurnoReservado | null> {
@@ -80,6 +92,14 @@ class RepositorioTurnosConcurrencia implements IRepositorioTurnos {
 
   async listarPropios(): Promise<{ items: never[]; total: number; pagina: number; porPagina: number }> {
     return { items: [], total: 0, pagina: 1, porPagina: 50 };
+  }
+
+  async cancelar(): Promise<null> {
+    return null;
+  }
+
+  async reprogramar(): Promise<null> {
+    return null;
   }
 }
 
