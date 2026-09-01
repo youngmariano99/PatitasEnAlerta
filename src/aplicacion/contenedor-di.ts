@@ -12,6 +12,7 @@ import type { INotificacionesRepositorio } from '@dominio/puertos/INotificacione
 import type { IRepositorioReportes } from '@dominio/puertos/IRepositorioReportes';
 import type { IRepositorioEventos } from '@dominio/puertos/IRepositorioEventos';
 import type { IRepositorioTurnos } from '@dominio/puertos/IRepositorioTurnos';
+import type { IRepositorioFichasAdopcion } from '@dominio/puertos/IRepositorioFichasAdopcion';
 import type { FuenteDisponibilidadEvento, ProveedorTurnera } from '@dominio/estrategias/ProveedorTurnera';
 import type { IControlDeTasa } from '@dominio/puertos/IControlDeTasa';
 import type { IControlDeTasaConReintento } from '@dominio/puertos/IControlDeTasaConReintento';
@@ -27,6 +28,7 @@ import { PrismaNotificacionesRepositorio } from '@infraestructura/adaptadores/Pr
 import { PrismaReporteRepositorio } from '@infraestructura/adaptadores/PrismaReporteRepositorio';
 import { PrismaEventoRepositorio } from '@infraestructura/adaptadores/PrismaEventoRepositorio';
 import { PrismaTurnoRepositorio } from '@infraestructura/adaptadores/PrismaTurnoRepositorio';
+import { PrismaFichaAdopcionRepositorio } from '@infraestructura/adaptadores/PrismaFichaAdopcionRepositorio';
 import { TurneraMunicipio } from '@dominio/estrategias/ProveedorTurnera';
 import { UpstashControlDeTasa } from '@infraestructura/adaptadores/UpstashControlDeTasa';
 import { UpstashControlDeTasaAntiSaturacion } from '@infraestructura/adaptadores/UpstashControlDeTasaAntiSaturacion';
@@ -54,6 +56,7 @@ container.registerSingleton<INotificacionesRepositorio>('INotificacionesReposito
 container.registerSingleton<IRepositorioReportes>('IRepositorioReportes', PrismaReporteRepositorio);
 container.registerSingleton<IRepositorioEventos>('IRepositorioEventos', PrismaEventoRepositorio);
 container.registerSingleton<IRepositorioTurnos>('IRepositorioTurnos', PrismaTurnoRepositorio);
+container.registerSingleton<IRepositorioFichasAdopcion>('IRepositorioFichasAdopcion', PrismaFichaAdopcionRepositorio);
 container.registerSingleton<ProveedorTurnera<FuenteDisponibilidadEvento>>('ProveedorTurneraMunicipio', TurneraMunicipio);
 container.registerSingleton<IControlDeTasa>('IControlDeTasa', UpstashControlDeTasa);
 container.registerSingleton<IControlDeTasaConReintento>('IControlDeTasaConReintento', UpstashControlDeTasaAntiSaturacion);

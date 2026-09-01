@@ -17,6 +17,7 @@ import '@aplicacion/dtos/reportes/ActualizarEstadoReporteDto';
 import '@aplicacion/dtos/reportes/HistorialReporteDto';
 import '@aplicacion/dtos/notificaciones/NotificacionesDto';
 import '@aplicacion/dtos/municipio/CrearEventoDto';
+import '@aplicacion/dtos/municipio/FichaAdopcionDto';
 
 export const dynamic = 'force-dynamic';
 
