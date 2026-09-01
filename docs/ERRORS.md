@@ -39,7 +39,7 @@
 | PEA-MUN-002 | Este operativo ya no tiene cupos disponibles. | Dominio (`cupos_totales` agotado) — 409 | Sugerir el próximo evento disponible del mismo tipo, si existe. |
 | PEA-MUN-003 | No encontramos ese evento o turno. | Dominio (soft delete / no encontrado) — 404 | Volver al calendario público de operativos. |
 | PEA-MUN-004 | La fecha del evento tiene que ser posterior a hoy. | Aplicación (Zod) — 400 | Resaltar el campo de fecha en el formulario de alta rápida. |
-| PEA-MUN-005 | Solo cuentas municipales pueden administrar eventos y la vitrina de adopción. | Middleware (RLS, rol requerido) — 403 | Redirigir al panel correspondiente al rol autenticado. |
+| PEA-MUN-005 | Solo cuentas municipales pueden administrar eventos, la vitrina de adopción y el dashboard analítico. | Middleware (RLS, rol requerido) — 403 | Redirigir al panel correspondiente al rol autenticado. |
 | PEA-MUN-006 | Ese animal ya no está disponible para adopción. | Dominio (`vitrina_adopcion.estado ≠ disponible`) — 409 | Refrescar la ficha y sugerir animales similares disponibles. |
 | PEA-MUN-007 | El rango de fechas elegido no es válido para exportar el resumen. | Aplicación (Zod) — 400 | Sugerir el rango máximo permitido y ajustar automáticamente si se excede. |
 | PEA-MUN-008 | No encontramos esa ficha de adopción o ya no está disponible. | Dominio (soft delete / no encontrado) — 404 | Volver al listado de fichas de adopción del panel municipal. |

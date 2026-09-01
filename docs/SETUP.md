@@ -93,6 +93,16 @@ psql "$DATABASE_URL" -f docs/SEED.md   # extraer el bloque SQL de docs/SEED.md S
 
 (`docs/SEED.md` contiene el script completo con la estrategia de volumen — ver ese documento para el detalle.)
 
+## 7.1 Job de refresco del dashboard analítico (Edge Function + Cron)
+
+El dashboard municipal (Módulo 3, `docs/SCHEMA.md` — "Vistas materializadas — Dashboard Municipal") nunca ejecuta `REFRESH MATERIALIZED VIEW` dentro del request; lo hace una Edge Function programada:
+
+1. Desplegar la función: `supabase functions deploy refresh-metricas-dashboard` (Supabase CLI, requiere estar logueado y con el proyecto linkeado).
+2. Supabase Dashboard → Edge Functions → `refresh-metricas-dashboard` → **Cron Jobs** → crear un job con expresión `*/15 * * * *` (cada 15 minutos; ajustar según qué tan "en vivo" necesite verse el dashboard).
+3. Verificar que `SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY` estén disponibles como secrets de la función (Supabase los inyecta automáticamente a toda Edge Function del mismo proyecto, no requiere configuración manual adicional).
+
+Para probar el refresco manualmente sin esperar al cron: `supabase functions invoke refresh-metricas-dashboard`.
+
 ## 8. Verificación final antes de desarrollar
 
 ```bash

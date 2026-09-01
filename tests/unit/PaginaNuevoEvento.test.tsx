@@ -111,7 +111,7 @@ describe('PaginaNuevoEvento (app/municipio/eventos/nuevo)', () => {
   it('muestra un error general ante un rechazo no relacionado con la fecha (ej. PEA-MUN-005)', async () => {
     mockearFetch({
       status: 403,
-      body: { codigo: 'PEA-MUN-005', mensaje: 'Solo cuentas municipales pueden administrar eventos y la vitrina de adopción.' },
+      body: { codigo: 'PEA-MUN-005', mensaje: 'Solo cuentas municipales pueden administrar eventos, la vitrina de adopción y el dashboard analítico.' },
     });
     const usuario = userEvent.setup();
     render(<PaginaNuevoEvento />);
@@ -120,7 +120,7 @@ describe('PaginaNuevoEvento (app/municipio/eventos/nuevo)', () => {
     await usuario.click(screen.getByRole('button', { name: 'Publicar operativo' }));
 
     expect(
-      await screen.findByText('Solo cuentas municipales pueden administrar eventos y la vitrina de adopción.'),
+      await screen.findByText('Solo cuentas municipales pueden administrar eventos, la vitrina de adopción y el dashboard analítico.'),
     ).toBeInTheDocument();
     expect(pushMock).not.toHaveBeenCalled();
   });

@@ -81,7 +81,7 @@ describe('PaginaAdopcionesMunicipio (app/municipio/adopciones)', () => {
   it('un rechazo al publicar (ej. PEA-MUN-005) muestra el mensaje de error sin alert nativo', async () => {
     mockearFetch({
       GET: { status: 200, body: { items: [], total: 0, pagina: 1, porPagina: 50 } },
-      POST: { status: 403, body: { codigo: 'PEA-MUN-005', mensaje: 'Solo cuentas municipales pueden administrar eventos y la vitrina de adopción.' } },
+      POST: { status: 403, body: { codigo: 'PEA-MUN-005', mensaje: 'Solo cuentas municipales pueden administrar eventos, la vitrina de adopción y el dashboard analítico.' } },
     });
     const usuario = userEvent.setup();
     render(<PaginaAdopcionesMunicipio />);
@@ -93,7 +93,7 @@ describe('PaginaAdopcionesMunicipio (app/municipio/adopciones)', () => {
     await usuario.click(screen.getByRole('button', { name: 'Publicar ficha' }));
 
     expect(
-      await screen.findByText('Solo cuentas municipales pueden administrar eventos y la vitrina de adopción.'),
+      await screen.findByText('Solo cuentas municipales pueden administrar eventos, la vitrina de adopción y el dashboard analítico.'),
     ).toBeInTheDocument();
   });
 

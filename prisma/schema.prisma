@@ -278,6 +278,34 @@ model VitrinaAdopcion {
   @@index([municipioId, estado])
 }
 
+// Vistas materializadas (no tablas) del dashboard analítico — docs/SCHEMA.md,
+// "Vistas materializadas — Dashboard Municipal". Prisma no distingue entre
+// tabla y vista materializada a nivel de modelo: se leen igual (`findMany`),
+// pero nunca se escriben desde acá — el único INSERT/UPDATE posible es el
+// REFRESH ejecutado por supabase/functions/refresh-metricas-dashboard/, fuera
+// del ciclo de request de la app (Paso 2 del ticket).
+model MetricaReportePeriodo {
+  periodo DateTime
+  tipo    String
+  estado  String
+  zonaLat Float   @map("zona_lat")
+  zonaLng Float   @map("zona_lng")
+  total   Int
+
+  @@id([periodo, tipo, estado, zonaLat, zonaLng])
+  @@map("mv_metricas_reportes_periodo")
+}
+
+model MetricaTurnoPeriodo {
+  periodo       DateTime
+  proveedorTipo String   @map("proveedor_tipo")
+  estado        String
+  total         Int
+
+  @@id([periodo, proveedorTipo, estado])
+  @@map("mv_metricas_turnos_periodo")
+}
+
 // ============================================================
 // MÓDULO 4 — Veterinarios: Libreta Sanitaria Básica
 // ============================================================

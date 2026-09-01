@@ -11,15 +11,19 @@ export class FechaEventoPasadaError extends ErrorDominio {
 }
 
 /**
- * Reutilizada tanto por CrearEvento (eventos) como por
+ * Reutilizada por CrearEvento (eventos), por
  * PublicarFichaAdopcion/ActualizarFichaAdopcion/DarDeBajaFichaAdopcion
- * (vitrina de adopción) — el propio mensaje de docs/ERRORS.md ya cubre
- * ambos recursos ("... administrar eventos y la vitrina de adopción"), así
- * que no hace falta un código separado por entidad.
+ * (vitrina de adopción) y por ObtenerDashboardMunicipal (dashboard
+ * analítico) — el propio mensaje de docs/ERRORS.md ya cubre los tres
+ * recursos, así que no hace falta un código separado por entidad.
  */
 export class SoloMunicipioAdministraEventosError extends ErrorDominio {
   constructor() {
-    super('PEA-MUN-005', 'Solo cuentas municipales pueden administrar eventos y la vitrina de adopción.', 403);
+    super(
+      'PEA-MUN-005',
+      'Solo cuentas municipales pueden administrar eventos, la vitrina de adopción y el dashboard analítico.',
+      403,
+    );
   }
 }
 

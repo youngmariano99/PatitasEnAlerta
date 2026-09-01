@@ -5,6 +5,15 @@ jest.mock('@presentacion/componentes/municipio/PanelReportesMunicipio', () => ({
   PanelReportesMunicipio: ({ rol }: { rol: string }) => <div data-testid="panel-mock">Panel para rol: {rol}</div>,
 }));
 
+// DashboardAnaliticoMunicipal.tsx tiene su propia suite dedicada
+// (DashboardAnaliticoMunicipal.test.tsx) — acá se mockea para que esta
+// página se pruebe de forma aislada (mismo criterio que PanelReportesMunicipio
+// arriba), sin que su propio fetch/error interfiera con las aserciones del
+// flujo de "resolver el rol propio" que es lo que este archivo cubre.
+jest.mock('@presentacion/componentes/municipio/DashboardAnaliticoMunicipal', () => ({
+  DashboardAnaliticoMunicipal: () => <div data-testid="dashboard-analitico-mock" />,
+}));
+
 function mockearFetchPerfil(respuesta: { status: number; body: unknown }) {
   global.fetch = jest.fn().mockResolvedValue({
     ok: respuesta.status >= 200 && respuesta.status < 300,
