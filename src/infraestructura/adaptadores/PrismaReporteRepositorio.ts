@@ -3,8 +3,12 @@ import { prisma } from '@infraestructura/adaptadores/prisma-client';
 import type {
   CriteriosCoincidenciaReporte,
   DatosNuevoReporte,
+  FiltrosListadoReportes,
+  FiltroZona,
   IRepositorioReportes,
+  PaginaReportes,
   ReporteActivoResumen,
+  ReporteListado,
 } from '@dominio/puertos/IRepositorioReportes';
 import type { DatosReporte } from '@dominio/entidades/Reporte';
 import { ESTADOS_REPORTE_ACTIVOS, Reporte } from '@dominio/entidades/Reporte';
@@ -15,6 +19,21 @@ const SELECT_REPORTE = {
   subtipo: true,
   reportadoPor: true,
   mascotaId: true,
+  descripcion: true,
+  fotoUrl: true,
+  latitud: true,
+  longitud: true,
+  especie: true,
+  estado: true,
+  createdAt: true,
+} as const;
+
+// Público (ListarReportes): sin `reportadoPor`/`mascotaId` — no forman parte
+// de lo que la tabla/mapa público necesita mostrar (ver ReporteListado).
+const SELECT_REPORTE_LISTADO = {
+  id: true,
+  tipo: true,
+  subtipo: true,
   descripcion: true,
   fotoUrl: true,
   latitud: true,
@@ -56,10 +75,26 @@ function aEntidad(fila: FilaReporte): Reporte {
 }
 
 // Aproximación estándar de "km por grado de latitud" — suficiente para la
-// "regla simple" de coincidencia del MVP (docs/PLANIFICACION.md, REP-U-06);
-// una precisión mayor (Haversine exacto, PostGIS) queda para si el matching
+// "regla simple" de coincidencia del MVP (docs/PLANIFICACION.md, REP-U-06)
+// y para el filtro de zona del listado público (ListarReportes); una
+// precisión mayor (Haversine exacto, PostGIS) queda para si el matching
 // semántico post-MVP la termina necesitando.
 const KM_POR_GRADO_LATITUD = 111;
+
+function calcularRangoGeografico(zona: FiltroZona) {
+  const deltaLatitud = zona.radioKm / KM_POR_GRADO_LATITUD;
+  const kmPorGradoLongitud = KM_POR_GRADO_LATITUD * Math.cos((zona.latitud * Math.PI) / 180);
+  // Cerca de los polos kmPorGradoLongitud tiende a 0 — en ese caso, un grado
+  // entero de longitud sigue siendo un rango razonable (fuera del alcance
+  // real single-tenant del proyecto, pero evita una división por ~0 que
+  // dispararía un rango absurdamente amplio).
+  const deltaLongitud = kmPorGradoLongitud > 0.001 ? zona.radioKm / kmPorGradoLongitud : 1;
+
+  return {
+    latitud: { gte: zona.latitud - deltaLatitud, lte: zona.latitud + deltaLatitud },
+    longitud: { gte: zona.longitud - deltaLongitud, lte: zona.longitud + deltaLongitud },
+  };
+}
 
 @injectable()
 export class PrismaReporteRepositorio implements IRepositorioReportes {
@@ -85,21 +120,12 @@ export class PrismaReporteRepositorio implements IRepositorioReportes {
   }
 
   async buscarPerdidosActivosPorZonaYEspecie(criterios: CriteriosCoincidenciaReporte): Promise<ReporteActivoResumen[]> {
-    const deltaLatitud = criterios.radioKm / KM_POR_GRADO_LATITUD;
-    const kmPorGradoLongitud = KM_POR_GRADO_LATITUD * Math.cos((criterios.latitud * Math.PI) / 180);
-    // Cerca de los polos kmPorGradoLongitud tiende a 0 — en ese caso, un
-    // grado entero de longitud sigue siendo un rango razonable (fuera del
-    // alcance real single-tenant del proyecto, pero evita una división por
-    // ~0 que dispararía un rango absurdamente amplio).
-    const deltaLongitud = kmPorGradoLongitud > 0.001 ? criterios.radioKm / kmPorGradoLongitud : 1;
-
     const filas = await prisma.reporte.findMany({
       where: {
         tipo: 'perdido',
         estado: { in: [...ESTADOS_REPORTE_ACTIVOS] },
         especie: { equals: criterios.especie, mode: 'insensitive' },
-        latitud: { gte: criterios.latitud - deltaLatitud, lte: criterios.latitud + deltaLatitud },
-        longitud: { gte: criterios.longitud - deltaLongitud, lte: criterios.longitud + deltaLongitud },
+        ...calcularRangoGeografico(criterios),
         id: { not: criterios.excluirReporteId },
         deletedAt: null,
       },
@@ -107,5 +133,31 @@ export class PrismaReporteRepositorio implements IRepositorioReportes {
     });
 
     return filas;
+  }
+
+  async listar(filtros: FiltrosListadoReportes, pagina: number, porPagina: number): Promise<PaginaReportes> {
+    const where = {
+      deletedAt: null,
+      // Sin `estado` explícito: solo los activos — "Listado y mapa de
+      // reportes activos" es el nombre de esta historia. Un `estado`
+      // puntual (incluidos 'resuelto'/'cerrado') lo reemplaza por completo.
+      estado: filtros.estado ?? { in: [...ESTADOS_REPORTE_ACTIVOS] },
+      ...(filtros.tipo ? { tipo: filtros.tipo } : {}),
+      ...(filtros.zona ? calcularRangoGeografico(filtros.zona) : {}),
+    };
+
+    const [filas, total] = await Promise.all([
+      prisma.reporte.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (pagina - 1) * porPagina,
+        take: porPagina,
+        select: SELECT_REPORTE_LISTADO,
+      }),
+      prisma.reporte.count({ where }),
+    ]);
+
+    const items: ReporteListado[] = filas;
+    return { items, total, pagina, porPagina };
   }
 }
