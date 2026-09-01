@@ -3,6 +3,7 @@ import { injectable, inject } from 'tsyringe';
 import { ZodError } from 'zod';
 import { CasoDeUsoBase } from '@aplicacion/casos-de-uso/CasoDeUsoBase';
 import { CrearEventoSchema, type ComandoCrearEvento, type EventoCreado } from '@aplicacion/dtos/municipio/CrearEventoDto';
+import { GenerarTurnosEvento } from '@aplicacion/casos-de-uso/municipio/GenerarTurnosEvento';
 import type { IRepositorioEventos } from '@dominio/puertos/IRepositorioEventos';
 import type { IRepositorioPerfil } from '@dominio/puertos/IRepositorioPerfil';
 import { FechaEventoPasadaError, SoloMunicipioAdministraEventosError } from '@dominio/errores/erroresMunicipio';
@@ -34,6 +35,7 @@ export class CrearEvento extends CasoDeUsoBase<EntradaCrearEvento, EventoCreado,
   constructor(
     @inject('IRepositorioEventos') private readonly repositorioEventos: IRepositorioEventos,
     @inject('IRepositorioPerfil') private readonly repositorioPerfil: IRepositorioPerfil,
+    private readonly generarTurnosEvento: GenerarTurnosEvento,
   ) {
     super();
   }
@@ -80,6 +82,18 @@ export class CrearEvento extends CasoDeUsoBase<EntradaCrearEvento, EventoCreado,
       fecha: dato.fecha,
       cuposTotales: dato.cuposTotales,
       requisitos: dato.requisitos ?? null,
+    });
+
+    // Paso 1 (Historia "Configuración de cupos por tipo de operativo"): el
+    // alta rápida no termina en el INSERT de `eventos` — el operativo
+    // necesita sus `cupos_totales` turnos 'disponible' ya generados para
+    // que la reserva (Módulo 3, fuera de esta actividad) tenga algo sobre
+    // qué operar desde el primer instante.
+    await this.generarTurnosEvento.ejecutar({
+      id: evento.id,
+      municipioId: evento.municipioId,
+      fecha: evento.fecha,
+      cuposTotales: evento.cuposTotales,
     });
 
     return {

@@ -5,6 +5,8 @@ import { NextRequest } from 'next/server';
 import { container } from '@aplicacion/contenedor-di';
 import type { DatosNuevoEvento, IRepositorioEventos } from '@dominio/puertos/IRepositorioEventos';
 import type { IRepositorioPerfil, ResumenPerfilPropio } from '@dominio/puertos/IRepositorioPerfil';
+import type { DatosNuevoTurno, IRepositorioTurnos, TurnoGenerado } from '@dominio/puertos/IRepositorioTurnos';
+import { TurneraMunicipio, type FuenteDisponibilidadEvento, type ProveedorTurnera } from '@dominio/estrategias/ProveedorTurnera';
 import { Evento } from '@dominio/entidades/Evento';
 
 const getUserMock = jest.fn();
@@ -32,6 +34,25 @@ class RepositorioPerfilFalso implements IRepositorioPerfil {
 
   async obtenerPerfilPropio(usuarioId: string): Promise<ResumenPerfilPropio | null> {
     return { id: usuarioId, email: 'municipio@ejemplo.test', rol: this.rol, estadoVerificacion: 'verificado', verificadoEn: null };
+  }
+}
+
+/** En memoria, real (no jest.fn): permite verificar el conteo real de filas creadas por evento (Paso 4). */
+class RepositorioTurnosFalso implements IRepositorioTurnos {
+  public turnos: TurnoGenerado[] = [];
+
+  async contarDisponiblesPorEvento(eventoId: string): Promise<number> {
+    return this.turnos.filter((t) => t.eventoId === eventoId && t.estado === 'disponible').length;
+  }
+
+  async crearLote(turnos: DatosNuevoTurno[]): Promise<TurnoGenerado[]> {
+    const generados = turnos.map((turno, indice) => ({
+      id: `turno-${this.turnos.length + indice + 1}`,
+      ...turno,
+      estado: 'disponible',
+    }));
+    this.turnos.push(...generados);
+    return generados;
   }
 }
 
@@ -65,14 +86,18 @@ const eventoValido = {
 describe('POST /api/municipio/eventos (Alta rápida de operativos municipales)', () => {
   let repositorioEventos: RepositorioEventosFalso;
   let repositorioPerfil: RepositorioPerfilFalso;
+  let repositorioTurnos: RepositorioTurnosFalso;
 
   beforeEach(() => {
     getUserMock.mockReset();
     repositorioEventos = new RepositorioEventosFalso();
     repositorioPerfil = new RepositorioPerfilFalso();
+    repositorioTurnos = new RepositorioTurnosFalso();
     container.reset();
     container.registerInstance<IRepositorioEventos>('IRepositorioEventos', repositorioEventos);
     container.registerInstance<IRepositorioPerfil>('IRepositorioPerfil', repositorioPerfil);
+    container.registerInstance<IRepositorioTurnos>('IRepositorioTurnos', repositorioTurnos);
+    container.registerInstance<ProveedorTurnera<FuenteDisponibilidadEvento>>('ProveedorTurneraMunicipio', new TurneraMunicipio());
   });
 
   it('rechaza sin sesión activa (401 / PEA-SIS-001), sin persistir nada', async () => {
@@ -171,5 +196,32 @@ describe('POST /api/municipio/eventos (Alta rápida de operativos municipales)',
 
     expect(respuesta.status).toBe(201);
     expect(repositorioEventos.creados[0]).toMatchObject({ requisitos: 'Traer collar/bozal y DNI del tutor.' });
+  });
+
+  // Paso 4 del checklist: crea un evento con 10 cupos y verifica exactamente 10 filas en turnos.
+  describe('GenerarTurnosEvento — generación de turnos disponibles a partir de cupos_totales', () => {
+    it('AC: un evento con cupos_totales=10 genera exactamente 10 filas en turnos, proveedor_tipo="municipio" y estado="disponible"', async () => {
+      autenticarComo('municipio-1');
+
+      const respuesta = await POST(crearRequest({ ...eventoValido, cuposTotales: 10 }));
+
+      expect(respuesta.status).toBe(201);
+      const cuerpo = await respuesta.json();
+      const turnosDelEvento = repositorioTurnos.turnos.filter((t) => t.eventoId === cuerpo.id);
+
+      expect(turnosDelEvento).toHaveLength(10);
+      expect(turnosDelEvento.every((t) => t.proveedorTipo === 'municipio')).toBe(true);
+      expect(turnosDelEvento.every((t) => t.estado === 'disponible')).toBe(true);
+      expect(turnosDelEvento.every((t) => t.proveedorId === 'municipio-1')).toBe(true);
+    });
+
+    it('un evento con cupos_totales=30 (default de eventoValido) genera exactamente 30 turnos', async () => {
+      autenticarComo('municipio-1');
+
+      const respuesta = await POST(crearRequest(eventoValido));
+      const cuerpo = await respuesta.json();
+
+      expect(repositorioTurnos.turnos.filter((t) => t.eventoId === cuerpo.id)).toHaveLength(30);
+    });
   });
 });

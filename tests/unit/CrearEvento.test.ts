@@ -3,6 +3,7 @@
  */
 import { ZodError } from 'zod';
 import { CrearEvento } from '@aplicacion/casos-de-uso/municipio/CrearEvento';
+import type { GenerarTurnosEvento } from '@aplicacion/casos-de-uso/municipio/GenerarTurnosEvento';
 import { Evento } from '@dominio/entidades/Evento';
 import type { DatosNuevoEvento, IRepositorioEventos } from '@dominio/puertos/IRepositorioEventos';
 import type { IRepositorioPerfil, ResumenPerfilPropio } from '@dominio/puertos/IRepositorioPerfil';
@@ -35,13 +36,14 @@ function crearFakes(opciones?: { rol?: string }) {
   const repositorioPerfil: jest.Mocked<IRepositorioPerfil> = {
     obtenerPerfilPropio: jest.fn().mockResolvedValue(crearPerfil(opciones?.rol ?? 'municipio')),
   };
-  return { repositorioEventos, repositorioPerfil };
+  const generarTurnosEvento = { ejecutar: jest.fn().mockResolvedValue([]) } as unknown as jest.Mocked<GenerarTurnosEvento>;
+  return { repositorioEventos, repositorioPerfil, generarTurnosEvento };
 }
 
 describe('CrearEvento', () => {
   it('crea el evento con municipioId resuelto por la sesión, para rol municipio', async () => {
-    const { repositorioEventos, repositorioPerfil } = crearFakes();
-    const caso = new CrearEvento(repositorioEventos, repositorioPerfil);
+    const { repositorioEventos, repositorioPerfil, generarTurnosEvento } = crearFakes();
+    const caso = new CrearEvento(repositorioEventos, repositorioPerfil, generarTurnosEvento);
 
     const resultado = await caso.ejecutar({ datosCrudos: datosCrudosValidos, municipioId });
 
@@ -53,9 +55,23 @@ describe('CrearEvento', () => {
     );
   });
 
+  it('Paso 1: ejecuta GenerarTurnosEvento con el evento recién creado (id, municipioId, fecha, cuposTotales)', async () => {
+    const { repositorioEventos, repositorioPerfil, generarTurnosEvento } = crearFakes();
+    const caso = new CrearEvento(repositorioEventos, repositorioPerfil, generarTurnosEvento);
+
+    const resultado = await caso.ejecutar({ datosCrudos: datosCrudosValidos, municipioId });
+
+    expect(generarTurnosEvento.ejecutar).toHaveBeenCalledWith({
+      id: resultado.id,
+      municipioId: resultado.municipioId,
+      fecha: new Date(resultado.fecha),
+      cuposTotales: resultado.cuposTotales,
+    });
+  });
+
   it('permite la publicación también para rol administrador', async () => {
-    const { repositorioEventos, repositorioPerfil } = crearFakes({ rol: 'administrador' });
-    const caso = new CrearEvento(repositorioEventos, repositorioPerfil);
+    const { repositorioEventos, repositorioPerfil, generarTurnosEvento } = crearFakes({ rol: 'administrador' });
+    const caso = new CrearEvento(repositorioEventos, repositorioPerfil, generarTurnosEvento);
 
     await expect(caso.ejecutar({ datosCrudos: datosCrudosValidos, municipioId })).resolves.toMatchObject({
       titulo: datosCrudosValidos.titulo,
@@ -63,8 +79,8 @@ describe('CrearEvento', () => {
   });
 
   it('persiste requisitos cuando se declara', async () => {
-    const { repositorioEventos, repositorioPerfil } = crearFakes();
-    const caso = new CrearEvento(repositorioEventos, repositorioPerfil);
+    const { repositorioEventos, repositorioPerfil, generarTurnosEvento } = crearFakes();
+    const caso = new CrearEvento(repositorioEventos, repositorioPerfil, generarTurnosEvento);
 
     await caso.ejecutar({
       datosCrudos: { ...datosCrudosValidos, requisitos: 'Traer collar/bozal y DNI del tutor.' },
@@ -77,8 +93,8 @@ describe('CrearEvento', () => {
   });
 
   it.each(['dueño', 'veterinario'])('rechaza con PEA-MUN-005 (403) para rol %s, sin tocar el repositorio', async (rol) => {
-    const { repositorioEventos, repositorioPerfil } = crearFakes({ rol });
-    const caso = new CrearEvento(repositorioEventos, repositorioPerfil);
+    const { repositorioEventos, repositorioPerfil, generarTurnosEvento } = crearFakes({ rol });
+    const caso = new CrearEvento(repositorioEventos, repositorioPerfil, generarTurnosEvento);
 
     await expect(caso.ejecutar({ datosCrudos: datosCrudosValidos, municipioId })).rejects.toBeInstanceOf(
       SoloMunicipioAdministraEventosError,
@@ -87,8 +103,8 @@ describe('CrearEvento', () => {
   });
 
   it('rechaza fail-fast (Zod) sin persistir cuando falta el título', async () => {
-    const { repositorioEventos, repositorioPerfil } = crearFakes();
-    const caso = new CrearEvento(repositorioEventos, repositorioPerfil);
+    const { repositorioEventos, repositorioPerfil, generarTurnosEvento } = crearFakes();
+    const caso = new CrearEvento(repositorioEventos, repositorioPerfil, generarTurnosEvento);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { titulo: _titulo, ...sinTitulo } = datosCrudosValidos;
 
@@ -97,8 +113,8 @@ describe('CrearEvento', () => {
   });
 
   it('rechaza fail-fast (Zod) con cuposTotales=0', async () => {
-    const { repositorioEventos, repositorioPerfil } = crearFakes();
-    const caso = new CrearEvento(repositorioEventos, repositorioPerfil);
+    const { repositorioEventos, repositorioPerfil, generarTurnosEvento } = crearFakes();
+    const caso = new CrearEvento(repositorioEventos, repositorioPerfil, generarTurnosEvento);
 
     await expect(
       caso.ejecutar({ datosCrudos: { ...datosCrudosValidos, cuposTotales: 0 }, municipioId }),
@@ -107,8 +123,8 @@ describe('CrearEvento', () => {
   });
 
   it('rechaza fail-fast (Zod) con cuposTotales negativo', async () => {
-    const { repositorioEventos, repositorioPerfil } = crearFakes();
-    const caso = new CrearEvento(repositorioEventos, repositorioPerfil);
+    const { repositorioEventos, repositorioPerfil, generarTurnosEvento } = crearFakes();
+    const caso = new CrearEvento(repositorioEventos, repositorioPerfil, generarTurnosEvento);
 
     await expect(
       caso.ejecutar({ datosCrudos: { ...datosCrudosValidos, cuposTotales: -5 }, municipioId }),
@@ -116,8 +132,8 @@ describe('CrearEvento', () => {
   });
 
   it('rechaza con PEA-MUN-004 (400) una fecha anterior a hoy, sin persistir nada (AC)', async () => {
-    const { repositorioEventos, repositorioPerfil } = crearFakes();
-    const caso = new CrearEvento(repositorioEventos, repositorioPerfil);
+    const { repositorioEventos, repositorioPerfil, generarTurnosEvento } = crearFakes();
+    const caso = new CrearEvento(repositorioEventos, repositorioPerfil, generarTurnosEvento);
 
     await expect(
       caso.ejecutar({ datosCrudos: { ...datosCrudosValidos, fecha: FECHA_PASADA }, municipioId }),
@@ -126,8 +142,8 @@ describe('CrearEvento', () => {
   });
 
   it('rechaza un tipo fuera del catálogo soportado', async () => {
-    const { repositorioEventos, repositorioPerfil } = crearFakes();
-    const caso = new CrearEvento(repositorioEventos, repositorioPerfil);
+    const { repositorioEventos, repositorioPerfil, generarTurnosEvento } = crearFakes();
+    const caso = new CrearEvento(repositorioEventos, repositorioPerfil, generarTurnosEvento);
 
     await expect(
       caso.ejecutar({ datosCrudos: { ...datosCrudosValidos, tipo: 'incendio' }, municipioId }),
