@@ -4,34 +4,33 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Patitas en Alerta — Presentación</title>
-<meta name="description" content="Presentación ilustrativa de Patitas en Alerta: el problema, cómo conecta a vecinos, municipio y veterinarios, y el flujo de la plataforma.">
+<meta name="description" content="Presentación ilustrativa de Patitas en Alerta: las preguntas abiertas sobre bienestar animal en la localidad, cómo conecta a todos los stakeholders, y las soluciones que propone la plataforma.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@500;600;700;800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Roboto+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#020617;
-    --surface-1:#0b1424;
-    --surface-2:#111d33;
-    --surface-3:#1c2c47;
-    --border:#22314d;
-    --border-soft:#182338;
-    --text:#f4f6fb;
-    --text-muted:#9aa8c2;
-    --text-dim:#647192;
-    --blue:#3b82f6;
-    --blue-soft:#1d4ed8;
-    --blue-wash:rgba(59,130,246,.12);
-    --emerald:#10b981;
-    --emerald-wash:rgba(16,185,129,.12);
-    --red:#ef4444;
-    --red-wash:rgba(239,68,68,.12);
-    --amber:#f59e0b;
-    --font-display:'Manrope', 'Segoe UI', sans-serif;
-    --font-body:'Inter', 'Segoe UI', sans-serif;
-    --font-mono:'JetBrains Mono', 'Courier New', monospace;
-    --radius:14px;
-    --content-w:1120px;
+    --bg:#F8F9FA;
+    --surface:#FFFFFF;
+    --surface-tint:#EDF4F3;
+    --border:#D8E1E0;
+    --border-strong:#BFCCCA;
+    --text:#1E1E1E;
+    --text-muted:#485654;
+    --text-soft:#66746F;
+    --teal:#008080;
+    --teal-ink:#00595A;
+    --teal-wash:rgba(0,128,128,.09);
+    --teal-wash-strong:rgba(0,128,128,.16);
+    --blue:#0073E6;
+    --blue-wash:rgba(0,115,230,.09);
+    --alert:#C44601;
+    --alert-wash:rgba(196,70,1,.09);
+    --font-display:'Lexend','Segoe UI',sans-serif;
+    --font-body:'Atkinson Hyperlegible','Segoe UI',sans-serif;
+    --font-mono:'Roboto Mono','Courier New',monospace;
+    --radius:12px;
+    --content-w:1140px;
   }
 
   *{box-sizing:border-box; margin:0; padding:0;}
@@ -42,42 +41,47 @@
     background:var(--bg);
     color:var(--text);
     font-family:var(--font-body);
-    font-size:16px;
-    line-height:1.6;
+    font-size:17px;
+    line-height:1.65;
     -webkit-font-smoothing:antialiased;
     overflow-x:hidden;
   }
 
   img{max-width:100%; display:block;}
+  a{color:var(--blue);}
+  a:focus-visible, button:focus-visible, .focusable:focus-visible{
+    outline:3px solid var(--teal);
+    outline-offset:2px;
+  }
 
-  h1,h2,h3{
+  h1,h2,h3,h4{
     font-family:var(--font-display);
     text-wrap:balance;
-    letter-spacing:-0.01em;
+    color:var(--text);
+    font-weight:700;
   }
 
   .eyebrow{
     font-family:var(--font-mono);
-    font-size:12.5px;
+    font-size:13px;
     font-weight:600;
-    letter-spacing:.14em;
+    letter-spacing:.08em;
     text-transform:uppercase;
-    color:var(--blue);
+    color:var(--teal-ink);
     display:inline-flex;
     align-items:center;
-    gap:8px;
+    gap:9px;
   }
   .eyebrow::before{
     content:"";
-    width:7px; height:7px;
-    border-radius:50%;
-    background:var(--blue);
-    box-shadow:0 0 0 3px var(--blue-wash);
+    width:8px; height:8px;
+    border-radius:2px;
+    background:var(--teal);
   }
-  .eyebrow.rose::before{background:var(--red); box-shadow:0 0 0 3px var(--red-wash);}
-  .eyebrow.rose{color:var(--red);}
-  .eyebrow.mint::before{background:var(--emerald); box-shadow:0 0 0 3px var(--emerald-wash);}
-  .eyebrow.mint{color:var(--emerald);}
+  .eyebrow.alert{color:var(--alert);}
+  .eyebrow.alert::before{background:var(--alert); border-radius:50%;}
+  .eyebrow.blue{color:var(--blue);}
+  .eyebrow.blue::before{background:var(--blue);}
 
   .wrap{
     max-width:var(--content-w);
@@ -86,429 +90,225 @@
   }
 
   section{position:relative;}
+  .section-pad{padding:72px 0;}
+  .band{background:var(--surface-tint); border-top:1px solid var(--border); border-bottom:1px solid var(--border);}
 
-  /* ---------- reveal on scroll ---------- */
-  .reveal{opacity:0; transform:translateY(22px); transition:opacity .7s ease, transform .7s ease;}
-  .reveal.in{opacity:1; transform:translateY(0);}
-  @media (prefers-reduced-motion: reduce){
-    .reveal{opacity:1; transform:none; transition:none;}
+  .section-head{max-width:66ch; margin-bottom:40px;}
+  .section-head h2{
+    font-size:clamp(1.7rem, 3vw, 2.3rem);
+    margin-top:14px;
+    line-height:1.18;
   }
+  .section-head p{color:var(--text-muted); margin-top:14px; font-size:1.05rem;}
 
-  /* ---------- top nav ---------- */
+  .reveal{opacity:0; transform:translateY(16px); transition:opacity .55s ease, transform .55s ease;}
+  .reveal.in{opacity:1; transform:translateY(0);}
+  @media (prefers-reduced-motion: reduce){ .reveal{opacity:1; transform:none; transition:none;} }
+
+  /* ---------- topbar ---------- */
   .topbar{
     position:sticky; top:0; z-index:50;
-    background:rgba(2,6,23,.82);
-    backdrop-filter:blur(10px);
-    border-bottom:1px solid var(--border-soft);
+    background:rgba(248,249,250,.92);
+    backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--border);
   }
   .topbar-inner{
     max-width:var(--content-w);
     margin:0 auto;
     padding:14px 28px;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:16px;
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
   }
   .brand{
     display:flex; align-items:center; gap:10px;
-    font-family:var(--font-display);
-    font-weight:800;
-    font-size:16px;
-    color:var(--text);
-    white-space:nowrap;
+    font-family:var(--font-display); font-weight:700; font-size:16px;
+    color:var(--text); white-space:nowrap;
   }
-  .brand .paw{width:20px; height:20px; color:var(--blue);}
-  .topbar-tag{
-    font-family:var(--font-mono);
-    font-size:12px;
-    color:var(--text-dim);
-    display:none;
-  }
+  .brand .paw{width:22px; height:22px; color:var(--teal); flex-shrink:0;}
+  .topbar-tag{font-family:var(--font-mono); font-size:12.5px; color:var(--text-soft); display:none;}
   @media (min-width:720px){ .topbar-tag{display:block;} }
 
   /* ---------- hero ---------- */
-  .hero{
-    padding:88px 0 64px;
-    background:
-      radial-gradient(680px 420px at 82% -10%, rgba(59,130,246,.16), transparent 60%),
-      radial-gradient(520px 360px at 8% 10%, rgba(16,185,129,.08), transparent 60%);
-    overflow:hidden;
-  }
-  .hero-grid{
-    display:grid;
-    grid-template-columns:1.15fr .85fr;
-    gap:48px;
-    align-items:center;
-  }
-  @media (max-width:860px){ .hero-grid{grid-template-columns:1fr; gap:36px;} }
-
-  .hero h1{
-    font-size:clamp(2.4rem, 5.4vw, 4rem);
-    font-weight:800;
-    line-height:1.03;
-    margin:18px 0 6px;
-  }
-  .hero h1 .accent{color:var(--blue);}
+  .hero{padding:60px 0 56px;}
+  .hero-grid{display:grid; grid-template-columns:1.2fr .8fr; gap:44px; align-items:center;}
+  @media (max-width:860px){ .hero-grid{grid-template-columns:1fr;} }
+  .hero h1{font-size:clamp(2.1rem, 4.6vw, 3.2rem); line-height:1.08; margin:16px 0 14px;}
+  .hero h1 .accent{color:var(--teal);}
   .lema{
-    font-family:var(--font-mono);
-    font-size:clamp(.95rem, 1.6vw, 1.15rem);
-    color:var(--emerald);
-    margin-bottom:20px;
-    letter-spacing:.01em;
+    font-family:var(--font-mono); font-size:1rem; color:var(--teal-ink);
+    background:var(--teal-wash); display:inline-block; padding:8px 14px;
+    border-radius:8px; margin-bottom:20px; border:1px solid var(--teal-wash-strong);
   }
-  .lema b{color:var(--text); font-weight:600;}
-  .hero p.lead{
-    color:var(--text-muted);
-    font-size:1.08rem;
-    max-width:52ch;
-    margin-bottom:28px;
+  .lema b{font-weight:600;}
+  .hero p.lead{color:var(--text-muted); max-width:56ch; font-size:1.08rem;}
+  .hero-note{
+    margin-top:22px; font-size:.92rem; color:var(--text-soft);
+    border-left:3px solid var(--border-strong); padding-left:14px; max-width:52ch;
   }
-  .hero-stats{
-    display:flex; gap:28px; flex-wrap:wrap;
-    margin-top:8px;
-  }
-  .hero-stat b{
-    display:block;
-    font-family:var(--font-mono);
-    font-size:1.5rem;
-    color:var(--text);
-    font-weight:600;
-  }
-  .hero-stat span{font-size:.82rem; color:var(--text-dim);}
-
   .hero-art{
-    position:relative;
-    display:flex; justify-content:center; align-items:center;
+    background:var(--surface); border:1px solid var(--border); border-radius:16px;
+    padding:20px; display:flex; justify-content:center; align-items:center;
   }
-  .hero-art img{
-    width:min(360px, 90%);
-    filter:drop-shadow(0 30px 60px rgba(0,0,0,.55));
-  }
-  .hero-ring{
-    position:absolute;
-    width:380px; height:380px;
-    border-radius:50%;
-    border:1px dashed rgba(59,130,246,.25);
-  }
-  .hero-ring.r2{width:460px; height:460px; border-color:rgba(16,185,129,.15);}
+  .hero-art img{width:min(280px, 90%);}
 
-  /* ---------- generic section header ---------- */
-  .section-pad{padding:76px 0;}
-  .section-head{max-width:60ch; margin-bottom:44px;}
-  .section-head h2{
-    font-size:clamp(1.7rem, 3.2vw, 2.35rem);
-    font-weight:800;
-    margin-top:12px;
-    line-height:1.15;
+  /* ---------- disclaimer banner ---------- */
+  .disclaimer{
+    background:var(--surface); border:1px solid var(--border-strong); border-left:4px solid var(--blue);
+    border-radius:10px; padding:18px 20px; display:flex; gap:14px; align-items:flex-start;
+    margin-bottom:40px;
   }
-  .section-head p{color:var(--text-muted); margin-top:14px; font-size:1.02rem;}
-  .band{background:var(--surface-1); border-top:1px solid var(--border-soft); border-bottom:1px solid var(--border-soft);}
+  .disclaimer svg{width:22px; height:22px; color:var(--blue); flex-shrink:0; margin-top:2px;}
+  .disclaimer p{font-size:.94rem; color:var(--text-muted);}
+  .disclaimer b{color:var(--text);}
 
   /* ---------- problema cards ---------- */
-  .problema-layout{
-    display:grid;
-    grid-template-columns:.85fr 1.15fr;
-    gap:44px;
-    align-items:center;
-  }
-  @media (max-width:860px){ .problema-layout{grid-template-columns:1fr;} }
-  .problema-art{display:flex; justify-content:center;}
-  .problema-art img{width:min(300px, 80%);}
-
-  .cardgrid{
-    display:grid;
-    grid-template-columns:repeat(2, 1fr);
-    gap:16px;
-  }
-  @media (max-width:560px){ .cardgrid{grid-template-columns:1fr;} }
-
+  .problema-grid{display:grid; grid-template-columns:repeat(2, 1fr); gap:16px;}
+  @media (max-width:760px){ .problema-grid{grid-template-columns:1fr;} }
   .p-card{
-    background:var(--surface-2);
-    border:1px solid var(--border);
-    border-left:3px solid var(--red);
-    border-radius:10px;
-    padding:18px 18px;
-  }
-  .p-card h3{
-    font-size:.98rem;
-    font-weight:700;
-    margin:10px 0 6px;
-    display:flex; align-items:center; gap:8px;
-  }
-  .p-card p{font-size:.88rem; color:var(--text-muted); line-height:1.55;}
-  .p-card .icon{width:18px; height:18px; color:var(--red); flex-shrink:0;}
-
-  .callout{
-    margin-top:26px;
-    font-family:var(--font-mono);
-    font-size:.88rem;
-    color:var(--text-dim);
-    border-left:2px solid var(--blue);
-    padding-left:14px;
-  }
-  .callout b{color:var(--text);}
-
-  /* ---------- conexion / flujo de dato ---------- */
-  .flow-diagram{
-    display:grid;
-    grid-template-columns:1fr auto 1fr;
-    gap:0;
-    align-items:center;
-    margin-top:8px;
-  }
-  @media (max-width:760px){ .flow-diagram{grid-template-columns:1fr;} }
-
-  .flow-node{
-    background:var(--surface-2);
-    border:1px solid var(--border);
-    border-radius:12px;
-    padding:20px;
-    text-align:center;
-  }
-  .flow-node.source{border-color:rgba(59,130,246,.4); box-shadow:0 0 0 1px rgba(59,130,246,.08) inset;}
-  .flow-node .icon-wrap{
-    width:44px; height:44px; margin:0 auto 12px;
-    border-radius:10px;
-    display:flex; align-items:center; justify-content:center;
-    background:var(--blue-wash);
-    color:var(--blue);
-  }
-  .flow-node h4{font-size:.95rem; font-weight:700; margin-bottom:4px;}
-  .flow-node p{font-size:.8rem; color:var(--text-dim);}
-
-  .flow-arrow{
-    display:flex; align-items:center; justify-content:center;
-    padding:0 18px;
-  }
-  .flow-arrow svg{width:34px; height:20px; color:var(--blue);}
-  @media (max-width:760px){
-    .flow-arrow{padding:14px 0; transform:rotate(90deg);}
-  }
-
-  .flow-out{
-    display:flex; flex-direction:column; gap:12px;
-  }
-  .flow-out .flow-node{
-    display:flex; align-items:center; gap:12px; text-align:left; padding:14px 16px;
-  }
-  .flow-out .icon-wrap{margin:0; flex-shrink:0; width:38px; height:38px;}
-  .flow-out .flow-node.mint .icon-wrap{background:var(--emerald-wash); color:var(--emerald);}
-  .flow-out .flow-node.blue .icon-wrap{background:var(--blue-wash); color:var(--blue);}
-  .flow-out .flow-node.amber .icon-wrap{background:rgba(245,158,11,.12); color:var(--amber);}
-
-  .flow-caption{
-    text-align:center;
-    font-family:var(--font-mono);
-    font-size:.85rem;
-    color:var(--emerald);
-    margin-top:28px;
-  }
-
-  /* ---------- stakeholders ---------- */
-  .stake-grid{
-    display:grid;
-    grid-template-columns:repeat(3, 1fr);
-    gap:20px;
-  }
-  @media (max-width:900px){ .stake-grid{grid-template-columns:1fr;} }
-
-  .stake-card{
-    background:var(--surface-2);
-    border:1px solid var(--border);
-    border-radius:var(--radius);
-    padding:26px 22px;
-    display:flex;
-    flex-direction:column;
-    gap:16px;
-  }
-  .stake-top{display:flex; align-items:center; gap:12px;}
-  .stake-icon{
-    width:42px; height:42px;
-    border-radius:10px;
-    background:var(--blue-wash);
-    color:var(--blue);
-    display:flex; align-items:center; justify-content:center;
-    flex-shrink:0;
-  }
-  .stake-card h3{font-size:1.08rem; font-weight:700;}
-  .stake-card .role-tag{
-    font-family:var(--font-mono);
-    font-size:.72rem;
-    color:var(--text-dim);
-    text-transform:uppercase;
-    letter-spacing:.06em;
-  }
-  .stake-block{
-    background:var(--surface-1);
-    border-radius:8px;
-    padding:12px 14px;
-  }
-  .stake-block .label{
-    font-family:var(--font-mono);
-    font-size:.68rem;
-    letter-spacing:.08em;
-    text-transform:uppercase;
-    display:block;
-    margin-bottom:6px;
-  }
-  .stake-block.problem .label{color:var(--red);}
-  .stake-block.solution .label{color:var(--emerald);}
-  .stake-block p{font-size:.87rem; color:var(--text-muted);}
-
-  /* ---------- flujo storyboard ---------- */
-  .story{
-    display:flex;
-    flex-direction:column;
-    gap:64px;
-  }
-  .story-step{
-    display:grid;
-    grid-template-columns:200px 1fr;
-    gap:36px;
-    align-items:center;
-  }
-  .story-step.rev{grid-template-columns:1fr 200px;}
-  .story-step.rev .story-art{order:2;}
-  .story-step.rev .story-copy{order:1;}
-  @media (max-width:720px){
-    .story-step, .story-step.rev{grid-template-columns:1fr; text-align:center;}
-    .story-step.rev .story-art, .story-step.rev .story-copy{order:0;}
-  }
-  .story-art{display:flex; justify-content:center;}
-  .story-art img{width:170px;}
-  .story-num{
-    font-family:var(--font-mono);
-    font-size:.78rem;
-    color:var(--blue);
-    letter-spacing:.1em;
-  }
-  .story-copy h3{font-size:1.25rem; font-weight:700; margin:8px 0 8px;}
-  .story-copy p{color:var(--text-muted); max-width:52ch;}
-  @media (max-width:720px){ .story-copy p{margin:0 auto;} }
-  .story-thread{
-    position:relative;
-  }
-  .story-thread::before{
-    content:"";
-    position:absolute;
-    left:99px; top:-32px; bottom:-32px;
-    width:1px;
-    background:linear-gradient(var(--border), var(--blue-soft), var(--border));
-    z-index:0;
-  }
-  @media (max-width:720px){ .story-thread::before{display:none;} }
-
-  /* ---------- funcionalidades ---------- */
-  .feat-grid{
-    display:grid;
-    grid-template-columns:repeat(2, 1fr);
-    gap:16px;
-  }
-  @media (max-width:760px){ .feat-grid{grid-template-columns:1fr;} }
-  .feat-card{
-    background:var(--surface-2);
-    border:1px solid var(--border);
-    border-radius:var(--radius);
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
     padding:22px;
   }
-  .feat-card .icon-wrap{
-    width:40px; height:40px;
-    border-radius:9px;
-    background:var(--emerald-wash);
-    color:var(--emerald);
-    display:flex; align-items:center; justify-content:center;
-    margin-bottom:14px;
-  }
-  .feat-card h3{font-size:1.02rem; font-weight:700; margin-bottom:8px;}
-  .feat-card p{font-size:.88rem; color:var(--text-muted); margin-bottom:12px;}
-  .feat-solves{
-    font-family:var(--font-mono);
-    font-size:.72rem;
-    color:var(--text-dim);
-    border-top:1px solid var(--border);
-    padding-top:10px;
-    display:flex;
-    gap:6px;
-  }
-  .feat-solves b{color:var(--red); font-weight:600;}
-
-  /* ---------- confianza / error handling ---------- */
-  .trust-layout{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:40px;
-    align-items:center;
-  }
-  @media (max-width:800px){ .trust-layout{grid-template-columns:1fr;} }
-  .trust-art{display:flex; gap:20px; justify-content:center; align-items:flex-end;}
-  .trust-art img{width:150px;}
-  .trust-list{display:flex; flex-direction:column; gap:16px;}
-  .trust-item{display:flex; gap:14px;}
-  .trust-item .icon-wrap{
-    width:34px; height:34px; flex-shrink:0;
-    border-radius:8px;
-    background:var(--blue-wash); color:var(--blue);
+  .p-card.risk{border-color:rgba(196,70,1,.28); background:linear-gradient(var(--surface), var(--alert-wash));}
+  .p-card-top{display:flex; align-items:center; gap:12px; margin-bottom:12px;}
+  .p-card .icon-wrap{
+    width:38px; height:38px; border-radius:9px; flex-shrink:0;
+    background:var(--teal-wash); color:var(--teal-ink);
     display:flex; align-items:center; justify-content:center;
   }
-  .trust-item h4{font-size:.95rem; font-weight:700; margin-bottom:3px;}
-  .trust-item p{font-size:.85rem; color:var(--text-muted);}
-
-  /* ---------- ecosistema ---------- */
-  .eco-wrap{
-    display:grid;
-    grid-template-columns:1fr 1.1fr;
-    gap:44px;
-    align-items:center;
+  .p-card.risk .icon-wrap{background:var(--alert-wash); color:var(--alert);}
+  .p-card h3{font-size:1.02rem; line-height:1.35;}
+  .p-card p{font-size:.92rem; color:var(--text-muted);}
+  .p-card .tag{
+    display:inline-block; margin-top:12px; font-family:var(--font-mono); font-size:.72rem;
+    color:var(--alert); background:var(--alert-wash); padding:4px 9px; border-radius:6px;
+    border:1px solid rgba(196,70,1,.25);
   }
-  @media (max-width:860px){ .eco-wrap{grid-template-columns:1fr;} }
-  .eco-art{border-radius:16px; overflow:hidden; border:1px solid var(--border);}
-  .eco-tags{display:flex; flex-wrap:wrap; gap:10px; margin-top:20px;}
-  .eco-tag{
-    font-family:var(--font-mono);
-    font-size:.78rem;
-    padding:7px 12px;
-    border-radius:20px;
-    border:1px solid var(--border);
-    color:var(--text-muted);
-    background:var(--surface-2);
-  }
-  .eco-tag.live{color:var(--emerald); border-color:rgba(16,185,129,.35);}
 
-  /* ---------- cierre ---------- */
+  /* ---------- idea central / stakeholder wheel ---------- */
+  .wheel-layout{display:grid; grid-template-columns:.95fr 1.05fr; gap:48px; align-items:center;}
+  @media (max-width:900px){ .wheel-layout{grid-template-columns:1fr;} }
+
+  .wheel{
+    position:relative; width:100%; max-width:520px; aspect-ratio:1/1; margin:0 auto;
+  }
+  .wheel svg.lines{position:absolute; inset:0; width:100%; height:100%;}
+  .wheel-hub{
+    position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+    width:118px; height:118px; border-radius:50%;
+    background:var(--teal); color:#fff;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+    text-align:center; padding:8px; box-shadow:0 8px 20px rgba(0,128,128,.28);
+    z-index:2;
+  }
+  .wheel-hub svg{width:26px; height:26px;}
+  .wheel-hub span{font-family:var(--font-display); font-weight:700; font-size:.78rem; line-height:1.15;}
+
+  .wheel-node{
+    position:absolute; transform:translate(-50%,-50%);
+    width:150px; text-align:center; z-index:2;
+  }
+  .wheel-node .node-icon{
+    width:46px; height:46px; border-radius:50%; margin:0 auto 6px;
+    background:var(--surface); border:2px solid var(--teal); color:var(--teal-ink);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .wheel-node.future .node-icon{border-color:var(--border-strong); color:var(--text-soft);}
+  .wheel-node .node-icon svg{width:22px; height:22px;}
+  .wheel-node h4{font-size:.86rem; margin-bottom:2px;}
+  .wheel-node p{font-size:.72rem; color:var(--text-soft); line-height:1.3;}
+  .wheel-node .tag{
+    display:inline-block; margin-top:4px; font-family:var(--font-mono); font-size:.62rem;
+    padding:2px 7px; border-radius:5px;
+  }
+  .wheel-node .tag.mvp{background:var(--teal-wash); color:var(--teal-ink);}
+  .wheel-node .tag.next{background:var(--border); color:var(--text-soft);}
+
+  .wheel-legend{display:flex; gap:18px; flex-wrap:wrap; margin-top:22px; font-size:.82rem; color:var(--text-soft); justify-content:center;}
+  .wheel-legend span{display:inline-flex; align-items:center; gap:6px;}
+  .dot{width:9px; height:9px; border-radius:50%;}
+  .dot.mvp{background:var(--teal);}
+  .dot.next{background:var(--border-strong); border:1px solid var(--text-soft);}
+
+  .wheel-copy p{color:var(--text-muted); margin-bottom:14px; font-size:1.02rem;}
+  .wheel-copy ul{margin:0; padding-left:20px; color:var(--text-muted); font-size:.94rem;}
+  .wheel-copy li{margin-bottom:8px;}
+
+  /* ---------- soluciones ---------- */
+  .sol-grid{display:grid; grid-template-columns:repeat(2, 1fr); gap:18px;}
+  @media (max-width:800px){ .sol-grid{grid-template-columns:1fr;} }
+  .sol-card{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:24px;
+  }
+  .sol-card .against{
+    font-family:var(--font-mono); font-size:.72rem; color:var(--text-soft);
+    text-transform:uppercase; letter-spacing:.05em; margin-bottom:8px;
+  }
+  .sol-card h3{font-size:1.08rem; margin-bottom:10px;}
+  .sol-card ul{padding-left:18px; color:var(--text-muted); font-size:.9rem;}
+  .sol-card li{margin-bottom:6px;}
+  .pill-row{display:flex; gap:8px; flex-wrap:wrap; margin-top:14px;}
+  .pill{
+    font-family:var(--font-mono); font-size:.7rem; padding:4px 10px; border-radius:20px;
+    display:inline-flex; align-items:center; gap:5px;
+  }
+  .pill.mvp{background:var(--teal-wash); color:var(--teal-ink); border:1px solid var(--teal-wash-strong);}
+  .pill.next{background:var(--border); color:var(--text-soft); border:1px solid var(--border-strong);}
+  .pill svg{width:11px; height:11px;}
+
+  /* ---------- mapa esquemático ---------- */
+  .map-block{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:24px; margin-top:32px;
+    display:grid; grid-template-columns:1.1fr .9fr; gap:28px; align-items:center;
+  }
+  @media (max-width:800px){ .map-block{grid-template-columns:1fr;} }
+  .map-block svg{width:100%; height:auto; border-radius:8px; border:1px solid var(--border);}
+  .map-legend{display:flex; flex-direction:column; gap:10px;}
+  .map-legend-item{display:flex; align-items:center; gap:10px; font-size:.88rem; color:var(--text-muted);}
+  .map-legend-item .swatch{width:14px; height:14px; border-radius:50%; flex-shrink:0;}
+
+  /* ---------- storyboard ---------- */
+  .story-intro{margin:56px 0 32px;}
+  .story{display:flex; flex-direction:column; gap:14px;}
+  .story-step{
+    display:grid; grid-template-columns:96px 1fr; gap:20px; align-items:center;
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:16px 20px;
+  }
+  @media (max-width:600px){ .story-step{grid-template-columns:1fr; text-align:center;} }
+  .story-art img{width:80px; margin:0 auto;}
+  .story-num{font-family:var(--font-mono); font-size:.72rem; color:var(--teal-ink); letter-spacing:.08em;}
+  .story-copy h3{font-size:1.02rem; margin:4px 0 4px;}
+  .story-copy p{color:var(--text-muted); font-size:.9rem; max-width:60ch;}
+
+  /* ---------- conclusion ---------- */
+  .concl-layout{display:grid; grid-template-columns:1fr 1fr; gap:44px; align-items:start;}
+  @media (max-width:860px){ .concl-layout{grid-template-columns:1fr;} }
+  .concl-copy p{color:var(--text-muted); margin-bottom:16px; font-size:1.02rem;}
+  .later-list{display:flex; flex-direction:column; gap:10px;}
+  .later-item{
+    display:flex; gap:12px; align-items:flex-start;
+    background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px 16px;
+  }
+  .later-item .icon-wrap{
+    width:32px; height:32px; border-radius:8px; flex-shrink:0;
+    background:var(--border); color:var(--text-soft);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .later-item h4{font-size:.92rem; margin-bottom:2px;}
+  .later-item p{font-size:.82rem; color:var(--text-soft);}
+
   .cierre{
-    padding:90px 0 70px;
-    text-align:center;
-    background:radial-gradient(560px 320px at 50% 0%, rgba(16,185,129,.10), transparent 65%);
+    padding:72px 0 60px; text-align:center;
+    background:var(--teal); color:#fff;
   }
-  .cierre img{width:220px; margin:0 auto 26px;}
-  .cierre h2{font-size:clamp(1.8rem, 4vw, 2.6rem); font-weight:800; max-width:20ch; margin:0 auto 14px;}
-  .cierre p{color:var(--text-muted); max-width:48ch; margin:0 auto 30px;}
-  .cierre .lema{justify-content:center; display:flex;}
+  .cierre img{width:150px; margin:0 auto 22px; border-radius:12px; background:#fff; padding:10px;}
+  .cierre h2{color:#fff; font-size:clamp(1.6rem, 3.6vw, 2.3rem); max-width:22ch; margin:0 auto 14px;}
+  .cierre p{color:rgba(255,255,255,.85); max-width:52ch; margin:0 auto; font-size:1.02rem;}
 
-  .btn{
-    display:inline-flex; align-items:center; gap:8px;
-    font-family:var(--font-mono);
-    font-size:.85rem; font-weight:600;
-    padding:13px 24px;
-    border-radius:9px;
-    background:var(--blue);
-    color:#fff;
-    border:1px solid var(--blue);
-    text-decoration:none;
-  }
-  .btn.ghost{background:transparent; color:var(--text-muted); border-color:var(--border);}
-  .btn-row{display:flex; gap:12px; justify-content:center; flex-wrap:wrap;}
+  footer{padding:24px 0 40px; text-align:center; font-family:var(--font-mono); font-size:.78rem; color:var(--text-soft);}
 
-  footer{
-    padding:26px 0 40px;
-    text-align:center;
-    font-family:var(--font-mono);
-    font-size:.74rem;
-    color:var(--text-dim);
-  }
-
-  ::selection{background:var(--blue-soft); color:#fff;}
+  ::selection{background:var(--teal-wash-strong); color:var(--text);}
 </style>
 </head>
 <body>
@@ -519,7 +319,7 @@
       <svg class="paw" viewBox="0 0 24 24" fill="currentColor"><path d="M6.5 10.5c1.1 0 2-1.12 2-2.5S7.6 5.5 6.5 5.5 4.5 6.62 4.5 8s.9 2.5 2 2.5zm5-3c1.1 0 2-1.12 2-2.5S12.6 2.5 11.5 2.5 9.5 3.62 9.5 5s.9 2.5 2 2.5zm5.5 3c1.1 0 2-1.12 2-2.5S18.1 5.5 17 5.5s-2 1.12-2 2.5.9 2.5 2 2.5zm-3.9 2.3c-1.9-1.6-4.1-1.6-6 0-1.85 1.55-4.3 2.7-4.3 5.1 0 1.7 1.35 3.1 3 3.1.95 0 1.6-.4 2.3-.85.7-.45 1.4-.9 2.4-.9s1.7.45 2.4.9c.7.45 1.35.85 2.3.85 1.65 0 3-1.4 3-3.1 0-2.4-2.45-3.55-4.3-5.1z"/></svg>
       Patitas en Alerta
     </div>
-    <span class="topbar-tag">Presentación ilustrativa · uso interno / video</span>
+    <span class="topbar-tag">Presentación ilustrativa · para conversar con los stakeholders</span>
   </div>
 </div>
 
@@ -527,335 +327,361 @@
 <section class="hero">
   <div class="wrap hero-grid">
     <div>
-      <span class="eyebrow">Coronel Pringles · Piloto municipal</span>
-      <h1>Un dato,<br>todo el <span class="accent">ecosistema</span> de bienestar animal.</h1>
-      <p class="lema"><b>"Reportar protege.</b> Actuar salva."</p>
-      <p class="lead">Patitas en Alerta conecta a vecinos, municipio y veterinarios en un mismo lugar: lo que un vecino reporta en la calle llega, en tiempo real, a quien puede actuar.</p>
-      <div class="hero-stats">
-        <div class="hero-stat"><b>3</b><span>actores conectados en el MVP</span></div>
-        <div class="hero-stat"><b>1</b><span>reporte alimenta todo el sistema</span></div>
-        <div class="hero-stat"><b>48h</b><span>ventana crítica que buscamos cubrir</span></div>
-      </div>
+      <span class="eyebrow">Coronel Pringles · Propuesta en construcción</span>
+      <h1>Una plataforma para pensar el bienestar animal <span class="accent">entre todos</span>.</h1>
+      <div class="lema"><b>"Reportar protege.</b> Actuar salva."</div>
+      <p class="lead">Patitas en Alerta busca conectar a vecinos, municipio, veterinarios, ONGs y comercios en un mismo lugar, para que la información sobre las mascotas y la fauna urbana de la localidad no se pierda entre grupos de Facebook, llamados telefónicos y papeles sueltos.</p>
+      <p class="hero-note">Esta página presenta preguntas e hipótesis de trabajo, no diagnósticos confirmados — todavía no conversamos formalmente con el municipio ni relevamos a los vecinos.</p>
     </div>
     <div class="hero-art">
-      <div class="hero-ring"></div>
-      <div class="hero-ring r2"></div>
       <img src="../public/animales/Inicio-Dashboard.png" alt="Mascota de Patitas en Alerta con el teléfono en la mano">
     </div>
   </div>
 </section>
 
-<!-- ================= PROBLEMA ================= -->
+<!-- ================= PROBLEMAS ================= -->
+<section class="section-pad">
+  <div class="wrap">
+    <div class="disclaimer reveal">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+      <p><b>Antes de seguir:</b> lo que sigue son preguntas abiertas sobre lo que podría estar pasando en una localidad como la nuestra con la fauna urbana. Las planteamos como interrogantes a propósito — se van a confirmar, matizar o descartar recién cuando hablemos con el municipio y con vecinos concretos.</p>
+    </div>
+
+    <div class="section-head">
+      <span class="eyebrow">Preguntas que nos hacemos</span>
+      <h2>¿Qué puede estar pasando hoy, sin una herramienta que lo ordene?</h2>
+      <p>Cada pregunta acá abajo es también la razón de ser de una parte de la plataforma. Si alguna no aplica en la práctica, esa parte del proyecto se revisa.</p>
+    </div>
+
+    <div class="problema-grid">
+      <div class="p-card reveal">
+        <div class="p-card-top">
+          <div class="icon-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.5-9.3-9.1C1.4 8.7 3 5.5 6.2 5A4.7 4.7 0 0 1 12 8a4.7 4.7 0 0 1 5.8-3c3.2.5 4.8 3.7 3.5 6.9C19 16.5 12 21 12 21z"/></svg></div>
+          <h3>¿Cuánto tarda hoy en reencontrarse una mascota perdida?</h3>
+        </div>
+        <p>Si la búsqueda depende de grupos de Facebook y estados de WhatsApp, ¿cuánta información se pierde por no tener una ubicación exacta o un canal único donde buscar?</p>
+      </div>
+
+      <div class="p-card risk reveal">
+        <div class="p-card-top">
+          <div class="icon-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l9 5v6c0 5-3.6 8-9 9-5.4-1-9-4-9-9V7z"/><path d="M12 8v5M12 16h.01"/></svg></div>
+          <h3>¿A quién le avisa hoy un vecino que ve un animal suelto o con signos de rabia?</h3>
+        </div>
+        <p>Animales sueltos, con posibles signos de rabia o que mordieron a alguien: ¿existe hoy un canal claro y rápido para que esa información llegue a Zoonosis, o depende de que alguien sepa a quién llamar?</p>
+        <span class="tag">Situación de atención veterinaria urgente</span>
+      </div>
+
+      <div class="p-card reveal">
+        <div class="p-card-top">
+          <div class="icon-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></div>
+          <h3>¿Con qué datos decide el municipio dónde vacunar o castrar primero?</h3>
+        </div>
+        <p>Sin un mapa consolidado de reportes por zona, ¿la planificación de operativos se apoya en registros propios o en lo que va llegando de forma dispersa?</p>
+      </div>
+
+      <div class="p-card reveal">
+        <div class="p-card-top">
+          <div class="icon-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h9l3 3v17H6z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg></div>
+          <h3>¿Qué pasa cuando la libreta sanitaria en papel no está el día de la consulta?</h3>
+        </div>
+        <p>¿Cuántas veces el veterinario tiene que reconstruir el historial de memoria porque la libreta se mojó, se perdió o quedó en casa?</p>
+      </div>
+
+      <div class="p-card reveal">
+        <div class="p-card-top">
+          <div class="icon-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 1 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg></div>
+          <h3>¿Cómo encuentra hoy un vecino a las ONGs o rescatistas de la zona?</h3>
+        </div>
+        <p>Sin un directorio ni un canal común, ¿cuánto esfuerzo de voluntarios se pierde coordinando por chats individuales en lugar de por un espacio compartido?</p>
+      </div>
+
+      <div class="p-card reveal">
+        <div class="p-card-top">
+          <div class="icon-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l1-5h16l1 5M4 9v10a1 1 0 001 1h14a1 1 0 001-1V9M9 21v-6h6v6"/></svg></div>
+          <h3>¿Dónde busca hoy un vecino un comercio o curso confiable sobre su mascota?</h3>
+        </div>
+        <p>Pet shops, veterinarias, adiestradores, cursos de tenencia responsable: ¿existe un lugar donde encontrarlos organizados por zona, o cada búsqueda arranca de cero?</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= IDEA CENTRAL ================= -->
+<section class="section-pad band">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow blue">La idea central</span>
+      <h2>Patitas en Alerta no es una app para un solo actor: es el punto donde se cruzan todos.</h2>
+      <p>Cada stakeholder entra por una necesidad distinta, pero comparte la misma base de datos e infraestructura. Lo que uno reporta, el resto lo puede usar.</p>
+    </div>
+
+    <div class="wheel-layout">
+      <div class="wheel reveal">
+        <svg class="lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          <line x1="50" y1="50" x2="50" y2="6" stroke="#008080" stroke-width="1.2"/>
+          <line x1="50" y1="50" x2="90" y2="28" stroke="#008080" stroke-width="1.2"/>
+          <line x1="50" y1="50" x2="20" y2="28" stroke="#008080" stroke-width="1.2"/>
+          <line x1="50" y1="50" x2="78" y2="82" stroke="#BFCCCA" stroke-width="1.2" stroke-dasharray="3 3"/>
+          <line x1="50" y1="50" x2="22" y2="82" stroke="#BFCCCA" stroke-width="1.2" stroke-dasharray="3 3"/>
+        </svg>
+
+        <div class="wheel-hub">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6.5 10.5c1.1 0 2-1.12 2-2.5S7.6 5.5 6.5 5.5 4.5 6.62 4.5 8s.9 2.5 2 2.5zm5-3c1.1 0 2-1.12 2-2.5S12.6 2.5 11.5 2.5 9.5 3.62 9.5 5s.9 2.5 2 2.5zm5.5 3c1.1 0 2-1.12 2-2.5S18.1 5.5 17 5.5s-2 1.12-2 2.5.9 2.5 2 2.5zm-3.9 2.3c-1.9-1.6-4.1-1.6-6 0-1.85 1.55-4.3 2.7-4.3 5.1 0 1.7 1.35 3.1 3 3.1.95 0 1.6-.4 2.3-.85.7-.45 1.4-.9 2.4-.9s1.7.45 2.4.9c.7.45 1.35.85 2.3.85 1.65 0 3-1.4 3-3.1 0-2.4-2.45-3.55-4.3-5.1z"/></svg>
+          <span>Patitas<br>en Alerta</span>
+        </div>
+
+        <div class="wheel-node" style="left:50%; top:6%;">
+          <div class="node-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21V10l9-7 9 7v11M9 21v-6h6v6"/></svg></div>
+          <h4>Municipio</h4>
+          <p>Zoonosis y turnera</p>
+          <span class="tag mvp">En el MVP</span>
+        </div>
+
+        <div class="wheel-node" style="left:90%; top:28%;">
+          <div class="node-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h9l3 3v17H6z"/><path d="M9 8h6M9 12h6"/></svg></div>
+          <h4>Veterinarios/as</h4>
+          <p>Agenda y libreta digital</p>
+          <span class="tag mvp">En el MVP</span>
+        </div>
+
+        <div class="wheel-node" style="left:20%; top:28%;">
+          <div class="node-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.5-9.3-9.1C1.4 8.7 3 5.5 6.2 5A4.7 4.7 0 0 1 12 8a4.7 4.7 0 0 1 5.8-3c3.2.5 4.8 3.7 3.5 6.9C19 16.5 12 21 12 21z"/></svg></div>
+          <h4>Dueños de mascotas</h4>
+          <p>Vecinos y adoptantes</p>
+          <span class="tag mvp">En el MVP</span>
+        </div>
+
+        <div class="wheel-node future" style="left:78%; top:82%;">
+          <div class="node-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l1-5h16l1 5M4 9v10a1 1 0 001 1h14a1 1 0 001-1V9M9 21v-6h6v6"/></svg></div>
+          <h4>Comerciantes</h4>
+          <p>Pet shops y servicios</p>
+          <span class="tag next">Después del MVP</span>
+        </div>
+
+        <div class="wheel-node future" style="left:22%; top:82%;">
+          <div class="node-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 1 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg></div>
+          <h4>ONGs / Rescatistas</h4>
+          <p>Red de colaboración</p>
+          <span class="tag next">Después del MVP</span>
+        </div>
+      </div>
+
+      <div class="wheel-copy">
+        <span class="eyebrow blue">Cómo se lee el gráfico</span>
+        <p style="margin-top:12px;">Las líneas sólidas son los tres actores que ya tienen historias de usuario definidas en el MVP de 4 semanas. Las líneas punteadas son actores igual de importantes para la visión completa, que se suman en etapas siguientes.</p>
+        <ul>
+          <li><b>Dueño de mascota</b> registra a su animal y reporta — ese dato alimenta al resto sin que nadie lo vuelva a cargar.</li>
+          <li><b>Municipio</b> ve todo consolidado en un panel, sin depender de que cada vecino llame por teléfono.</li>
+          <li><b>Veterinario/a</b> reutiliza el mismo motor de turnos del municipio para su propia agenda.</li>
+          <li><b>ONGs y comerciantes</b> se conectan sobre la misma base, cuando el núcleo esté validado y estable.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SOLUCIONES ================= -->
 <section class="section-pad">
   <div class="wrap">
     <div class="section-head">
-      <span class="eyebrow rose">El problema, hoy</span>
-      <h2>Cada funcionalidad de esta plataforma existe para resolver algo puntual — ninguna está de adorno.</h2>
-      <p>Antes de mostrar qué hace la plataforma, esto es lo que pasa hoy sin ella.</p>
-    </div>
-    <div class="problema-layout">
-      <div class="problema-art">
-        <img src="../public/animales/Reportar-mascota%20-perdida.png" alt="Mascota triste sosteniendo un cartel de mascota perdida">
-      </div>
-      <div class="cardgrid">
-        <div class="p-card reveal">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h5l2-4 4 8 2-4h7"/></svg>
-          <h3>Mascota perdida = ruido</h3>
-          <p>Se publica en grupos de Facebook: sin ubicación real, sin seguimiento, y la ventana de las primeras 48 horas se pierde.</p>
-        </div>
-        <div class="p-card reveal">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>
-          <h3>Municipio decide a ciegas</h3>
-          <p>Sin datos consolidados de dónde hay más problemáticas, los operativos de vacunación y castración se planifican sin evidencia real.</p>
-        </div>
-        <div class="p-card reveal">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4l16 16M20 4L4 20"/></svg>
-          <h3>Turnos por teléfono</h3>
-          <p>Municipio y veterinarios gestionan agenda a mano o por WhatsApp: sin control de superposición, sin historial.</p>
-        </div>
-        <div class="p-card reveal">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h9l3 3v17H6z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>
-          <h3>Libreta sanitaria en papel</h3>
-          <p>Se moja, se pierde o queda en casa el día de la consulta. El historial de vacunas de la mascota no está en ningún lado confiable.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ================= CONEXION ================= -->
-<section class="section-pad band">
-  <div class="wrap">
-    <div class="section-head">
-      <span class="eyebrow">La idea central</span>
-      <h2>Un solo reporte alimenta a todo el sistema, sin que nadie tenga que cargarlo dos veces.</h2>
-      <p>Ese es el argumento que sostiene toda la plataforma: el dato no queda aislado en la pantalla de quien lo generó.</p>
+      <span class="eyebrow">Lo que propone la plataforma</span>
+      <h2>Una solución por cada pregunta abierta — separada por lo que entra ahora y lo que queda para después.</h2>
+      <p>El orden respeta el de la sección anterior: cada tarjeta responde directamente a una de esas preguntas.</p>
     </div>
 
-    <div class="flow-diagram">
-      <div class="flow-node source reveal">
-        <div class="icon-wrap">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3.2"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg>
-        </div>
-        <h4>Vecino reporta</h4>
-        <p>Foto + ubicación + categoría, en pocos pasos</p>
+    <div class="sol-grid">
+      <div class="sol-card reveal">
+        <div class="against">Responde a → mascotas perdidas y encontradas</div>
+        <h3>Motor de reportes unificado</h3>
+        <ul>
+          <li>Reporte con foto y ubicación automática, en pocos pasos</li>
+          <li>Listado público con filtros de mapa y tabla</li>
+          <li>Aviso cuando aparece un reporte de "encontrado" compatible</li>
+        </ul>
+        <div class="pill-row"><span class="pill mvp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg>Módulo 2 · MVP</span></div>
       </div>
 
-      <div class="flow-arrow">
-        <svg viewBox="0 0 34 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 10h30M24 3l8 7-8 7"/></svg>
+      <div class="sol-card reveal">
+        <div class="against">Responde a → eventos de riesgo en la vía pública</div>
+        <h3>Alertas urbanas, dentro del mismo motor</h3>
+        <ul>
+          <li>Categoría propia para animal suelto, con signos de rabia o mordedura</li>
+          <li>Evidencia obligatoria y visibilidad directa en el panel municipal</li>
+          <li>No depende de encontrar el teléfono correcto al que llamar</li>
+        </ul>
+        <div class="pill-row"><span class="pill mvp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg>Módulo 2 · MVP</span></div>
       </div>
 
-      <div class="flow-out">
-        <div class="flow-node blue reveal">
-          <div class="icon-wrap">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M8 15h4"/></svg>
-          </div>
-          <div><h4>Dashboard del municipio</h4><p>Mapa de calor y datos reales, sin carga manual</p></div>
-        </div>
-        <div class="flow-node mint reveal">
-          <div class="icon-wrap">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.5-9.3-9.1C1.4 8.7 3 5.5 6.2 5A4.7 4.7 0 0 1 12 8a4.7 4.7 0 0 1 5.8-3c3.2.5 4.8 3.7 3.5 6.9C19 16.5 12 21 12 21z"/></svg>
-          </div>
-          <div><h4>Vecinos con reportes cercanos</h4><p>Aviso automático por zona y especie compatible</p></div>
-        </div>
-        <div class="flow-node amber reveal">
-          <div class="icon-wrap">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 9h16M9 4v16"/></svg>
-          </div>
-          <div><h4>Ficha e historial de la mascota</h4><p>Queda vinculado, sin volver a completar datos</p></div>
-        </div>
+      <div class="sol-card reveal">
+        <div class="against">Responde a → operativos decididos sin datos</div>
+        <h3>Dashboard, turnera y vitrina de adopción</h3>
+        <ul>
+          <li>Mapa de calor con los reportes ya cargados, sin trabajo manual</li>
+          <li>Alta rápida de operativos y turnos con cupo controlado</li>
+          <li>Fichas de adopción publicadas por el municipio, visibles al vecino</li>
+        </ul>
+        <div class="pill-row"><span class="pill mvp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg>Módulo 3 · MVP</span></div>
+      </div>
+
+      <div class="sol-card reveal">
+        <div class="against">Responde a → historial sanitario que se pierde</div>
+        <h3>Agenda y libreta sanitaria digital</h3>
+        <ul>
+          <li>Franjas de turno sobre el mismo motor que usa el municipio</li>
+          <li>Entradas cargadas solo por el veterinario, con el dueño autorizando el acceso</li>
+          <li>Historial ordenado por fecha, disponible siempre</li>
+        </ul>
+        <div class="pill-row"><span class="pill mvp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg>Módulo 4 · MVP</span></div>
+      </div>
+
+      <div class="sol-card reveal">
+        <div class="against">Responde a → rescate y adopción bajo presión</div>
+        <h3>Red de colaboración entre ONGs</h3>
+        <ul>
+          <li>Directorio de aliados verificados, filtrable por zona</li>
+          <li>Solicitudes de recursos (tránsito, insumos, asistencia veterinaria)</li>
+          <li>Seguimiento de cada colaboración en un hilo con historial</li>
+        </ul>
+        <div class="pill-row"><span class="pill next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>Módulo 5 · Después</span></div>
+      </div>
+
+      <div class="sol-card reveal">
+        <div class="against">Responde a → comercio y educación dispersos</div>
+        <h3>Marketplace y foros de bienestar animal</h3>
+        <ul>
+          <li>Directorio de comercios y servicios verificados por zona</li>
+          <li>Cursos de tenencia responsable publicados por municipio u ONGs</li>
+          <li>Foro moderado para consultas de la comunidad</li>
+        </ul>
+        <div class="pill-row"><span class="pill next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>Módulos 7 y 8 · Después</span></div>
       </div>
     </div>
 
-    <p class="flow-caption">reporte ciudadano → dato limpio → decisión pública</p>
-  </div>
-</section>
-
-<!-- ================= STAKEHOLDERS ================= -->
-<section class="section-pad" id="stakeholders">
-  <div class="wrap">
-    <div class="section-head">
-      <span class="eyebrow mint">Beneficio real, no genérico</span>
-      <h2>Cada actor entra por un problema puntual, no por "usar una app más".</h2>
-    </div>
-
-    <div class="stake-grid">
-      <div class="stake-card reveal">
-        <div class="stake-top">
-          <div class="stake-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.5-9.3-9.1C1.4 8.7 3 5.5 6.2 5A4.7 4.7 0 0 1 12 8a4.7 4.7 0 0 1 5.8-3c3.2.5 4.8 3.7 3.5 6.9C19 16.5 12 21 12 21z"/></svg></div>
-          <div>
-            <h3>Dueño de mascota</h3>
-            <span class="role-tag">Vecino</span>
-          </div>
-        </div>
-        <div class="stake-block problem">
-          <span class="label">Problema hoy</span>
-          <p>Publica en redes sin geolocalización real y pierde la libreta sanitaria física de su mascota.</p>
-        </div>
-        <div class="stake-block solution">
-          <span class="label">Con Patitas en Alerta</span>
-          <p>Reporte geolocalizado en minutos y una ficha de su mascota con historial que no se pierde nunca.</p>
-        </div>
-      </div>
-
-      <div class="stake-card reveal">
-        <div class="stake-top">
-          <div class="stake-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21V10l9-7 9 7v11M9 21v-6h6v6"/></svg></div>
-          <div>
-            <h3>Municipio</h3>
-            <span class="role-tag">Zoonosis</span>
-          </div>
-        </div>
-        <div class="stake-block problem">
-          <span class="label">Problema hoy</span>
-          <p>Decide campañas de vacunación y castración sin datos consolidados, y gestiona turnos por teléfono.</p>
-        </div>
-        <div class="stake-block solution">
-          <span class="label">Con Patitas en Alerta</span>
-          <p>Dashboard alimentado automáticamente por los reportes ciudadanos y turnera propia sin desarrollo extra.</p>
-        </div>
-      </div>
-
-      <div class="stake-card reveal">
-        <div class="stake-top">
-          <div class="stake-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h9l3 3v17H6z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg></div>
-          <div>
-            <h3>Veterinario/a</h3>
-            <span class="role-tag">Profesional matriculado</span>
-          </div>
-        </div>
-        <div class="stake-block problem">
-          <span class="label">Problema hoy</span>
-          <p>Agenda manual por WhatsApp o teléfono, y libreta en papel que el dueño extravía en la consulta.</p>
-        </div>
-        <div class="stake-block solution">
-          <span class="label">Con Patitas en Alerta</span>
-          <p>Agenda propia sobre el mismo motor de turnos del municipio, y libreta sanitaria digital con autoridad verificada.</p>
-        </div>
+    <!-- mapa esquemático -->
+    <div class="map-block reveal">
+      <svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Mapa esquemático con distintos tipos de reporte">
+        <rect width="320" height="200" fill="#F4F7F6"/>
+        <path d="M0 60 H320 M0 130 H320 M70 0 V200 M230 0 V200" stroke="#D8E1E0" stroke-width="2"/>
+        <path d="M0 60 H320" stroke="#BFE3E1" stroke-width="10" opacity=".5"/>
+        <circle cx="70" cy="60" r="7" fill="#0073E6"/>
+        <circle cx="140" cy="95" r="7" fill="#008080"/>
+        <circle cx="230" cy="130" r="7" fill="#C44601"/>
+        <circle cx="190" cy="40" r="7" fill="#0073E6"/>
+        <circle cx="270" cy="70" r="7" fill="#008080"/>
+        <circle cx="40" cy="150" r="7" fill="#C44601"/>
+        <circle cx="255" cy="160" r="7" fill="#66746F"/>
+      </svg>
+      <div class="map-legend">
+        <div class="map-legend-item"><span class="swatch" style="background:#0073E6;"></span>Mascota perdida</div>
+        <div class="map-legend-item"><span class="swatch" style="background:#008080;"></span>Mascota encontrada</div>
+        <div class="map-legend-item"><span class="swatch" style="background:#C44601;"></span>Evento de riesgo urbano</div>
+        <div class="map-legend-item"><span class="swatch" style="background:#66746F;"></span>Operativo municipal</div>
+        <p style="margin-top:8px; font-size:.85rem; color:var(--text-soft);">Un mismo mapa, con categorías claramente diferenciadas por ícono y color — nunca solo por color, siguiendo el criterio de accesibilidad del proyecto.</p>
       </div>
     </div>
-  </div>
-</section>
 
-<!-- ================= FLUJO / STORYBOARD ================= -->
-<section class="section-pad band">
-  <div class="wrap">
-    <div class="section-head">
-      <span class="eyebrow">Así se usa</span>
-      <h2>El recorrido completo, en cinco pasos.</h2>
-      <p>La misma secuencia que se ve dentro de la plataforma — pensada para no perder a nadie en el camino.</p>
+    <!-- storyboard -->
+    <div class="story-intro">
+      <span class="eyebrow blue">Así se ve en la práctica</span>
+      <h2 style="font-size:clamp(1.4rem,2.6vw,1.9rem); margin-top:10px;">El recorrido de un reporte, paso a paso.</h2>
     </div>
 
-    <div class="story story-thread">
+    <div class="story">
       <div class="story-step reveal">
         <div class="story-art"><img src="../public/animales/Login-Bienvenida.png" alt="Mascota dando la bienvenida con el teléfono"></div>
         <div class="story-copy">
           <span class="story-num">PASO 01</span>
           <h3>Entra sin fricción</h3>
-          <p>Registro con email y contraseña en menos de un minuto. El vecino, el veterinario y el municipio entran por el mismo lugar, con el rol que les corresponde.</p>
+          <p>Registro simple con email y contraseña. Cada rol entra por el mismo lugar, con lo que le corresponde.</p>
         </div>
       </div>
-
-      <div class="story-step rev reveal">
+      <div class="story-step reveal">
         <div class="story-art"><img src="../public/animales/Registro.png" alt="Mascota señalando el teléfono para registrarse"></div>
         <div class="story-copy">
           <span class="story-num">PASO 02</span>
           <h3>Registra a su mascota</h3>
-          <p>Nombre, especie y una foto alcanzan para empezar. Esa ficha queda lista para vincularse a cualquier reporte o visita veterinaria futura.</p>
+          <p>Nombre, especie y una foto alcanzan para empezar. Queda lista para vincularse a un reporte o a una visita veterinaria.</p>
         </div>
       </div>
-
       <div class="story-step reveal">
         <div class="story-art"><img src="../public/animales/Crear-alerta.png" alt="Mascota creando una alerta desde su tablet"></div>
         <div class="story-copy">
           <span class="story-num">PASO 03</span>
-          <h3>Reporta en tres pasos</h3>
-          <p>Foto, ubicación automática y categoría (perdido, encontrado o problemática urbana). Sin formularios largos, sin pasos de más.</p>
+          <h3>Reporta lo que ve</h3>
+          <p>Perdida, encontrada o un evento de riesgo urbano — la categoría define a quién le llega primero.</p>
         </div>
       </div>
-
-      <div class="story-step rev reveal">
+      <div class="story-step reveal">
         <div class="story-art"><img src="../public/animales/Mapa-Animales-encontrados.png" alt="Mascota señalando pines en un mapa"></div>
         <div class="story-copy">
           <span class="story-num">PASO 04</span>
           <h3>Aparece en el mapa, en vivo</h3>
-          <p>El reporte se ve al instante en el panel del municipio y llega a los vecinos de la zona con mascotas compatibles.</p>
+          <p>El reporte llega al panel del municipio y a los vecinos de la zona con mascotas compatibles.</p>
         </div>
       </div>
-
       <div class="story-step reveal">
         <div class="story-art"><img src="../public/animales/Éxito-Confirmación.png" alt="Mascotas festejando un reencuentro exitoso"></div>
         <div class="story-copy">
           <span class="story-num">PASO 05</span>
           <h3>El cierre que importa</h3>
-          <p>Reencuentro confirmado, turno reservado o problemática atendida: el estado se actualiza y todos los involucrados lo ven.</p>
+          <p>Reencuentro, turno cumplido o evento atendido: el estado se actualiza y todos los involucrados lo ven.</p>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ================= FUNCIONALIDADES ================= -->
-<section class="section-pad">
+<!-- ================= CONCLUSION ================= -->
+<section class="section-pad band">
   <div class="wrap">
     <div class="section-head">
-      <span class="eyebrow mint">Funcionalidad ↔ problema</span>
-      <h2>Cuatro piezas, cada una atada a algo de la sección "El problema, hoy".</h2>
+      <span class="eyebrow">Conclusión</span>
+      <h2>El MVP resuelve lo urgente. El resto queda ordenado, no descartado.</h2>
     </div>
 
-    <div class="feat-grid">
-      <div class="feat-card reveal">
-        <div class="icon-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3.2"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg></div>
-        <h3>Motor de reportes unificado</h3>
-        <p>Perdidos, encontrados y problemáticas urbanas en un mismo flujo con foto, ubicación y estado.</p>
-        <div class="feat-solves"><b>Resuelve</b><span>publicaciones sin ubicación real, sin seguimiento</span></div>
+    <div class="concl-layout">
+      <div class="concl-copy reveal">
+        <p>Cada módulo de esta plataforma nace de una pregunta concreta sobre lo que puede estar fallando hoy en la gestión del bienestar animal local — no de una funcionalidad que "queda bien" en una demo. Por eso, si al conversar con el municipio o con los vecinos alguna de esas preguntas no se sostiene, esa parte del proyecto se revisa antes de construirse.</p>
+        <p>El MVP de 4 semanas cubre lo que conecta a más actores con menos esfuerzo: registro y mascotas, reportes (incluyendo eventos de riesgo urbano), turnera y dashboard municipal con vitrina de adopción, y agenda + libreta sanitaria veterinaria.</p>
+        <p>Lo que sigue no es una lista de "ideas lindas": es la continuación directa de las preguntas que este ciclo no llega a cubrir.</p>
       </div>
-      <div class="feat-card reveal">
-        <div class="icon-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
-        <h3>Turnera compartida</h3>
-        <p>Un mismo motor de franjas y cupos, usado por el municipio para operativos y por cada veterinario para su agenda.</p>
-        <div class="feat-solves"><b>Resuelve</b><span>turnos gestionados por teléfono o WhatsApp</span></div>
-      </div>
-      <div class="feat-card reveal">
-        <div class="icon-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h9l3 3v17H6z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg></div>
-        <h3>Libreta sanitaria digital</h3>
-        <p>Vacunas, visitas y observaciones cargadas por el veterinario, visibles siempre para el dueño autorizado.</p>
-        <div class="feat-solves"><b>Resuelve</b><span>historial en papel que se pierde o se moja</span></div>
-      </div>
-      <div class="feat-card reveal">
-        <div class="icon-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/></svg></div>
-        <h3>Dashboard con mapa de calor</h3>
-        <p>Reportes agregados por zona y por período, listos para decidir dónde enfocar el próximo operativo.</p>
-        <div class="feat-solves"><b>Resuelve</b><span>operativos decididos sin datos consolidados</span></div>
-      </div>
-    </div>
-  </div>
-</section>
 
-<!-- ================= CONFIANZA / ERRORES ================= -->
-<section class="section-pad band">
-  <div class="wrap trust-layout">
-    <div class="trust-art reveal">
-      <img src="../public/animales/Error-Problema.png" alt="Mascota confundida frente a un error">
-      <img src="../public/animales/Preguntas-frecuentes.png" alt="Grupo de mascotas de Patitas en Alerta">
-    </div>
-    <div>
-      <span class="eyebrow rose">Diseñado para el momento de crisis</span>
-      <h2 style="font-size:clamp(1.5rem,2.6vw,2rem); font-weight:800; margin:12px 0 20px;">Quien reporta una mascota perdida no está para leer letra chica.</h2>
-      <div class="trust-list">
-        <div class="trust-item">
-          <div class="icon-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg></div>
-          <div><h4>Errores en lenguaje humano</h4><p>Nunca un mensaje técnico ni un texto interno expuesto: siempre una explicación clara y un siguiente paso.</p></div>
+      <div class="later-list reveal">
+        <div class="later-item">
+          <div class="icon-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 1 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg></div>
+          <div><h4>Red de colaboración entre ONGs y rescatistas</h4><p>Directorio de aliados, solicitudes de recursos y seguimiento de colaboraciones.</p></div>
         </div>
-        <div class="trust-item">
-          <div class="icon-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l8 4v5c0 5-3.4 7.8-8 9-4.6-1.2-8-4-8-9V7z"/></svg></div>
-          <div><h4>Datos sensibles, tratados como tales</h4><p>Datos de salud de mascotas y de personas, protegidos desde el diseño — no como un parche posterior.</p></div>
+        <div class="later-item">
+          <div class="icon-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h9l3 3v17H6z"/><path d="M9 8h6M9 12h6"/></svg></div>
+          <div><h4>Funcionalidades avanzadas para veterinarios</h4><p>Recordatorios automáticos, venta de insumos propios e historia clínica interoperable — esta última requiere validación legal previa.</p></div>
         </div>
-        <div class="trust-item">
-          <div class="icon-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
-          <div><h4>Accesible para cualquier vecino</h4><p>Texto legible, botones grandes y ayuda contextual pensada también para quien no usa apps todos los días.</p></div>
+        <div class="later-item">
+          <div class="icon-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l1-5h16l1 5M4 9v10a1 1 0 001 1h14a1 1 0 001-1V9M9 21v-6h6v6"/></svg></div>
+          <div><h4>Marketplace de comerciantes</h4><p>Pet shops, farmacias veterinarias y servicios visibles por zona para el dueño de la mascota.</p></div>
+        </div>
+        <div class="later-item">
+          <div class="icon-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></div>
+          <div><h4>Foros y cursos de bienestar animal</h4><p>Contenido educativo publicado por municipio u ONGs, con foro moderado.</p></div>
+        </div>
+        <div class="later-item">
+          <div class="icon-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></div>
+          <div><h4>Algoritmo de compatibilidad de adopción</h4><p>Cuestionario de estilo de vida cruzado con las fichas de adopción, para reducir devoluciones.</p></div>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ================= ECOSISTEMA ================= -->
-<section class="section-pad">
-  <div class="wrap eco-wrap">
-    <div class="eco-art reveal">
-      <img src="../public/animales/Preguntas-frecuentes.png" alt="Los personajes de Patitas en Alerta reunidos">
-    </div>
-    <div>
-      <span class="eyebrow">Hacia dónde crece</span>
-      <h2 style="font-size:clamp(1.6rem,2.8vw,2.1rem); font-weight:800; margin:12px 0 14px;">El MVP conecta a tres actores. La visión conecta a todos.</h2>
-      <p style="color:var(--text-muted); max-width:52ch;">La arquitectura se construyó para sumar el resto del ecosistema como una extensión, no como una reescritura: ONGs y rescatistas coordinando recursos, comerciantes con su directorio, y un algoritmo de compatibilidad de adopción una vez que haya datos suficientes.</p>
-      <div class="eco-tags">
-        <span class="eco-tag live">● Dueños de mascotas</span>
-        <span class="eco-tag live">● Municipio</span>
-        <span class="eco-tag live">● Veterinarios</span>
-        <span class="eco-tag">○ ONGs / Rescatistas</span>
-        <span class="eco-tag">○ Comerciantes</span>
-        <span class="eco-tag">○ Matching de adopción</span>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ================= CIERRE ================= -->
 <section class="cierre">
   <div class="wrap">
     <img src="../public/animales/%C3%89xito-Confirmaci%C3%B3n.png" alt="Mascotas de Patitas en Alerta festejando" class="reveal">
     <h2>Reportar protege. Actuar salva.</h2>
-    <p>Esta es la historia que la plataforma cuenta en la práctica: un dato que nace en la calle y termina siendo una decisión pública mejor.</p>
-    <div class="btn-row">
-      <a class="btn" href="#stakeholders">Ver beneficio por stakeholder</a>
-    </div>
+    <p>Estas preguntas están abiertas a propósito. El paso que sigue es llevarlas al municipio y a los vecinos, y construir sobre lo que se confirme.</p>
   </div>
 </section>
 
 <footer>
-  Patitas en Alerta — página ilustrativa para presentación, no forma parte de la plataforma.
+  Patitas en Alerta — página ilustrativa de trabajo, no forma parte de la plataforma. Problemas planteados como hipótesis a validar.
 </footer>
 
 <script>
@@ -873,7 +699,7 @@
         io.unobserve(entry.target);
       }
     });
-  }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+  }, { threshold: 0.12, rootMargin: '0px 0px -30px 0px' });
   els.forEach(function(e){ io.observe(e); });
 })();
 </script>
