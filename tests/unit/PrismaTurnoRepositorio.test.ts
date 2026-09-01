@@ -6,14 +6,14 @@ import type { DatosNuevoTurno } from '@dominio/puertos/IRepositorioTurnos';
 
 jest.mock('@infraestructura/adaptadores/prisma-client', () => ({
   prisma: {
-    turno: { count: jest.fn(), create: jest.fn(), findFirst: jest.fn(), updateMany: jest.fn() },
+    turno: { count: jest.fn(), create: jest.fn(), findFirst: jest.fn(), updateMany: jest.fn(), findMany: jest.fn() },
     $transaction: jest.fn(),
   },
 }));
 
 const { prisma } = jest.requireMock('@infraestructura/adaptadores/prisma-client') as {
   prisma: {
-    turno: { count: jest.Mock; create: jest.Mock; findFirst: jest.Mock; updateMany: jest.Mock };
+    turno: { count: jest.Mock; create: jest.Mock; findFirst: jest.Mock; updateMany: jest.Mock; findMany: jest.Mock };
     $transaction: jest.Mock;
   };
 };
@@ -29,6 +29,7 @@ describe('PrismaTurnoRepositorio', () => {
     prisma.turno.create.mockReset();
     prisma.turno.findFirst.mockReset();
     prisma.turno.updateMany.mockReset();
+    prisma.turno.findMany.mockReset();
     prisma.$transaction.mockReset();
   });
 
@@ -136,6 +137,84 @@ describe('PrismaTurnoRepositorio', () => {
       const resultado = await adapter.reservar(turnoId, reservadoPor, 3);
 
       expect(resultado).toBeNull();
+    });
+  });
+
+  describe('listarPropios', () => {
+    it('AC (Paso 1): filtra exclusivamente por reservado_por, no soft-deleted, ordenado por franja_inicio ascendente', async () => {
+      const filaCruda = {
+        id: turnoId,
+        proveedorTipo: 'municipio',
+        proveedorId: municipioId,
+        eventoId,
+        franjaInicio: new Date('2026-09-05T13:00:00.000Z'),
+        franjaFin: new Date('2026-09-05T13:20:00.000Z'),
+        estado: 'reservado',
+        evento: { titulo: 'Jornada de castración — Barrio Norte' },
+      };
+      prisma.turno.findMany.mockResolvedValue([filaCruda]);
+      prisma.turno.count.mockResolvedValue(1);
+      const adapter = new PrismaTurnoRepositorio();
+
+      const resultado = await adapter.listarPropios(reservadoPor, 1, 50);
+
+      expect(prisma.turno.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { reservadoPor, deletedAt: null },
+          orderBy: { franjaInicio: 'asc' },
+          skip: 0,
+          take: 50,
+        }),
+      );
+      expect(prisma.turno.count).toHaveBeenCalledWith({ where: { reservadoPor, deletedAt: null } });
+      expect(resultado).toEqual({
+        items: [
+          {
+            id: turnoId,
+            proveedorTipo: 'municipio',
+            proveedorId: municipioId,
+            eventoId,
+            eventoTitulo: 'Jornada de castración — Barrio Norte',
+            franjaInicio: filaCruda.franjaInicio,
+            franjaFin: filaCruda.franjaFin,
+            estado: 'reservado',
+          },
+        ],
+        total: 1,
+        pagina: 1,
+        porPagina: 50,
+      });
+    });
+
+    it('devuelve eventoTitulo null para un turno sin evento asociado (proveedor veterinario)', async () => {
+      prisma.turno.findMany.mockResolvedValue([
+        {
+          id: turnoId,
+          proveedorTipo: 'veterinario',
+          proveedorId: 'vet-1',
+          eventoId: null,
+          franjaInicio: new Date('2026-09-10T10:00:00.000Z'),
+          franjaFin: new Date('2026-09-10T10:30:00.000Z'),
+          estado: 'reservado',
+          evento: null,
+        },
+      ]);
+      prisma.turno.count.mockResolvedValue(1);
+      const adapter = new PrismaTurnoRepositorio();
+
+      const resultado = await adapter.listarPropios(reservadoPor, 1, 50);
+
+      expect(resultado.items[0]!.eventoTitulo).toBeNull();
+    });
+
+    it('respeta la paginación (skip/take) según pagina/porPagina', async () => {
+      prisma.turno.findMany.mockResolvedValue([]);
+      prisma.turno.count.mockResolvedValue(0);
+      const adapter = new PrismaTurnoRepositorio();
+
+      await adapter.listarPropios(reservadoPor, 3, 20);
+
+      expect(prisma.turno.findMany).toHaveBeenCalledWith(expect.objectContaining({ skip: 40, take: 20 }));
     });
   });
 });

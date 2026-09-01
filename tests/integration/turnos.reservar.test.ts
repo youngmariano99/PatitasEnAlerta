@@ -77,6 +77,10 @@ class RepositorioTurnosConcurrencia implements IRepositorioTurnos {
     this.turno.version += 1;
     return { id: this.turno.id, estado: this.turno.estado, reservadoPor, version: this.turno.version };
   }
+
+  async listarPropios(): Promise<{ items: never[]; total: number; pagina: number; porPagina: number }> {
+    return { items: [], total: 0, pagina: 1, porPagina: 50 };
+  }
 }
 
 class RepositorioNotificacionesFalso implements INotificacionesRepositorio {

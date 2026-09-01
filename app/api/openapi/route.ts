@@ -19,6 +19,7 @@ import '@aplicacion/dtos/notificaciones/NotificacionesDto';
 import '@aplicacion/dtos/municipio/CrearEventoDto';
 import '@aplicacion/dtos/municipio/ListarEventosPublicoDto';
 import '@aplicacion/dtos/turnos/ReservarTurnoDto';
+import '@aplicacion/dtos/turnos/ListarMisTurnosDto';
 import '@aplicacion/dtos/municipio/FichaAdopcionDto';
 import '@aplicacion/dtos/municipio/DashboardMunicipalDto';
 import '@aplicacion/dtos/municipio/ExportarDashboardMunicipalDto';
