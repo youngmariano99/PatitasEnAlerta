@@ -4,15 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Patitas en Alerta — Presentación</title>
-<meta name="description" content="Presentación ilustrativa de Patitas en Alerta: las preguntas abiertas sobre bienestar animal en la localidad, cómo conecta a todos los stakeholders, y las soluciones que propone la plataforma.">
+<meta name="description" content="Guía visual para presentar Patitas en Alerta en video: esencia, problemas, soluciones y cierre.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@500;600;700;800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Roboto+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@600;700;800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Roboto+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#F8F9FA;
     --surface:#FFFFFF;
-    --surface-tint:#EDF4F3;
     --border:#D8E1E0;
     --border-strong:#BFCCCA;
     --text:#1E1E1E;
@@ -21,16 +20,14 @@
     --teal:#008080;
     --teal-ink:#00595A;
     --teal-wash:rgba(0,128,128,.09);
-    --teal-wash-strong:rgba(0,128,128,.16);
+    --teal-wash-strong:rgba(0,128,128,.18);
     --blue:#0073E6;
     --blue-wash:rgba(0,115,230,.09);
     --alert:#C44601;
-    --alert-wash:rgba(196,70,1,.09);
+    --alert-wash:rgba(196,70,1,.1);
     --font-display:'Lexend','Segoe UI',sans-serif;
     --font-body:'Atkinson Hyperlegible','Segoe UI',sans-serif;
     --font-mono:'Roboto Mono','Courier New',monospace;
-    --radius:12px;
-    --content-w:1140px;
   }
 
   *{box-sizing:border-box; margin:0; padding:0;}
@@ -41,627 +38,259 @@
     background:var(--bg);
     color:var(--text);
     font-family:var(--font-body);
-    font-size:17px;
-    line-height:1.65;
+    font-size:18px;
+    line-height:1.6;
     -webkit-font-smoothing:antialiased;
     overflow-x:hidden;
   }
 
   img{max-width:100%; display:block;}
-  a{color:var(--blue);}
-  a:focus-visible, button:focus-visible, .focusable:focus-visible{
-    outline:3px solid var(--teal);
-    outline-offset:2px;
-  }
 
-  h1,h2,h3,h4{
+  h1,h2,h3{
     font-family:var(--font-display);
     text-wrap:balance;
     color:var(--text);
-    font-weight:700;
+    font-weight:800;
   }
 
   .eyebrow{
     font-family:var(--font-mono);
-    font-size:13px;
+    font-size:14px;
     font-weight:600;
-    letter-spacing:.08em;
+    letter-spacing:.1em;
     text-transform:uppercase;
     color:var(--teal-ink);
     display:inline-flex;
     align-items:center;
     gap:9px;
   }
-  .eyebrow::before{
-    content:"";
-    width:8px; height:8px;
-    border-radius:2px;
-    background:var(--teal);
-  }
-  .eyebrow.alert{color:var(--alert);}
-  .eyebrow.alert::before{background:var(--alert); border-radius:50%;}
-  .eyebrow.blue{color:var(--blue);}
-  .eyebrow.blue::before{background:var(--blue);}
+  .eyebrow::before{ content:""; width:9px; height:9px; border-radius:2px; background:var(--teal); }
 
-  .wrap{
-    max-width:var(--content-w);
-    margin:0 auto;
-    padding:0 28px;
+  .wrap{ max-width:1100px; margin:0 auto; padding:0 32px; }
+
+  .slide{
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    padding:64px 0;
+    border-bottom:1px solid var(--border);
   }
 
-  section{position:relative;}
-  .section-pad{padding:72px 0;}
-  .band{background:var(--surface-tint); border-top:1px solid var(--border); border-bottom:1px solid var(--border);}
-
-  .section-head{max-width:66ch; margin-bottom:40px;}
-  .section-head h2{
-    font-size:clamp(1.7rem, 3vw, 2.3rem);
-    margin-top:14px;
-    line-height:1.18;
-  }
-  .section-head p{color:var(--text-muted); margin-top:14px; font-size:1.05rem;}
-
-  .reveal{opacity:0; transform:translateY(16px); transition:opacity .55s ease, transform .55s ease;}
+  .reveal{opacity:0; transform:translateY(14px); transition:opacity .5s ease, transform .5s ease;}
   .reveal.in{opacity:1; transform:translateY(0);}
   @media (prefers-reduced-motion: reduce){ .reveal{opacity:1; transform:none; transition:none;} }
 
-  /* ---------- topbar ---------- */
-  .topbar{
-    position:sticky; top:0; z-index:50;
-    background:rgba(248,249,250,.92);
-    backdrop-filter:blur(8px);
-    border-bottom:1px solid var(--border);
+  /* ================= SLIDE 1 — ESENCIA ================= */
+  .s-esencia{ text-align:center; }
+  .s-esencia .paw{ width:44px; height:44px; color:var(--teal); margin:0 auto 20px; }
+  .s-esencia h1{
+    font-size:clamp(2.2rem, 6vw, 3.6rem);
+    line-height:1.08;
+    max-width:16ch;
+    margin:0 auto 22px;
   }
-  .topbar-inner{
-    max-width:var(--content-w);
-    margin:0 auto;
-    padding:14px 28px;
-    display:flex; align-items:center; justify-content:space-between; gap:16px;
-  }
-  .brand{
-    display:flex; align-items:center; gap:10px;
-    font-family:var(--font-display); font-weight:700; font-size:16px;
-    color:var(--text); white-space:nowrap;
-  }
-  .brand .paw{width:22px; height:22px; color:var(--teal); flex-shrink:0;}
-  .topbar-tag{font-family:var(--font-mono); font-size:12.5px; color:var(--text-soft); display:none;}
-  @media (min-width:720px){ .topbar-tag{display:block;} }
-
-  /* ---------- hero ---------- */
-  .hero{padding:60px 0 56px;}
-  .hero-grid{display:grid; grid-template-columns:1.2fr .8fr; gap:44px; align-items:center;}
-  @media (max-width:860px){ .hero-grid{grid-template-columns:1fr;} }
-  .hero h1{font-size:clamp(2.1rem, 4.6vw, 3.2rem); line-height:1.08; margin:16px 0 14px;}
-  .hero h1 .accent{color:var(--teal);}
+  .s-esencia h1 .accent{ color:var(--teal); }
   .lema{
-    font-family:var(--font-mono); font-size:1rem; color:var(--teal-ink);
-    background:var(--teal-wash); display:inline-block; padding:8px 14px;
-    border-radius:8px; margin-bottom:20px; border:1px solid var(--teal-wash-strong);
-  }
-  .lema b{font-weight:600;}
-  .hero p.lead{color:var(--text-muted); max-width:56ch; font-size:1.08rem;}
-  .hero-art{
-    background:var(--surface); border:1px solid var(--border); border-radius:16px;
-    padding:20px; display:flex; justify-content:center; align-items:center;
-  }
-  .hero-art img{width:min(280px, 90%);}
-
-  /* ---------- problema cards ---------- */
-  .problema-grid{display:grid; grid-template-columns:repeat(2, 1fr); gap:16px;}
-  @media (max-width:760px){ .problema-grid{grid-template-columns:1fr;} }
-  .p-card{
-    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
-    padding:22px;
-  }
-  .p-card.risk{border-color:rgba(196,70,1,.28); background:linear-gradient(var(--surface), var(--alert-wash));}
-  .p-card-top{display:flex; align-items:center; gap:12px; margin-bottom:12px;}
-  .p-card .icon-wrap{
-    width:38px; height:38px; border-radius:9px; flex-shrink:0;
-    background:var(--teal-wash); color:var(--teal-ink);
-    display:flex; align-items:center; justify-content:center;
-  }
-  .p-card.risk .icon-wrap{background:var(--alert-wash); color:var(--alert);}
-  .p-card h3{font-size:1.02rem; line-height:1.35;}
-  .p-card p{font-size:.92rem; color:var(--text-muted);}
-  .p-card .tag{
-    display:inline-block; margin-top:12px; font-family:var(--font-mono); font-size:.72rem;
-    color:var(--alert); background:var(--alert-wash); padding:4px 9px; border-radius:6px;
-    border:1px solid rgba(196,70,1,.25);
+    font-family:var(--font-mono); font-size:1.05rem; color:var(--teal-ink);
+    background:var(--teal-wash); display:inline-block; padding:9px 16px;
+    border-radius:8px; margin-bottom:48px; border:1px solid var(--teal-wash-strong);
   }
 
-  /* ---------- idea central / stakeholder wheel ---------- */
-  .wheel-layout{display:grid; grid-template-columns:.95fr 1.05fr; gap:48px; align-items:center;}
-  @media (max-width:900px){ .wheel-layout{grid-template-columns:1fr;} }
-
-  .wheel{
-    position:relative; width:100%; max-width:520px; aspect-ratio:1/1; margin:0 auto;
+  .roles-row{
+    display:flex; justify-content:center; flex-wrap:wrap; gap:28px;
   }
-  .wheel svg.lines{position:absolute; inset:0; width:100%; height:100%;}
-  .wheel-hub{
-    position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
-    width:118px; height:118px; border-radius:50%;
-    background:var(--teal); color:#fff;
-    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
-    text-align:center; padding:8px; box-shadow:0 8px 20px rgba(0,128,128,.28);
-    z-index:2;
+  .role{
+    display:flex; flex-direction:column; align-items:center; gap:10px;
+    width:120px;
   }
-  .wheel-hub svg{width:26px; height:26px;}
-  .wheel-hub span{font-family:var(--font-display); font-weight:700; font-size:.78rem; line-height:1.15;}
-
-  .wheel-node{
-    position:absolute; transform:translate(-50%,-50%);
-    width:150px; text-align:center; z-index:2;
-  }
-  .wheel-node .node-icon{
-    width:46px; height:46px; border-radius:50%; margin:0 auto 6px;
+  .role .role-icon{
+    width:60px; height:60px; border-radius:50%;
     background:var(--surface); border:2px solid var(--teal); color:var(--teal-ink);
     display:flex; align-items:center; justify-content:center;
   }
-  .wheel-node.future .node-icon{border-color:var(--border-strong); color:var(--text-soft);}
-  .wheel-node .node-icon svg{width:22px; height:22px;}
-  .wheel-node h4{font-size:.86rem; margin-bottom:2px;}
-  .wheel-node p{font-size:.72rem; color:var(--text-soft); line-height:1.3;}
-  .wheel-node .tag{
-    display:inline-block; margin-top:4px; font-family:var(--font-mono); font-size:.62rem;
-    padding:2px 7px; border-radius:5px;
-  }
-  .wheel-node .tag.mvp{background:var(--teal-wash); color:var(--teal-ink);}
-  .wheel-node .tag.next{background:var(--border); color:var(--text-soft);}
+  .role.next .role-icon{ border-color:var(--border-strong); color:var(--text-soft); border-style:dashed; }
+  .role .role-icon svg{ width:26px; height:26px; }
+  .role span{ font-family:var(--font-display); font-weight:700; font-size:.88rem; line-height:1.2; }
 
-  .wheel-legend{display:flex; gap:18px; flex-wrap:wrap; margin-top:22px; font-size:.82rem; color:var(--text-soft); justify-content:center;}
-  .wheel-legend span{display:inline-flex; align-items:center; gap:6px;}
-  .dot{width:9px; height:9px; border-radius:50%;}
-  .dot.mvp{background:var(--teal);}
-  .dot.next{background:var(--border-strong); border:1px solid var(--text-soft);}
-
-  .wheel-copy p{color:var(--text-muted); margin-bottom:14px; font-size:1.02rem;}
-  .wheel-copy ul{margin:0; padding-left:20px; color:var(--text-muted); font-size:.94rem;}
-  .wheel-copy li{margin-bottom:8px;}
-
-  /* ---------- soluciones ---------- */
-  .sol-grid{display:grid; grid-template-columns:repeat(2, 1fr); gap:18px;}
-  @media (max-width:800px){ .sol-grid{grid-template-columns:1fr;} }
-  .sol-card{
-    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
-    padding:24px;
+  /* ================= SLIDE 2 — PROBLEMAS ================= */
+  .s-problemas .eyebrow{ display:flex; justify-content:center; }
+  .s-problemas h2{
+    text-align:center; font-size:clamp(1.6rem, 3.6vw, 2.1rem);
+    margin:16px auto 44px; max-width:20ch;
   }
-  .sol-card .against{
-    font-family:var(--font-mono); font-size:.72rem; color:var(--text-soft);
-    text-transform:uppercase; letter-spacing:.05em; margin-bottom:8px;
+  .q-list{ display:flex; flex-direction:column; gap:0; }
+  .q-item{
+    display:flex; align-items:flex-start; gap:18px;
+    padding:22px 4px;
+    border-top:1px solid var(--border);
   }
-  .sol-card h3{font-size:1.08rem; margin-bottom:10px;}
-  .sol-card ul{padding-left:18px; color:var(--text-muted); font-size:.9rem;}
-  .sol-card li{margin-bottom:6px;}
-  .pill-row{display:flex; gap:8px; flex-wrap:wrap; margin-top:14px;}
-  .pill{
-    font-family:var(--font-mono); font-size:.7rem; padding:4px 10px; border-radius:20px;
-    display:inline-flex; align-items:center; gap:5px;
-  }
-  .pill.mvp{background:var(--teal-wash); color:var(--teal-ink); border:1px solid var(--teal-wash-strong);}
-  .pill.next{background:var(--border); color:var(--text-soft); border:1px solid var(--border-strong);}
-  .pill svg{width:11px; height:11px;}
-
-  /* ---------- mapa esquemático ---------- */
-  .map-block{
-    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
-    padding:24px; margin-top:32px;
-    display:grid; grid-template-columns:1.1fr .9fr; gap:28px; align-items:center;
-  }
-  @media (max-width:800px){ .map-block{grid-template-columns:1fr;} }
-  .map-block svg{width:100%; height:auto; border-radius:8px; border:1px solid var(--border);}
-  .map-legend{display:flex; flex-direction:column; gap:10px;}
-  .map-legend-item{display:flex; align-items:center; gap:10px; font-size:.88rem; color:var(--text-muted);}
-  .map-legend-item .swatch{width:14px; height:14px; border-radius:50%; flex-shrink:0;}
-
-  /* ---------- storyboard ---------- */
-  .story-intro{margin:56px 0 32px;}
-  .story{display:flex; flex-direction:column; gap:14px;}
-  .story-step{
-    display:grid; grid-template-columns:96px 1fr; gap:20px; align-items:center;
-    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
-    padding:16px 20px;
-  }
-  @media (max-width:600px){ .story-step{grid-template-columns:1fr; text-align:center;} }
-  .story-art img{width:80px; margin:0 auto;}
-  .story-num{font-family:var(--font-mono); font-size:.72rem; color:var(--teal-ink); letter-spacing:.08em;}
-  .story-copy h3{font-size:1.02rem; margin:4px 0 4px;}
-  .story-copy p{color:var(--text-muted); font-size:.9rem; max-width:60ch;}
-
-  /* ---------- conclusion ---------- */
-  .concl-layout{display:grid; grid-template-columns:1fr 1fr; gap:44px; align-items:start;}
-  @media (max-width:860px){ .concl-layout{grid-template-columns:1fr;} }
-  .concl-copy p{color:var(--text-muted); margin-bottom:16px; font-size:1.02rem;}
-  .later-list{display:flex; flex-direction:column; gap:10px;}
-  .later-item{
-    display:flex; gap:12px; align-items:flex-start;
-    background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px 16px;
-  }
-  .later-item .icon-wrap{
-    width:32px; height:32px; border-radius:8px; flex-shrink:0;
-    background:var(--border); color:var(--text-soft);
+  .q-item:last-child{ border-bottom:1px solid var(--border); }
+  .q-item .icon-wrap{
+    width:36px; height:36px; border-radius:9px; flex-shrink:0; margin-top:2px;
+    background:var(--teal-wash); color:var(--teal-ink);
     display:flex; align-items:center; justify-content:center;
   }
-  .later-item h4{font-size:.92rem; margin-bottom:2px;}
-  .later-item p{font-size:.82rem; color:var(--text-soft);}
+  .q-item.risk .icon-wrap{ background:var(--alert-wash); color:var(--alert); }
+  .q-item p{ font-size:1.12rem; font-weight:600; line-height:1.4; }
 
-  .cierre{
-    padding:72px 0 60px; text-align:center;
-    background:var(--teal); color:#fff;
+  /* ================= SLIDE 3 — SOLUCIONES ================= */
+  .s-soluciones .eyebrow{ display:flex; justify-content:center; }
+  .s-soluciones h2{
+    text-align:center; font-size:clamp(1.6rem, 3.6vw, 2.1rem);
+    margin:16px auto 44px; max-width:22ch;
   }
-  .cierre img{width:150px; margin:0 auto 22px; border-radius:12px; background:#fff; padding:10px;}
-  .cierre h2{color:#fff; font-size:clamp(1.6rem, 3.6vw, 2.3rem); max-width:22ch; margin:0 auto 14px;}
-  .cierre p{color:rgba(255,255,255,.85); max-width:52ch; margin:0 auto; font-size:1.02rem;}
+  .sol-list{ display:flex; flex-direction:column; gap:14px; }
+  .sol-item{
+    display:flex; align-items:center; gap:16px;
+    background:var(--surface); border:1px solid var(--border); border-radius:12px;
+    padding:18px 20px;
+  }
+  .sol-item .icon-wrap{
+    width:42px; height:42px; border-radius:10px; flex-shrink:0;
+    background:var(--teal-wash); color:var(--teal-ink);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .sol-item h3{ font-size:1.12rem; font-weight:700; flex:1; }
+  .tagpill{
+    font-family:var(--font-mono); font-size:.72rem; padding:5px 11px; border-radius:20px;
+    white-space:nowrap; flex-shrink:0;
+  }
+  .tagpill.mvp{ background:var(--teal-wash); color:var(--teal-ink); border:1px solid var(--teal-wash-strong); }
+  .tagpill.next{ background:var(--border); color:var(--text-soft); border:1px solid var(--border-strong); }
 
-  footer{padding:24px 0 40px; text-align:center; font-family:var(--font-mono); font-size:.78rem; color:var(--text-soft);}
+  /* ================= SLIDE 4 — FINAL ================= */
+  .s-final{ text-align:center; background:var(--teal); color:#fff; border-bottom:none; }
+  .s-final img{ width:170px; margin:0 auto 26px; border-radius:14px; background:#fff; padding:12px; }
+  .s-final h2{ color:#fff; font-size:clamp(1.8rem, 4.2vw, 2.6rem); max-width:18ch; margin:0 auto; }
 
-  ::selection{background:var(--teal-wash-strong); color:var(--text);}
+  footer{ padding:22px 0; text-align:center; font-family:var(--font-mono); font-size:.78rem; color:var(--text-soft); background:var(--bg); }
 </style>
 </head>
 <body>
 
-<div class="topbar">
-  <div class="topbar-inner">
-    <div class="brand">
-      <svg class="paw" viewBox="0 0 24 24" fill="currentColor"><path d="M6.5 10.5c1.1 0 2-1.12 2-2.5S7.6 5.5 6.5 5.5 4.5 6.62 4.5 8s.9 2.5 2 2.5zm5-3c1.1 0 2-1.12 2-2.5S12.6 2.5 11.5 2.5 9.5 3.62 9.5 5s.9 2.5 2 2.5zm5.5 3c1.1 0 2-1.12 2-2.5S18.1 5.5 17 5.5s-2 1.12-2 2.5.9 2.5 2 2.5zm-3.9 2.3c-1.9-1.6-4.1-1.6-6 0-1.85 1.55-4.3 2.7-4.3 5.1 0 1.7 1.35 3.1 3 3.1.95 0 1.6-.4 2.3-.85.7-.45 1.4-.9 2.4-.9s1.7.45 2.4.9c.7.45 1.35.85 2.3.85 1.65 0 3-1.4 3-3.1 0-2.4-2.45-3.55-4.3-5.1z"/></svg>
-      Patitas en Alerta
-    </div>
-    <span class="topbar-tag">"Reportar protege. Actuar salva."</span>
-  </div>
-</div>
-
-<!-- ================= HERO ================= -->
-<section class="hero">
-  <div class="wrap hero-grid">
-    <div>
-      <span class="eyebrow">Coronel Pringles · Piloto municipal</span>
-      <h1>Una plataforma para pensar el bienestar animal <span class="accent">entre todos</span>.</h1>
-      <div class="lema"><b>"Reportar protege.</b> Actuar salva."</div>
-      <p class="lead">Patitas en Alerta conecta a vecinos, municipio, veterinarios, ONGs y comercios en un mismo lugar, para que la información sobre las mascotas y la fauna urbana de la localidad no se pierda entre grupos de Facebook, llamados telefónicos y papeles sueltos.</p>
-    </div>
-    <div class="hero-art">
-      <img src="../public/animales/Inicio-Dashboard.png" alt="Mascota de Patitas en Alerta con el teléfono en la mano">
-    </div>
-  </div>
-</section>
-
-<!-- ================= PROBLEMAS ================= -->
-<section class="section-pad">
+<!-- ================= SLIDE 1 — ESENCIA ================= -->
+<section class="slide s-esencia">
   <div class="wrap">
-    <div class="section-head">
-      <span class="eyebrow">Los problemas</span>
-      <h2>¿Qué está pasando hoy, sin una herramienta que lo ordene?</h2>
-      <p>Seis preguntas centrales sobre la fauna urbana y el bienestar animal en la localidad. Cada una es también la razón de ser de una parte de la plataforma.</p>
-    </div>
+    <svg class="paw" viewBox="0 0 24 24" fill="currentColor"><path d="M6.5 10.5c1.1 0 2-1.12 2-2.5S7.6 5.5 6.5 5.5 4.5 6.62 4.5 8s.9 2.5 2 2.5zm5-3c1.1 0 2-1.12 2-2.5S12.6 2.5 11.5 2.5 9.5 3.62 9.5 5s.9 2.5 2 2.5zm5.5 3c1.1 0 2-1.12 2-2.5S18.1 5.5 17 5.5s-2 1.12-2 2.5.9 2.5 2 2.5zm-3.9 2.3c-1.9-1.6-4.1-1.6-6 0-1.85 1.55-4.3 2.7-4.3 5.1 0 1.7 1.35 3.1 3 3.1.95 0 1.6-.4 2.3-.85.7-.45 1.4-.9 2.4-.9s1.7.45 2.4.9c.7.45 1.35.85 2.3.85 1.65 0 3-1.4 3-3.1 0-2.4-2.45-3.55-4.3-5.1z"/></svg>
+    <h1>Patitas en Alerta conecta a <span class="accent">todos</span> los que cuidan el bienestar animal.</h1>
+    <div class="lema"><b>"Reportar protege.</b> Actuar salva."</div>
 
-    <div class="problema-grid">
-      <div class="p-card reveal">
-        <div class="p-card-top">
-          <div class="icon-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.5-9.3-9.1C1.4 8.7 3 5.5 6.2 5A4.7 4.7 0 0 1 12 8a4.7 4.7 0 0 1 5.8-3c3.2.5 4.8 3.7 3.5 6.9C19 16.5 12 21 12 21z"/></svg></div>
-          <h3>¿Cuánto tarda hoy en reencontrarse una mascota perdida?</h3>
-        </div>
-        <p>Si la búsqueda depende de grupos de Facebook y estados de WhatsApp, ¿cuánta información se pierde por no tener una ubicación exacta o un canal único donde buscar?</p>
+    <div class="roles-row">
+      <div class="role">
+        <div class="role-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.5-9.3-9.1C1.4 8.7 3 5.5 6.2 5A4.7 4.7 0 0 1 12 8a4.7 4.7 0 0 1 5.8-3c3.2.5 4.8 3.7 3.5 6.9C19 16.5 12 21 12 21z"/></svg></div>
+        <span>Vecinos</span>
       </div>
-
-      <div class="p-card risk reveal">
-        <div class="p-card-top">
-          <div class="icon-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l9 5v6c0 5-3.6 8-9 9-5.4-1-9-4-9-9V7z"/><path d="M12 8v5M12 16h.01"/></svg></div>
-          <h3>¿A quién le avisa hoy un vecino que ve un animal suelto o con signos de rabia?</h3>
-        </div>
-        <p>Animales sueltos, con posibles signos de rabia o que mordieron a alguien: ¿existe hoy un canal claro y rápido para que esa información llegue a Zoonosis, o depende de que alguien sepa a quién llamar?</p>
-        <span class="tag">Situación de atención veterinaria urgente</span>
+      <div class="role">
+        <div class="role-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21V10l9-7 9 7v11M9 21v-6h6v6"/></svg></div>
+        <span>Municipio</span>
       </div>
-
-      <div class="p-card reveal">
-        <div class="p-card-top">
-          <div class="icon-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></div>
-          <h3>¿Con qué datos decide el municipio dónde vacunar o castrar primero?</h3>
-        </div>
-        <p>Sin un mapa consolidado de reportes por zona, ¿la planificación de operativos se apoya en registros propios o en lo que va llegando de forma dispersa?</p>
+      <div class="role">
+        <div class="role-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h9l3 3v17H6z"/><path d="M9 8h6M9 12h6"/></svg></div>
+        <span>Veterinarias</span>
       </div>
-
-      <div class="p-card reveal">
-        <div class="p-card-top">
-          <div class="icon-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h9l3 3v17H6z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg></div>
-          <h3>¿Qué pasa cuando la libreta sanitaria en papel no está el día de la consulta?</h3>
-        </div>
-        <p>¿Cuántas veces el veterinario tiene que reconstruir el historial de memoria porque la libreta se mojó, se perdió o quedó en casa?</p>
+      <div class="role next">
+        <div class="role-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 1 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg></div>
+        <span>ONGs y rescatistas</span>
       </div>
-
-      <div class="p-card reveal">
-        <div class="p-card-top">
-          <div class="icon-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 1 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg></div>
-          <h3>¿Cómo encuentra hoy un vecino a las ONGs o rescatistas de la zona?</h3>
-        </div>
-        <p>Sin un directorio ni un canal común, ¿cuánto esfuerzo de voluntarios se pierde coordinando por chats individuales en lugar de por un espacio compartido?</p>
-      </div>
-
-      <div class="p-card reveal">
-        <div class="p-card-top">
-          <div class="icon-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l1-5h16l1 5M4 9v10a1 1 0 001 1h14a1 1 0 001-1V9M9 21v-6h6v6"/></svg></div>
-          <h3>¿Dónde busca hoy un vecino un comercio o curso confiable sobre su mascota?</h3>
-        </div>
-        <p>Pet shops, veterinarias, adiestradores, cursos de tenencia responsable: ¿existe un lugar donde encontrarlos organizados por zona, o cada búsqueda arranca de cero?</p>
+      <div class="role next">
+        <div class="role-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l1-5h16l1 5M4 9v10a1 1 0 001 1h14a1 1 0 001-1V9M9 21v-6h6v6"/></svg></div>
+        <span>Comercios</span>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ================= IDEA CENTRAL ================= -->
-<section class="section-pad band">
+<!-- ================= SLIDE 2 — PROBLEMAS ================= -->
+<section class="slide s-problemas">
   <div class="wrap">
-    <div class="section-head">
-      <span class="eyebrow blue">La idea central</span>
-      <h2>Patitas en Alerta no es una app para un solo actor: es el punto donde se cruzan todos.</h2>
-      <p>Cada stakeholder entra por una necesidad distinta, pero comparte la misma base de datos e infraestructura. Lo que uno reporta, el resto lo puede usar.</p>
-    </div>
+    <span class="eyebrow">Los problemas</span>
+    <h2>Lo que queremos resolver</h2>
 
-    <div class="wheel-layout">
-      <div class="wheel reveal">
-        <svg class="lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-          <line x1="50" y1="50" x2="50" y2="6" stroke="#008080" stroke-width="1.2"/>
-          <line x1="50" y1="50" x2="90" y2="28" stroke="#008080" stroke-width="1.2"/>
-          <line x1="50" y1="50" x2="20" y2="28" stroke="#008080" stroke-width="1.2"/>
-          <line x1="50" y1="50" x2="78" y2="82" stroke="#BFCCCA" stroke-width="1.2" stroke-dasharray="3 3"/>
-          <line x1="50" y1="50" x2="22" y2="82" stroke="#BFCCCA" stroke-width="1.2" stroke-dasharray="3 3"/>
-        </svg>
-
-        <div class="wheel-hub">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6.5 10.5c1.1 0 2-1.12 2-2.5S7.6 5.5 6.5 5.5 4.5 6.62 4.5 8s.9 2.5 2 2.5zm5-3c1.1 0 2-1.12 2-2.5S12.6 2.5 11.5 2.5 9.5 3.62 9.5 5s.9 2.5 2 2.5zm5.5 3c1.1 0 2-1.12 2-2.5S18.1 5.5 17 5.5s-2 1.12-2 2.5.9 2.5 2 2.5zm-3.9 2.3c-1.9-1.6-4.1-1.6-6 0-1.85 1.55-4.3 2.7-4.3 5.1 0 1.7 1.35 3.1 3 3.1.95 0 1.6-.4 2.3-.85.7-.45 1.4-.9 2.4-.9s1.7.45 2.4.9c.7.45 1.35.85 2.3.85 1.65 0 3-1.4 3-3.1 0-2.4-2.45-3.55-4.3-5.1z"/></svg>
-          <span>Patitas<br>en Alerta</span>
-        </div>
-
-        <div class="wheel-node" style="left:50%; top:6%;">
-          <div class="node-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21V10l9-7 9 7v11M9 21v-6h6v6"/></svg></div>
-          <h4>Municipio</h4>
-          <p>Zoonosis y turnera</p>
-          <span class="tag mvp">En el MVP</span>
-        </div>
-
-        <div class="wheel-node" style="left:90%; top:28%;">
-          <div class="node-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h9l3 3v17H6z"/><path d="M9 8h6M9 12h6"/></svg></div>
-          <h4>Veterinarios/as</h4>
-          <p>Agenda y libreta digital</p>
-          <span class="tag mvp">En el MVP</span>
-        </div>
-
-        <div class="wheel-node" style="left:20%; top:28%;">
-          <div class="node-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.5-9.3-9.1C1.4 8.7 3 5.5 6.2 5A4.7 4.7 0 0 1 12 8a4.7 4.7 0 0 1 5.8-3c3.2.5 4.8 3.7 3.5 6.9C19 16.5 12 21 12 21z"/></svg></div>
-          <h4>Dueños de mascotas</h4>
-          <p>Vecinos y adoptantes</p>
-          <span class="tag mvp">En el MVP</span>
-        </div>
-
-        <div class="wheel-node future" style="left:78%; top:82%;">
-          <div class="node-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l1-5h16l1 5M4 9v10a1 1 0 001 1h14a1 1 0 001-1V9M9 21v-6h6v6"/></svg></div>
-          <h4>Comerciantes</h4>
-          <p>Pet shops y servicios</p>
-          <span class="tag next">Después del MVP</span>
-        </div>
-
-        <div class="wheel-node future" style="left:22%; top:82%;">
-          <div class="node-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 1 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg></div>
-          <h4>ONGs / Rescatistas</h4>
-          <p>Red de colaboración</p>
-          <span class="tag next">Después del MVP</span>
-        </div>
+    <div class="q-list">
+      <div class="q-item reveal">
+        <div class="icon-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.5-9.3-9.1C1.4 8.7 3 5.5 6.2 5A4.7 4.7 0 0 1 12 8a4.7 4.7 0 0 1 5.8-3c3.2.5 4.8 3.7 3.5 6.9C19 16.5 12 21 12 21z"/></svg></div>
+        <p>¿Qué pasa hoy cuando una mascota se pierde, o cuando encontrás una perdida? ¿Qué canales se usan para avisar?</p>
       </div>
 
-      <div class="wheel-copy">
-        <span class="eyebrow blue">Un ecosistema, no una app</span>
-        <p style="margin-top:12px;">El mismo dato circula entre los cinco actores. Nadie lo vuelve a cargar dos veces.</p>
-        <ul>
-          <li><b>Dueño de mascota</b> registra a su animal y reporta — ese dato alimenta al resto sin que nadie lo vuelva a cargar.</li>
-          <li><b>Municipio</b> ve todo consolidado en un panel, sin depender de que cada vecino llame por teléfono.</li>
-          <li><b>Veterinario/a</b> reutiliza el mismo motor de turnos del municipio para su propia agenda.</li>
-          <li><b>ONGs y comerciantes</b> se conectan sobre la misma base, cuando el núcleo esté validado y estable.</li>
-        </ul>
+      <div class="q-item risk reveal">
+        <div class="icon-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l9 5v6c0 5-3.6 8-9 9-5.4-1-9-4-9-9V7z"/><path d="M12 8v5M12 16h.01"/></svg></div>
+        <p>¿A quién le avisa hoy un vecino ante un animal suelto, con signos de rabia o que puede ser agresivo?</p>
+      </div>
+
+      <div class="q-item reveal">
+        <div class="icon-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></div>
+        <p>¿El municipio cuenta con datos para organizar sus campañas? ¿Cómo se entera la gente? ¿Tiene una herramienta para gestionar los turnos?</p>
+      </div>
+
+      <div class="q-item reveal">
+        <div class="icon-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h9l3 3v17H6z"/><path d="M9 8h6M9 12h6"/></svg></div>
+        <p>¿Las veterinarias cuentan con un sistema que las ayude a gestionar su servicio?</p>
+      </div>
+
+      <div class="q-item reveal">
+        <div class="icon-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 1 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg></div>
+        <p>¿Cómo encuentra un vecino a una ONG o rescatista? ¿Y cómo encuentran ellos a quien pueda ayudarlos?</p>
+      </div>
+
+      <div class="q-item reveal">
+        <div class="icon-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l1-5h16l1 5M4 9v10a1 1 0 001 1h14a1 1 0 001-1V9M9 21v-6h6v6"/></svg></div>
+        <p>¿Dónde busca hoy un vecino un comercio o curso confiable sobre su mascota?</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ================= SOLUCIONES ================= -->
-<section class="section-pad">
+<!-- ================= SLIDE 3 — SOLUCIONES ================= -->
+<section class="slide s-soluciones">
   <div class="wrap">
-    <div class="section-head">
-      <span class="eyebrow">Lo que propone la plataforma</span>
-      <h2>Una solución por cada pregunta abierta — separada por lo que entra ahora y lo que queda para después.</h2>
-      <p>El orden respeta el de la sección anterior: cada tarjeta responde directamente a una de esas preguntas.</p>
-    </div>
+    <span class="eyebrow blue">Lo que proponemos</span>
+    <h2>Una solución para cada uno</h2>
 
-    <div class="sol-grid">
-      <div class="sol-card reveal">
-        <div class="against">Responde a → mascotas perdidas y encontradas</div>
-        <h3>Motor de reportes unificado</h3>
-        <ul>
-          <li>Reporte con foto y ubicación automática, en pocos pasos</li>
-          <li>Listado público con filtros de mapa y tabla</li>
-          <li>Aviso cuando aparece un reporte de "encontrado" compatible</li>
-        </ul>
-        <div class="pill-row"><span class="pill mvp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg>Módulo 2 · MVP</span></div>
+    <div class="sol-list">
+      <div class="sol-item reveal">
+        <div class="icon-wrap"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3.2"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg></div>
+        <h3>Reportes de mascotas perdidas y encontradas</h3>
+        <span class="tagpill mvp">MVP</span>
       </div>
-
-      <div class="sol-card reveal">
-        <div class="against">Responde a → eventos de riesgo en la vía pública</div>
-        <h3>Alertas urbanas, dentro del mismo motor</h3>
-        <ul>
-          <li>Categoría propia para animal suelto, con signos de rabia o mordedura</li>
-          <li>Evidencia obligatoria y visibilidad directa en el panel municipal</li>
-          <li>No depende de encontrar el teléfono correcto al que llamar</li>
-        </ul>
-        <div class="pill-row"><span class="pill mvp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg>Módulo 2 · MVP</span></div>
+      <div class="sol-item reveal">
+        <div class="icon-wrap"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l9 5v6c0 5-3.6 8-9 9-5.4-1-9-4-9-9V7z"/><path d="M12 8v5M12 16h.01"/></svg></div>
+        <h3>Alertas de eventos de riesgo urbano</h3>
+        <span class="tagpill mvp">MVP</span>
       </div>
-
-      <div class="sol-card reveal">
-        <div class="against">Responde a → operativos decididos sin datos</div>
-        <h3>Dashboard, turnera y vitrina de adopción</h3>
-        <ul>
-          <li>Mapa de calor con los reportes ya cargados, sin trabajo manual</li>
-          <li>Alta rápida de operativos y turnos con cupo controlado</li>
-          <li>Fichas de adopción publicadas por el municipio, visibles al vecino</li>
-        </ul>
-        <div class="pill-row"><span class="pill mvp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg>Módulo 3 · MVP</span></div>
+      <div class="sol-item reveal">
+        <div class="icon-wrap"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></div>
+        <h3>Turnera y dashboard municipal</h3>
+        <span class="tagpill mvp">MVP</span>
       </div>
-
-      <div class="sol-card reveal">
-        <div class="against">Responde a → historial sanitario que se pierde</div>
-        <h3>Agenda y libreta sanitaria digital</h3>
-        <ul>
-          <li>Franjas de turno sobre el mismo motor que usa el municipio</li>
-          <li>Entradas cargadas solo por el veterinario, con el dueño autorizando el acceso</li>
-          <li>Historial ordenado por fecha, disponible siempre</li>
-        </ul>
-        <div class="pill-row"><span class="pill mvp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg>Módulo 4 · MVP</span></div>
+      <div class="sol-item reveal">
+        <div class="icon-wrap"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h9l3 3v17H6z"/><path d="M9 8h6M9 12h6"/></svg></div>
+        <h3>Agenda y libreta sanitaria para veterinarias</h3>
+        <span class="tagpill mvp">MVP</span>
       </div>
-
-      <div class="sol-card reveal">
-        <div class="against">Responde a → rescate y adopción bajo presión</div>
-        <h3>Red de colaboración entre ONGs</h3>
-        <ul>
-          <li>Directorio de aliados verificados, filtrable por zona</li>
-          <li>Solicitudes de recursos (tránsito, insumos, asistencia veterinaria)</li>
-          <li>Seguimiento de cada colaboración en un hilo con historial</li>
-        </ul>
-        <div class="pill-row"><span class="pill next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>Módulo 5 · Después</span></div>
+      <div class="sol-item reveal">
+        <div class="icon-wrap"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 1 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg></div>
+        <h3>Red de colaboración con ONGs y rescatistas</h3>
+        <span class="tagpill next">Después</span>
       </div>
-
-      <div class="sol-card reveal">
-        <div class="against">Responde a → comercio y educación dispersos</div>
-        <h3>Marketplace y foros de bienestar animal</h3>
-        <ul>
-          <li>Directorio de comercios y servicios verificados por zona</li>
-          <li>Cursos de tenencia responsable publicados por municipio u ONGs</li>
-          <li>Foro moderado para consultas de la comunidad</li>
-        </ul>
-        <div class="pill-row"><span class="pill next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>Módulos 7 y 8 · Después</span></div>
-      </div>
-    </div>
-
-    <!-- mapa esquemático -->
-    <div class="map-block reveal">
-      <svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Mapa esquemático con distintos tipos de reporte">
-        <rect width="320" height="200" fill="#F4F7F6"/>
-        <path d="M0 60 H320 M0 130 H320 M70 0 V200 M230 0 V200" stroke="#D8E1E0" stroke-width="2"/>
-        <path d="M0 60 H320" stroke="#BFE3E1" stroke-width="10" opacity=".5"/>
-        <circle cx="70" cy="60" r="7" fill="#0073E6"/>
-        <circle cx="140" cy="95" r="7" fill="#008080"/>
-        <circle cx="230" cy="130" r="7" fill="#C44601"/>
-        <circle cx="190" cy="40" r="7" fill="#0073E6"/>
-        <circle cx="270" cy="70" r="7" fill="#008080"/>
-        <circle cx="40" cy="150" r="7" fill="#C44601"/>
-        <circle cx="255" cy="160" r="7" fill="#66746F"/>
-      </svg>
-      <div class="map-legend">
-        <div class="map-legend-item"><span class="swatch" style="background:#0073E6;"></span>Mascota perdida</div>
-        <div class="map-legend-item"><span class="swatch" style="background:#008080;"></span>Mascota encontrada</div>
-        <div class="map-legend-item"><span class="swatch" style="background:#C44601;"></span>Evento de riesgo urbano</div>
-        <div class="map-legend-item"><span class="swatch" style="background:#66746F;"></span>Operativo municipal</div>
-      </div>
-    </div>
-
-    <!-- storyboard -->
-    <div class="story-intro">
-      <span class="eyebrow blue">Así se ve en la práctica</span>
-      <h2 style="font-size:clamp(1.4rem,2.6vw,1.9rem); margin-top:10px;">El recorrido de un reporte, paso a paso.</h2>
-    </div>
-
-    <div class="story">
-      <div class="story-step reveal">
-        <div class="story-art"><img src="../public/animales/Login-Bienvenida.png" alt="Mascota dando la bienvenida con el teléfono"></div>
-        <div class="story-copy">
-          <span class="story-num">PASO 01</span>
-          <h3>Entra sin fricción</h3>
-          <p>Registro simple con email y contraseña. Cada rol entra por el mismo lugar, con lo que le corresponde.</p>
-        </div>
-      </div>
-      <div class="story-step reveal">
-        <div class="story-art"><img src="../public/animales/Registro.png" alt="Mascota señalando el teléfono para registrarse"></div>
-        <div class="story-copy">
-          <span class="story-num">PASO 02</span>
-          <h3>Registra a su mascota</h3>
-          <p>Nombre, especie y una foto alcanzan para empezar. Queda lista para vincularse a un reporte o a una visita veterinaria.</p>
-        </div>
-      </div>
-      <div class="story-step reveal">
-        <div class="story-art"><img src="../public/animales/Crear-alerta.png" alt="Mascota creando una alerta desde su tablet"></div>
-        <div class="story-copy">
-          <span class="story-num">PASO 03</span>
-          <h3>Reporta lo que ve</h3>
-          <p>Perdida, encontrada o un evento de riesgo urbano — la categoría define a quién le llega primero.</p>
-        </div>
-      </div>
-      <div class="story-step reveal">
-        <div class="story-art"><img src="../public/animales/Mapa-Animales-encontrados.png" alt="Mascota señalando pines en un mapa"></div>
-        <div class="story-copy">
-          <span class="story-num">PASO 04</span>
-          <h3>Aparece en el mapa, en vivo</h3>
-          <p>El reporte llega al panel del municipio y a los vecinos de la zona con mascotas compatibles.</p>
-        </div>
-      </div>
-      <div class="story-step reveal">
-        <div class="story-art"><img src="../public/animales/%C3%89xito-Confirmaci%C3%B3n.png" alt="Mascotas festejando un reencuentro exitoso"></div>
-        <div class="story-copy">
-          <span class="story-num">PASO 05</span>
-          <h3>El cierre que importa</h3>
-          <p>Reencuentro, turno cumplido o evento atendido: el estado se actualiza y todos los involucrados lo ven.</p>
-        </div>
+      <div class="sol-item reveal">
+        <div class="icon-wrap"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l1-5h16l1 5M4 9v10a1 1 0 001 1h14a1 1 0 001-1V9M9 21v-6h6v6"/></svg></div>
+        <h3>Directorio de comercios y cursos</h3>
+        <span class="tagpill next">Después</span>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ================= CONCLUSION ================= -->
-<section class="section-pad band">
+<!-- ================= SLIDE 4 — FINAL ================= -->
+<section class="slide s-final">
   <div class="wrap">
-    <div class="section-head">
-      <span class="eyebrow">Conclusión</span>
-      <h2>El MVP resuelve lo urgente. El resto queda ordenado, no descartado.</h2>
-    </div>
-
-    <div class="concl-layout">
-      <div class="concl-copy reveal">
-        <p>Cada módulo de esta plataforma nace de un problema concreto de la gestión del bienestar animal local — no de una funcionalidad que "queda bien" en una demo.</p>
-        <p>El MVP de 4 semanas cubre lo que conecta a más actores con menos esfuerzo: registro y mascotas, reportes (incluyendo eventos de riesgo urbano), turnera y dashboard municipal con vitrina de adopción, y agenda + libreta sanitaria veterinaria.</p>
-        <p>Lo que sigue no es una lista de "ideas lindas": es la continuación directa de los problemas que este ciclo no llega a cubrir.</p>
-      </div>
-
-      <div class="later-list reveal">
-        <div class="later-item">
-          <div class="icon-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 1 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg></div>
-          <div><h4>Red de colaboración entre ONGs y rescatistas</h4><p>Directorio de aliados, solicitudes de recursos y seguimiento de colaboraciones.</p></div>
-        </div>
-        <div class="later-item">
-          <div class="icon-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h9l3 3v17H6z"/><path d="M9 8h6M9 12h6"/></svg></div>
-          <div><h4>Funcionalidades avanzadas para veterinarios</h4><p>Recordatorios automáticos, venta de insumos propios e historia clínica interoperable — esta última requiere validación legal previa.</p></div>
-        </div>
-        <div class="later-item">
-          <div class="icon-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l1-5h16l1 5M4 9v10a1 1 0 001 1h14a1 1 0 001-1V9M9 21v-6h6v6"/></svg></div>
-          <div><h4>Marketplace de comerciantes</h4><p>Pet shops, farmacias veterinarias y servicios visibles por zona para el dueño de la mascota.</p></div>
-        </div>
-        <div class="later-item">
-          <div class="icon-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></div>
-          <div><h4>Foros y cursos de bienestar animal</h4><p>Contenido educativo publicado por municipio u ONGs, con foro moderado.</p></div>
-        </div>
-        <div class="later-item">
-          <div class="icon-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></div>
-          <div><h4>Algoritmo de compatibilidad de adopción</h4><p>Cuestionario de estilo de vida cruzado con las fichas de adopción, para reducir devoluciones.</p></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="cierre">
-  <div class="wrap">
-    <img src="../public/animales/%C3%89xito-Confirmaci%C3%B3n.png" alt="Mascotas de Patitas en Alerta festejando" class="reveal">
+    <img src="../public/animales/%C3%89xito-Confirmaci%C3%B3n.png" alt="Mascotas de Patitas en Alerta festejando">
     <h2>Reportar protege. Actuar salva.</h2>
-    <p>Así es como imaginamos el bienestar animal de la ciudad organizado entre todos: vecinos, municipio, veterinarios, ONGs y comercios, sobre una misma base.</p>
   </div>
 </section>
 
-<footer>
-  Patitas en Alerta
-</footer>
+<footer>Patitas en Alerta</footer>
 
 <script>
 (function(){
@@ -678,7 +307,7 @@
         io.unobserve(entry.target);
       }
     });
-  }, { threshold: 0.12, rootMargin: '0px 0px -30px 0px' });
+  }, { threshold: 0.15, rootMargin: '0px 0px -20px 0px' });
   els.forEach(function(e){ io.observe(e); });
 })();
 </script>
