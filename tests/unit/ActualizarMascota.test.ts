@@ -35,6 +35,7 @@ function crearFakes(opciones?: { mascota?: Mascota | null; fotoValida?: boolean 
   };
   const almacenamientoImagenes: jest.Mocked<IAlmacenamientoImagenes> = {
     esUrlDeImagenValida: jest.fn().mockReturnValue(opciones?.fotoValida ?? true),
+    fueSubidaPor: jest.fn().mockResolvedValue(true),
   };
   return { repositorioMascotas, almacenamientoImagenes };
 }

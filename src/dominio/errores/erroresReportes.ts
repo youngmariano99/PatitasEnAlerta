@@ -23,7 +23,15 @@ export class GeolocalizacionNoDisponibleError extends ErrorDominio {
 }
 
 export class LimiteDeReportesExcedidoError extends ErrorDominio {
-  constructor() {
+  /**
+   * @param reintentarEnSegundos cuando se conoce (ConRateLimitDecorator.ts,
+   * historia "Rate limiting anti-saturación"), tiempo hasta que el usuario
+   * puede reintentar — el route handler lo traduce a la cabecera HTTP
+   * `Retry-After` (Paso 3 del ticket). `undefined` cuando el rechazo viene
+   * del eslabón ValidadorRateLimit del pipeline (que no expone ese dato) —
+   * en ese caso la respuesta 429 no incluye la cabecera.
+   */
+  constructor(public readonly reintentarEnSegundos?: number) {
     super('PEA-REP-004', 'Hiciste varios reportes en poco tiempo. Esperá unos minutos antes de enviar otro.', 429);
   }
 }

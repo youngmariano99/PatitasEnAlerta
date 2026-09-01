@@ -22,6 +22,8 @@ import type {
 } from '@dominio/puertos/IRepositorioReportes';
 import type { IAlmacenamientoImagenes } from '@dominio/puertos/IAlmacenamientoImagenes';
 import type { IControlDeTasa } from '@dominio/puertos/IControlDeTasa';
+import type { IControlDeTasaConReintento, ResultadoControlDeTasa } from '@dominio/puertos/IControlDeTasaConReintento';
+import type { IRepositorioPerfil, ResumenPerfilPropio } from '@dominio/puertos/IRepositorioPerfil';
 import type { DatosNotificacion, INotificacionesRepositorio } from '@dominio/puertos/INotificacionesRepositorio';
 import type { DatosReporte } from '@dominio/entidades/Reporte';
 import { ESTADOS_REPORTE_ACTIVOS, Reporte } from '@dominio/entidades/Reporte';
@@ -109,11 +111,31 @@ class AlmacenamientoImagenesFalso implements IAlmacenamientoImagenes {
   esUrlDeImagenValida(url: string): boolean {
     return url.startsWith('https://res.cloudinary.com/patitas-en-alerta/');
   }
+
+  async fueSubidaPor(): Promise<boolean> {
+    return true;
+  }
 }
 
 class ControlDeTasaFalso implements IControlDeTasa {
   async permitir(): Promise<boolean> {
     return true;
+  }
+}
+
+// No es objeto de este test (ver ConRateLimitDecorator.test.ts /
+// reportes.crear.test.ts para el límite anti-saturación en sí) — siempre
+// permite, así el par 'perdido'/'encontrado' end-to-end nunca se ve
+// interferido por él.
+class ControlDeTasaAntiSaturacionFalso implements IControlDeTasaConReintento {
+  async evaluar(): Promise<ResultadoControlDeTasa> {
+    return { permitido: true, reintentarEnSegundos: 0 };
+  }
+}
+
+class RepositorioPerfilFalso implements IRepositorioPerfil {
+  async obtenerPerfilPropio(usuarioId: string): Promise<ResumenPerfilPropio | null> {
+    return { id: usuarioId, email: 'usuario@ejemplo.test', rol: 'dueño', estadoVerificacion: 'verificado', verificadoEn: null };
   }
 }
 
@@ -158,6 +180,8 @@ describe('Job de coincidencia zona/especie y generación de notificación (integ
     container.registerInstance<IRepositorioReportes>('IRepositorioReportes', repositorioReportes);
     container.registerInstance<INotificacionesRepositorio>('INotificacionesRepositorio', repositorioNotificaciones);
     container.registerSingleton<IControlDeTasa>('IControlDeTasa', ControlDeTasaFalso);
+    container.registerSingleton<IControlDeTasaConReintento>('IControlDeTasaConReintento', ControlDeTasaAntiSaturacionFalso);
+    container.registerSingleton<IRepositorioPerfil>('IRepositorioPerfil', RepositorioPerfilFalso);
     container.registerSingleton<IAlmacenamientoImagenes>('IAlmacenamientoImagenes', AlmacenamientoImagenesFalso);
   });
 

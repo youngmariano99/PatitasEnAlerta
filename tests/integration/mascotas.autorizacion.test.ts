@@ -49,6 +49,7 @@ describe('Anti-IDOR/BOLA — mascotas', () => {
     };
     const almacenamientoImagenes: jest.Mocked<IAlmacenamientoImagenes> = {
       esUrlDeImagenValida: jest.fn().mockReturnValue(true),
+      fueSubidaPor: jest.fn().mockResolvedValue(true),
     };
     const caso = new ActualizarMascota(repositorioMascotas, almacenamientoImagenes);
 
