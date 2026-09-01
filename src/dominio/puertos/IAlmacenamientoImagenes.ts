@@ -9,4 +9,17 @@
  */
 export interface IAlmacenamientoImagenes {
   esUrlDeImagenValida(url: string): boolean;
+
+  /**
+   * Confirma que, además de pertenecer a nuestra cuenta, `url` corresponde a
+   * una subida real hecha por `usuarioId` — consultando la metadata
+   * `context` que Cloudinary guardó al momento de la subida (Admin API, ver
+   * CloudinaryStorageAdapter.ts), nunca confiando en lo que el propio
+   * cliente afirme. Exclusivo de ValidadorContenidoImagen (Módulo 2,
+   * "Validación estructurada de reportes antes de publicar") — RegistrarMascota
+   * y ActualizarMascota (Módulo 1) siguen usando solo `esUrlDeImagenValida`,
+   * porque su flujo de subida no taguea la foto por usuario y no forma parte
+   * del alcance de este endurecimiento.
+   */
+  fueSubidaPor(url: string, usuarioId: string): Promise<boolean>;
 }
