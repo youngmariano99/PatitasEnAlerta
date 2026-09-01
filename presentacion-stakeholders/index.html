@@ -144,13 +144,6 @@
     border-radius:20px;
     box-shadow:0 16px 34px rgba(0,89,90,.16);
   }
-  .q-icon{
-    width:150px; height:150px; border-radius:50%; margin:0 auto 28px;
-    background:var(--teal-wash); color:var(--teal-ink);
-    display:flex; align-items:center; justify-content:center;
-  }
-  .s-problema.risk .q-icon{ background:var(--alert-wash); color:var(--alert); }
-  .q-icon svg{ width:66px; height:66px; }
   .q-caption{
     font-family:var(--font-display); font-weight:700;
     font-size:clamp(1.25rem, 3.6vw, 1.7rem);
@@ -236,7 +229,6 @@
 </section>
 
 <!-- ================= PROBLEMAS — 5 pantallas, una imagen por vez ================= -->
-<!-- Íconos en Problema 2, 3, 4 y 5 son placeholders: reemplazar por <img class="q-photo reveal" src="../public/animales/NOMBRE.png" alt="..."> cuando estén las ilustraciones nuevas. -->
 <section class="slide s-problema" data-group="problemas" id="s2-1">
   <div class="wrap">
     <div class="q-num reveal">Problema 1 / 5</div>
@@ -248,7 +240,7 @@
 <section class="slide s-problema risk" data-group="problemas" id="s2-2">
   <div class="wrap">
     <div class="q-num reveal">Problema 2 / 5</div>
-    <div class="q-icon reveal" style="transition-delay:.08s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l9 5v6c0 5-3.6 8-9 9-5.4-1-9-4-9-9V7z"/><path d="M12 8v5M12 16h.01"/></svg></div>
+    <img class="q-photo reveal" style="transition-delay:.08s" src="../public/animales/Animal%20sueltoRiesgoSanitario.png" alt="Mascota alertando sobre un riesgo sanitario">
     <p class="q-caption reveal" style="transition-delay:.16s">Animal suelto o con rabia <span class="arrow">→</span> ¿a quién avisás?</p>
   </div>
 </section>
@@ -256,7 +248,7 @@
 <section class="slide s-problema" data-group="problemas" id="s2-3">
   <div class="wrap">
     <div class="q-num reveal">Problema 3 / 5</div>
-    <div class="q-icon reveal" style="transition-delay:.08s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></div>
+    <img class="q-photo reveal" style="transition-delay:.08s" src="../public/animales/Datos%20y%20turnos%20del%20municipio.png" alt="Mascota organizando un calendario de campañas y turnos">
     <p class="q-caption reveal" style="transition-delay:.16s">Campañas del municipio <span class="arrow">→</span> ¿con qué datos?</p>
   </div>
 </section>
@@ -264,7 +256,7 @@
 <section class="slide s-problema" data-group="problemas" id="s2-4">
   <div class="wrap">
     <div class="q-num reveal">Problema 4 / 5</div>
-    <div class="q-icon reveal" style="transition-delay:.08s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h9l3 3v17H6z"/><path d="M9 8h6M9 12h6"/></svg></div>
+    <img class="q-photo reveal" style="transition-delay:.08s" src="../public/animales/Veterinarias%20%20gesti%C3%B3n%20y%20registros%20cl%C3%ADnicos.png" alt="Mascota veterinaria con estetoscopio y ficha clínica">
     <p class="q-caption reveal" style="transition-delay:.16s">Veterinarias <span class="arrow">→</span> ¿gestión y registros digitales?</p>
   </div>
 </section>
@@ -272,7 +264,7 @@
 <section class="slide s-problema" data-group="problemas" id="s2-5">
   <div class="wrap">
     <div class="q-num reveal">Problema 5 / 5</div>
-    <div class="q-icon reveal" style="transition-delay:.08s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 1 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg></div>
+    <img class="q-photo reveal" style="transition-delay:.08s" src="../public/animales/ONGs%20y%20rescatistas.png" alt="Mascotas abrazadas representando la colaboración entre ONGs y rescatistas">
     <p class="q-caption reveal" style="transition-delay:.16s">ONGs y rescatistas <span class="arrow">→</span> ¿cómo se encuentran?</p>
   </div>
 </section>
