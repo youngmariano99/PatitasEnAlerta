@@ -58,6 +58,14 @@ class RepositorioTurnosFalso implements IRepositorioTurnos {
     this.turnos.push(...generados);
     return generados;
   }
+
+  async obtenerActual(): Promise<null> {
+    return null;
+  }
+
+  async reservar(): Promise<null> {
+    return null;
+  }
 }
 
 function autenticarComo(usuarioId: string | null) {

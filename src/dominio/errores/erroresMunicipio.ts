@@ -4,6 +4,21 @@ import { ErrorDominio } from '@dominio/errores/ErrorDominio';
  * Códigos y mensajes copiados textualmente de docs/ERRORS.md — Módulo 3.
  * No modificar el mensaje acá sin actualizar primero el catálogo.
  */
+
+/** Control optimista de concurrencia (ReservarTurnoCommand.ts): 0 filas afectadas por el UPDATE condicionado. */
+export class TurnoYaReservadoError extends ErrorDominio {
+  constructor() {
+    super('PEA-MUN-001', 'Ese turno ya fue reservado por otra persona justo ahora. Elegí otro horario disponible.', 409);
+  }
+}
+
+/** Reutilizable por cualquier caso de uso que resuelva un evento o turno por id (soft delete / no encontrado). */
+export class EventoOTurnoNoEncontradoError extends ErrorDominio {
+  constructor() {
+    super('PEA-MUN-003', 'No encontramos ese evento o turno.', 404);
+  }
+}
+
 export class FechaEventoPasadaError extends ErrorDominio {
   constructor() {
     super('PEA-MUN-004', 'La fecha del evento tiene que ser posterior a hoy.', 400);
