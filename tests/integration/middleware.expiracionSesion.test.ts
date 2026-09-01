@@ -53,6 +53,7 @@ describe('middleware — expiración automática de sesión', () => {
       '/api/admin/verificaciones',
       '/api/admin/auditoria',
       '/api/admin/municipio',
+      '/api/municipio/eventos',
     ])('responde 401 (PEA-AUTH-005) en %s con un JWT vencido (Paso 4)', async (ruta) => {
       getUserMock.mockResolvedValue({ data: { user: null }, error: { message: 'jwt expired' } });
       getSessionMock.mockResolvedValue(sesionExpiradaHaceUnaHora());
