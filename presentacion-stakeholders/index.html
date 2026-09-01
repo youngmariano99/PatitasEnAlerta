@@ -140,25 +140,11 @@
   }
   .lema b{font-weight:600;}
   .hero p.lead{color:var(--text-muted); max-width:56ch; font-size:1.08rem;}
-  .hero-note{
-    margin-top:22px; font-size:.92rem; color:var(--text-soft);
-    border-left:3px solid var(--border-strong); padding-left:14px; max-width:52ch;
-  }
   .hero-art{
     background:var(--surface); border:1px solid var(--border); border-radius:16px;
     padding:20px; display:flex; justify-content:center; align-items:center;
   }
   .hero-art img{width:min(280px, 90%);}
-
-  /* ---------- disclaimer banner ---------- */
-  .disclaimer{
-    background:var(--surface); border:1px solid var(--border-strong); border-left:4px solid var(--blue);
-    border-radius:10px; padding:18px 20px; display:flex; gap:14px; align-items:flex-start;
-    margin-bottom:40px;
-  }
-  .disclaimer svg{width:22px; height:22px; color:var(--blue); flex-shrink:0; margin-top:2px;}
-  .disclaimer p{font-size:.94rem; color:var(--text-muted);}
-  .disclaimer b{color:var(--text);}
 
   /* ---------- problema cards ---------- */
   .problema-grid{display:grid; grid-template-columns:repeat(2, 1fr); gap:16px;}
@@ -319,7 +305,7 @@
       <svg class="paw" viewBox="0 0 24 24" fill="currentColor"><path d="M6.5 10.5c1.1 0 2-1.12 2-2.5S7.6 5.5 6.5 5.5 4.5 6.62 4.5 8s.9 2.5 2 2.5zm5-3c1.1 0 2-1.12 2-2.5S12.6 2.5 11.5 2.5 9.5 3.62 9.5 5s.9 2.5 2 2.5zm5.5 3c1.1 0 2-1.12 2-2.5S18.1 5.5 17 5.5s-2 1.12-2 2.5.9 2.5 2 2.5zm-3.9 2.3c-1.9-1.6-4.1-1.6-6 0-1.85 1.55-4.3 2.7-4.3 5.1 0 1.7 1.35 3.1 3 3.1.95 0 1.6-.4 2.3-.85.7-.45 1.4-.9 2.4-.9s1.7.45 2.4.9c.7.45 1.35.85 2.3.85 1.65 0 3-1.4 3-3.1 0-2.4-2.45-3.55-4.3-5.1z"/></svg>
       Patitas en Alerta
     </div>
-    <span class="topbar-tag">Presentación ilustrativa · para conversar con los stakeholders</span>
+    <span class="topbar-tag">"Reportar protege. Actuar salva."</span>
   </div>
 </div>
 
@@ -327,11 +313,10 @@
 <section class="hero">
   <div class="wrap hero-grid">
     <div>
-      <span class="eyebrow">Coronel Pringles · Propuesta en construcción</span>
+      <span class="eyebrow">Coronel Pringles · Piloto municipal</span>
       <h1>Una plataforma para pensar el bienestar animal <span class="accent">entre todos</span>.</h1>
       <div class="lema"><b>"Reportar protege.</b> Actuar salva."</div>
-      <p class="lead">Patitas en Alerta busca conectar a vecinos, municipio, veterinarios, ONGs y comercios en un mismo lugar, para que la información sobre las mascotas y la fauna urbana de la localidad no se pierda entre grupos de Facebook, llamados telefónicos y papeles sueltos.</p>
-      <p class="hero-note">Esta página presenta preguntas e hipótesis de trabajo, no diagnósticos confirmados — todavía no conversamos formalmente con el municipio ni relevamos a los vecinos.</p>
+      <p class="lead">Patitas en Alerta conecta a vecinos, municipio, veterinarios, ONGs y comercios en un mismo lugar, para que la información sobre las mascotas y la fauna urbana de la localidad no se pierda entre grupos de Facebook, llamados telefónicos y papeles sueltos.</p>
     </div>
     <div class="hero-art">
       <img src="../public/animales/Inicio-Dashboard.png" alt="Mascota de Patitas en Alerta con el teléfono en la mano">
@@ -342,15 +327,10 @@
 <!-- ================= PROBLEMAS ================= -->
 <section class="section-pad">
   <div class="wrap">
-    <div class="disclaimer reveal">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
-      <p><b>Antes de seguir:</b> lo que sigue son preguntas abiertas sobre lo que podría estar pasando en una localidad como la nuestra con la fauna urbana. Las planteamos como interrogantes a propósito — se van a confirmar, matizar o descartar recién cuando hablemos con el municipio y con vecinos concretos.</p>
-    </div>
-
     <div class="section-head">
-      <span class="eyebrow">Preguntas que nos hacemos</span>
-      <h2>¿Qué puede estar pasando hoy, sin una herramienta que lo ordene?</h2>
-      <p>Cada pregunta acá abajo es también la razón de ser de una parte de la plataforma. Si alguna no aplica en la práctica, esa parte del proyecto se revisa.</p>
+      <span class="eyebrow">Los problemas</span>
+      <h2>¿Qué está pasando hoy, sin una herramienta que lo ordene?</h2>
+      <p>Seis preguntas centrales sobre la fauna urbana y el bienestar animal en la localidad. Cada una es también la razón de ser de una parte de la plataforma.</p>
     </div>
 
     <div class="problema-grid">
@@ -467,8 +447,8 @@
       </div>
 
       <div class="wheel-copy">
-        <span class="eyebrow blue">Cómo se lee el gráfico</span>
-        <p style="margin-top:12px;">Las líneas sólidas son los tres actores que ya tienen historias de usuario definidas en el MVP de 4 semanas. Las líneas punteadas son actores igual de importantes para la visión completa, que se suman en etapas siguientes.</p>
+        <span class="eyebrow blue">Un ecosistema, no una app</span>
+        <p style="margin-top:12px;">El mismo dato circula entre los cinco actores. Nadie lo vuelve a cargar dos veces.</p>
         <ul>
           <li><b>Dueño de mascota</b> registra a su animal y reporta — ese dato alimenta al resto sin que nadie lo vuelva a cargar.</li>
           <li><b>Municipio</b> ve todo consolidado en un panel, sin depender de que cada vecino llame por teléfono.</li>
@@ -576,7 +556,6 @@
         <div class="map-legend-item"><span class="swatch" style="background:#008080;"></span>Mascota encontrada</div>
         <div class="map-legend-item"><span class="swatch" style="background:#C44601;"></span>Evento de riesgo urbano</div>
         <div class="map-legend-item"><span class="swatch" style="background:#66746F;"></span>Operativo municipal</div>
-        <p style="margin-top:8px; font-size:.85rem; color:var(--text-soft);">Un mismo mapa, con categorías claramente diferenciadas por ícono y color — nunca solo por color, siguiendo el criterio de accesibilidad del proyecto.</p>
       </div>
     </div>
 
@@ -641,9 +620,9 @@
 
     <div class="concl-layout">
       <div class="concl-copy reveal">
-        <p>Cada módulo de esta plataforma nace de una pregunta concreta sobre lo que puede estar fallando hoy en la gestión del bienestar animal local — no de una funcionalidad que "queda bien" en una demo. Por eso, si al conversar con el municipio o con los vecinos alguna de esas preguntas no se sostiene, esa parte del proyecto se revisa antes de construirse.</p>
+        <p>Cada módulo de esta plataforma nace de un problema concreto de la gestión del bienestar animal local — no de una funcionalidad que "queda bien" en una demo.</p>
         <p>El MVP de 4 semanas cubre lo que conecta a más actores con menos esfuerzo: registro y mascotas, reportes (incluyendo eventos de riesgo urbano), turnera y dashboard municipal con vitrina de adopción, y agenda + libreta sanitaria veterinaria.</p>
-        <p>Lo que sigue no es una lista de "ideas lindas": es la continuación directa de las preguntas que este ciclo no llega a cubrir.</p>
+        <p>Lo que sigue no es una lista de "ideas lindas": es la continuación directa de los problemas que este ciclo no llega a cubrir.</p>
       </div>
 
       <div class="later-list reveal">
@@ -676,12 +655,12 @@
   <div class="wrap">
     <img src="../public/animales/%C3%89xito-Confirmaci%C3%B3n.png" alt="Mascotas de Patitas en Alerta festejando" class="reveal">
     <h2>Reportar protege. Actuar salva.</h2>
-    <p>Estas preguntas están abiertas a propósito. El paso que sigue es llevarlas al municipio y a los vecinos, y construir sobre lo que se confirme.</p>
+    <p>Así es como imaginamos el bienestar animal de la ciudad organizado entre todos: vecinos, municipio, veterinarios, ONGs y comercios, sobre una misma base.</p>
   </div>
 </section>
 
 <footer>
-  Patitas en Alerta — página ilustrativa de trabajo, no forma parte de la plataforma. Problemas planteados como hipótesis a validar.
+  Patitas en Alerta
 </footer>
 
 <script>
