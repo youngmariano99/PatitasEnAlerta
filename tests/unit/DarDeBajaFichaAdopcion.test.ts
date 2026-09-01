@@ -44,6 +44,7 @@ function crearFakes(opciones?: { rol?: string; existente?: FichaAdopcion | null;
       FichaAdopcion.reconstruir(id, { ...DATOS_BASE, estado: 'baja' }, new Date('2026-09-01T09:00:00.000Z')),
     ),
     listarPorMunicipio: jest.fn(),
+    listarPublico: jest.fn(),
   };
   const repositorioPerfil: jest.Mocked<IRepositorioPerfil> = {
     obtenerPerfilPropio: jest.fn().mockResolvedValue(crearPerfil(opciones?.rol ?? 'municipio')),
