@@ -14,11 +14,11 @@ Abrí `index.html` directamente en el navegador, o servila con cualquier servido
 npx serve presentacion-stakeholders
 ```
 
-## Contenido (4 pantallas, una por punto a marcar)
+## Contenido
 
 1. **Esencia** — el lema y los cinco actores que conecta la plataforma (vecinos, municipio y veterinarias ya en el MVP; ONGs/rescatistas y comercios después).
-2. **Problemas** — seis preguntas, sin responderlas en texto: mascotas perdidas/encontradas, eventos de riesgo urbano (sueltos, rabia, agresividad), datos y turnos del municipio, gestión de las veterinarias, cómo se encuentran ONGs/rescatistas con quien puede ayudarlos, y comercios/cursos confiables.
-3. **Soluciones** — las mismas seis, nombradas de forma concisa (sin descripción), etiquetadas MVP o Después.
+2. **Problemas** — 5 pantallas, una pregunta por vez, centrada y en letra grande (pensado para grabar con el celular sin zoom): canal específico para mascotas perdidas/encontradas, gestión con historial de eventos de riesgo urbano (sueltos, rabia, agresividad), datos y turnos del municipio, sistema de gestión + registros clínicos para veterinarias, y cómo se encuentran ONGs/rescatistas con quien puede ayudarlos.
+3. **Soluciones** — las mismas cinco, nombradas de forma concisa (sin descripción), etiquetadas MVP o Después.
 4. **Final** — cierre con el lema.
 
 Pensada para reutilizarse en varios videos cortos: cada pantalla alcanza sola como punto de guion, sin necesitar explicar la web completa en uno solo.
