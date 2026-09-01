@@ -53,7 +53,6 @@ describe('middleware — expiración automática de sesión', () => {
       '/api/admin/verificaciones',
       '/api/admin/auditoria',
       '/api/admin/municipio',
-      '/api/municipio/eventos',
     ])('responde 401 (PEA-AUTH-005) en %s con un JWT vencido (Paso 4)', async (ruta) => {
       getUserMock.mockResolvedValue({ data: { user: null }, error: { message: 'jwt expired' } });
       getSessionMock.mockResolvedValue(sesionExpiradaHaceUnaHora());
@@ -63,6 +62,24 @@ describe('middleware — expiración automática de sesión', () => {
       expect(respuesta.status).toBe(401);
       const cuerpo = await respuesta.json();
       expect(cuerpo.codigo).toBe('PEA-AUTH-005');
+    });
+
+    // GET /api/municipio/eventos es el único método público de ese prefijo
+    // (calendario público de operativos, Historia "Calendario público de
+    // operativos" — ver middleware.ts, RUTAS_API_LECTURA_PUBLICA); POST
+    // (alta de un operativo) sigue exigiendo sesión vigente igual que el
+    // resto de /api/municipio.
+    it('responde 401 (PEA-AUTH-005) en POST /api/municipio/eventos con un JWT vencido, a diferencia de GET (público)', async () => {
+      getUserMock.mockResolvedValue({ data: { user: null }, error: { message: 'jwt expired' } });
+      getSessionMock.mockResolvedValue(sesionExpiradaHaceUnaHora());
+
+      const respuestaPost = await middleware(crearRequest('/api/municipio/eventos', 'POST'));
+      expect(respuestaPost.status).toBe(401);
+      const cuerpoPost = await respuestaPost.json();
+      expect(cuerpoPost.codigo).toBe('PEA-AUTH-005');
+
+      const respuestaGet = await middleware(crearRequest('/api/municipio/eventos', 'GET'));
+      expect(respuestaGet.status).toBe(200);
     });
 
     it('responde 401 (PEA-SIS-001) cuando no hay sesión alguna, distinto de una sesión vencida', async () => {
@@ -134,11 +151,53 @@ describe('middleware — expiración automática de sesión', () => {
       '/api/auth/recuperar-password',
       '/api/openapi',
       '/api/reportes',
+      '/municipio/eventos',
+      '/api/municipio/eventos',
     ])('no exige sesión en %s (ni siquiera invoca a Supabase Auth)', async (ruta) => {
       const respuesta = await middleware(crearRequest(ruta));
 
       expect(respuesta.status).toBe(200);
       expect(getUserMock).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('excepción de método sobre /api/municipio/eventos (GET-only-público, calendario público)', () => {
+    // Historia "Calendario público de operativos": GET es público (RLS
+    // eventos_select_publico + GRANT SELECT a anon), pero publicar un
+    // operativo (POST) sigue exigiendo sesión y rol municipio/administrador.
+    it('POST /api/municipio/eventos sigue exigiendo sesión (401 / PEA-SIS-001 sin sesión)', async () => {
+      getUserMock.mockResolvedValue({ data: { user: null }, error: { message: 'sin sesión' } });
+      getSessionMock.mockResolvedValue(sinSesionLocal());
+
+      const respuesta = await middleware(crearRequest('/api/municipio/eventos', 'POST'));
+
+      expect(respuesta.status).toBe(401);
+      const cuerpo = await respuesta.json();
+      expect(cuerpo.codigo).toBe('PEA-SIS-001');
+    });
+
+    it('POST /api/municipio/eventos deja pasar con sesión válida', async () => {
+      getUserMock.mockResolvedValue({ data: { user: { id: 'user-1' } }, error: null });
+
+      const respuesta = await middleware(crearRequest('/api/municipio/eventos', 'POST'));
+
+      expect(respuesta.status).toBe(200);
+    });
+  });
+
+  describe('excepción de página sobre /municipio/eventos (calendario público dentro de un prefijo protegido)', () => {
+    // Coincidencia EXACTA con '/municipio/eventos', no por prefijo:
+    // '/municipio/eventos/nuevo' (alta rápida) sigue exigiendo sesión y rol,
+    // igual que el resto de /municipio.
+    it('/municipio/eventos/nuevo SÍ exige sesión (no es la misma ruta que el calendario público)', async () => {
+      getUserMock.mockResolvedValue({ data: { user: null }, error: { message: 'sin sesión' } });
+      getSessionMock.mockResolvedValue(sinSesionLocal());
+
+      const respuesta = await middleware(crearRequest('/municipio/eventos/nuevo'));
+
+      expect(respuesta.status).toBe(307);
+      const location = new URL(respuesta.headers.get('location')!);
+      expect(location.pathname).toBe('/auth/login');
     });
   });
 

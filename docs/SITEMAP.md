@@ -20,8 +20,8 @@
  ├─ /reportes/nuevo                (perdido | encontrado | problemática)
  └─ /reportes/[id]
 
-/municipio                        (rol Municipio)
- ├─ /municipio/eventos
+/municipio                        (rol Municipio, salvo lo indicado)
+ ├─ /municipio/eventos             (calendario de operativos — consulta pública sin login)
  ├─ /municipio/eventos/nuevo
  ├─ /municipio/turnera
  ├─ /municipio/dashboard

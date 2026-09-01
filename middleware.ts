@@ -5,11 +5,14 @@ import { SesionExpiradaError } from '@dominio/errores/erroresAutenticacion';
 
 // Páginas que requieren sesión — el usuario sin sesión se redirige a
 // /auth/login. Ampliar a medida que se agreguen módulos.
-// Las rutas de solo-lectura pública (ej. /reportes, /adopciones, /municipio/eventos)
-// se dejan deliberadamente fuera de esta lista. '/reportes/nuevo' es la
-// única subruta protegida de /reportes: publicar un reporte exige sesión
-// (el `reportadoPor` sale de ella), pero el listado público en '/reportes'
-// tiene que seguir siendo accesible sin login.
+// Las rutas de solo-lectura pública (ej. /reportes, /adopciones) se dejan
+// deliberadamente fuera de esta lista. '/reportes/nuevo' es la única
+// subruta protegida de /reportes: publicar un reporte exige sesión (el
+// `reportadoPor` sale de ella), pero el listado público en '/reportes'
+// tiene que seguir siendo accesible sin login. '/municipio/eventos' (el
+// calendario público, Historia "Calendario público de operativos") sigue
+// el mismo criterio dentro de /municipio — ver RUTAS_PAGINA_LECTURA_PUBLICA
+// más abajo, que la exime puntualmente de este prefijo protegido.
 const RUTAS_PAGINA_PROTEGIDAS = [
   '/panel',
   '/mascotas',
@@ -19,6 +22,16 @@ const RUTAS_PAGINA_PROTEGIDAS = [
   '/admin',
   '/reportes/nuevo',
 ];
+
+// Coincidencia EXACTA (no por prefijo) de páginas públicas dentro de un
+// prefijo protegido: '/municipio/eventos' es el calendario público (sin
+// sesión ni rol), pero '/municipio/eventos/nuevo' (alta rápida) y el resto
+// de /municipio siguen exigiendo rol municipio/administrador.
+const RUTAS_PAGINA_LECTURA_PUBLICA = ['/municipio/eventos'];
+
+function esPaginaLecturaPublica(pathname: string): boolean {
+  return RUTAS_PAGINA_LECTURA_PUBLICA.includes(pathname);
+}
 
 // Endpoints de API que requieren sesión — a diferencia de una página, una
 // API nunca debe responder con una redirección HTML: el usuario sin sesión
@@ -35,16 +48,16 @@ const RUTAS_API_PROTEGIDAS = [
 ];
 
 // Excepción de método sobre RUTAS_API_PROTEGIDAS: un GET a estas rutas
-// exactas es público (consulta de solo lectura, docs/ROLES.md 3.2 — RLS
-// `reportes_select_publico` + `GRANT SELECT ON reportes TO anon`); POST
-// (y cualquier otro método) sobre la misma ruta sigue protegido. GET
-// /api/reportes/route.ts no depende de esta excepción para autorizar — la
-// RLS pública ya lo permite — pero sin ella el usuario `anon` nunca llega a
-// ejecutar el caso de uso. Coincidencia EXACTA (no por prefijo): subrutas
-// como GET /api/reportes/[id]/historial (dueño/municipio/administrador,
-// ListarHistorialReporte) NO son públicas y deben seguir cayendo en
-// RUTAS_API_PROTEGIDAS.
-const RUTAS_API_LECTURA_PUBLICA = ['/api/reportes'];
+// exactas es público (consulta de solo lectura, docs/ROLES.md 3.2/3.3 — RLS
+// `reportes_select_publico`/`eventos_select_publico` + `GRANT SELECT ...
+// TO anon`); POST (y cualquier otro método) sobre la misma ruta sigue
+// protegido. Ninguno de estos GET depende de esta excepción para
+// autorizar — la RLS pública ya lo permite — pero sin ella el usuario
+// `anon` nunca llega a ejecutar el caso de uso. Coincidencia EXACTA (no por
+// prefijo): subrutas como GET /api/reportes/[id]/historial
+// (dueño/municipio/administrador, ListarHistorialReporte) NO son públicas y
+// deben seguir cayendo en RUTAS_API_PROTEGIDAS.
+const RUTAS_API_LECTURA_PUBLICA = ['/api/reportes', '/api/municipio/eventos'];
 
 function esLecturaPublicaExacta(pathname: string, method: string): boolean {
   return method === 'GET' && RUTAS_API_LECTURA_PUBLICA.includes(pathname);
@@ -125,7 +138,7 @@ export async function middleware(request: NextRequest) {
 
   const esLecturaPublica = esLecturaPublicaExacta(pathname, request.method);
   const esApiProtegida = esRutaProtegida(pathname, RUTAS_API_PROTEGIDAS) && !esLecturaPublica;
-  const esPaginaProtegida = esRutaProtegida(pathname, RUTAS_PAGINA_PROTEGIDAS);
+  const esPaginaProtegida = esRutaProtegida(pathname, RUTAS_PAGINA_PROTEGIDAS) && !esPaginaLecturaPublica(pathname);
   if (!esApiProtegida && !esPaginaProtegida) return response;
 
   const supabase = createServerClient(
