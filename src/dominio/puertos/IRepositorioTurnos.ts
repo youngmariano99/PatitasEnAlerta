@@ -31,6 +31,25 @@ export interface TurnoReservado {
   version: number;
 }
 
+/** Proyección de "mis turnos" — `eventoTitulo` es `null` para turnos de proveedor 'veterinario' (`evento_id IS NULL`, docs/SCHEMA.md). */
+export interface TurnoPropio {
+  id: string;
+  proveedorTipo: string;
+  proveedorId: string;
+  eventoId: string | null;
+  eventoTitulo: string | null;
+  franjaInicio: Date;
+  franjaFin: Date;
+  estado: string;
+}
+
+export interface PaginaTurnosPropios {
+  items: TurnoPropio[];
+  total: number;
+  pagina: number;
+  porPagina: number;
+}
+
 /**
  * Puerto hacia la persistencia del Motor de Turnera compartido (Módulo 3 y,
  * a futuro, Módulo 4) — genérico sobre `proveedorTipo`, nunca conoce si
@@ -55,4 +74,6 @@ export interface IRepositorioTurnos {
    * decide ahí mismo que es PEA-MUN-001 (409), no un error de sistema.
    */
   reservar(turnoId: string, reservadoPor: string, versionEsperada: number): Promise<TurnoReservado | null>;
+  /** "Mis turnos" (Historia "Monitoreo en tiempo real del turno reservado"): paginado (tope 50), filtrado exclusivamente por `reservado_por`, orden por `franja_inicio` ascendente (el próximo turno primero). */
+  listarPropios(reservadoPor: string, pagina: number, porPagina: number): Promise<PaginaTurnosPropios>;
 }

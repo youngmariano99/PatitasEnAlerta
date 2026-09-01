@@ -3,8 +3,10 @@ import { prisma } from '@infraestructura/adaptadores/prisma-client';
 import type {
   DatosNuevoTurno,
   IRepositorioTurnos,
+  PaginaTurnosPropios,
   TurnoActual,
   TurnoGenerado,
+  TurnoPropio,
   TurnoReservado,
 } from '@dominio/puertos/IRepositorioTurnos';
 
@@ -68,5 +70,42 @@ export class PrismaTurnoRepositorio implements IRepositorioTurnos {
     if (resultado.count === 0) return null;
 
     return { id: turnoId, estado: 'reservado', reservadoPor, version: versionEsperada + 1 };
+  }
+
+  async listarPropios(reservadoPor: string, pagina: number, porPagina: number): Promise<PaginaTurnosPropios> {
+    const where = { reservadoPor, deletedAt: null };
+
+    const [filas, total] = await Promise.all([
+      prisma.turno.findMany({
+        where,
+        orderBy: { franjaInicio: 'asc' },
+        skip: (pagina - 1) * porPagina,
+        take: porPagina,
+        select: {
+          id: true,
+          proveedorTipo: true,
+          proveedorId: true,
+          eventoId: true,
+          franjaInicio: true,
+          franjaFin: true,
+          estado: true,
+          evento: { select: { titulo: true } },
+        },
+      }),
+      prisma.turno.count({ where }),
+    ]);
+
+    const items: TurnoPropio[] = filas.map((fila) => ({
+      id: fila.id,
+      proveedorTipo: fila.proveedorTipo,
+      proveedorId: fila.proveedorId,
+      eventoId: fila.eventoId,
+      eventoTitulo: fila.evento?.titulo ?? null,
+      franjaInicio: fila.franjaInicio,
+      franjaFin: fila.franjaFin,
+      estado: fila.estado,
+    }));
+
+    return { items, total, pagina, porPagina };
   }
 }

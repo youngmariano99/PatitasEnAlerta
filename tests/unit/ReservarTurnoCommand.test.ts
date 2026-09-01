@@ -16,6 +16,7 @@ function crearFakes(opciones?: { turnoActual?: TurnoActual | null; reservarDevue
   const repositorioTurnos: jest.Mocked<IRepositorioTurnos> = {
     contarDisponiblesPorEvento: jest.fn(),
     crearLote: jest.fn(),
+    listarPropios: jest.fn(),
     obtenerActual: jest.fn().mockResolvedValue(opciones?.turnoActual === undefined ? turnoDisponible : opciones.turnoActual),
     reservar: jest
       .fn()
