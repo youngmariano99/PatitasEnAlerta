@@ -22,6 +22,8 @@ function crearFakes(opciones?: { yaDisponibles?: number }) {
       turnosPersistidos.push(...generados);
       return generados;
     }),
+    obtenerActual: jest.fn(),
+    reservar: jest.fn(),
   };
   // Instancia REAL de TurneraMunicipio (no un mock) — verificación técnica
   // del ticket: GenerarTurnosEvento reutiliza el Motor de Turnera compartido
