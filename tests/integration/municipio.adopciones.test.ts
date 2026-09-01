@@ -98,6 +98,11 @@ class RepositorioFichasFalso implements IRepositorioFichasAdopcion {
     );
     return { items, total: items.length, pagina, porPagina };
   }
+
+  async listarPublico(pagina: number, porPagina: number): Promise<PaginaFichasAdopcion> {
+    const items = Array.from(this.fichas.values()).filter((f) => f.estado === 'disponible');
+    return { items, total: items.length, pagina, porPagina };
+  }
 }
 
 class RepositorioPerfilFalso implements IRepositorioPerfil {

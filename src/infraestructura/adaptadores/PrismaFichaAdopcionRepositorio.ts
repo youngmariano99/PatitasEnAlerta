@@ -142,4 +142,27 @@ export class PrismaFichaAdopcionRepositorio implements IRepositorioFichasAdopcio
 
     return { items: filas.map(aEntidad), total, pagina, porPagina };
   }
+
+  async listarPublico(pagina: number, porPagina: number): Promise<PaginaFichasAdopcion> {
+    // Filtra únicamente por `estado` — en esta instancia single-tenant
+    // (docs/SCHEMA.md) toda la tabla pertenece al mismo `municipio_id`, así
+    // que `ix_vitrina_municipio_estado (municipio_id, estado)` sigue siendo
+    // efectivo para esta consulta (Paso 2 del ticket) aunque no se filtre
+    // por `municipio_id` acá: Postgres solo tiene un valor posible en esa
+    // primera columna.
+    const where = { deletedAt: null, estado: 'disponible' };
+
+    const [filas, total] = await Promise.all([
+      prisma.vitrinaAdopcion.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (pagina - 1) * porPagina,
+        take: porPagina,
+        select: SELECT_FICHA,
+      }),
+      prisma.vitrinaAdopcion.count({ where }),
+    ]);
+
+    return { items: filas.map(aEntidad), total, pagina, porPagina };
+  }
 }

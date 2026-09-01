@@ -42,4 +42,11 @@ export interface IRepositorioFichasAdopcion {
   actualizar(id: string, cambios: CambiosFichaAdopcion): Promise<FichaAdopcion>;
   darDeBaja(id: string): Promise<FichaAdopcion>;
   listarPorMunicipio(filtros: FiltrosListadoFichasAdopcion, pagina: number, porPagina: number): Promise<PaginaFichasAdopcion>;
+  /**
+   * Vitrina pública (Historia "Consulta pública de la vitrina de adopción"):
+   * paginado (tope 50), filtrado exclusivamente por `estado='disponible'` —
+   * nunca 'adoptado' ni 'baja', sin importar el municipio. Complementa
+   * (nunca reemplaza) la RLS `vitrina_select_publico`.
+   */
+  listarPublico(pagina: number, porPagina: number): Promise<PaginaFichasAdopcion>;
 }

@@ -16,12 +16,12 @@ export interface EntradaListarFichasAdopcion extends ParametrosListarFichasAdopc
 
 /**
  * Panel municipal de la vitrina de adopción: a diferencia de la vitrina
- * pública (Post-MVP, fuera de esta actividad — RLS `vitrina_select_publico`
- * solo muestra `estado='disponible'` a un visitante anónimo), acá el propio
- * municipio ve TODAS sus fichas sin importar el estado ('disponible',
- * 'adoptado', 'baja'), autorizado por rol (PEA-MUN-005) igual que el resto
- * de esta actividad — la RLS `vitrina_crud_municipio` ya lo permite vía
- * `municipio_id = auth.uid()`.
+ * pública (`ListarVitrinaAdopcionPublico`, GET /adopciones — RLS
+ * `vitrina_select_publico` solo muestra `estado='disponible'` a un
+ * visitante anónimo), acá el propio municipio ve TODAS sus fichas sin
+ * importar el estado ('disponible', 'adoptado', 'baja'), autorizado por rol
+ * (PEA-MUN-005) igual que el resto de esta actividad — la RLS
+ * `vitrina_crud_municipio` ya lo permite vía `municipio_id = auth.uid()`.
  */
 @injectable()
 export class ListarFichasAdopcion extends CasoDeUsoBase<EntradaListarFichasAdopcion, PaginaFichasAdopcion> {

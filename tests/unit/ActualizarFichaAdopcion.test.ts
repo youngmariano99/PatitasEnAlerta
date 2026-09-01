@@ -59,6 +59,7 @@ function crearFakes(opciones?: { rol?: string; fichaExistenteOverride?: FichaAdo
     ),
     darDeBaja: jest.fn(),
     listarPorMunicipio: jest.fn(),
+    listarPublico: jest.fn(),
   };
   const repositorioPerfil: jest.Mocked<IRepositorioPerfil> = {
     obtenerPerfilPropio: jest.fn().mockResolvedValue(crearPerfil(opciones?.rol ?? 'municipio')),

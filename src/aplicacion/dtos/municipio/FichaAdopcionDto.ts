@@ -124,6 +124,34 @@ export const PaginaFichasAdopcionSchema = registroOpenApi.register(
     .openapi('PaginaFichasAdopcion'),
 );
 
+/** Query params de la vitrina pública (GET /adopciones) — a diferencia del panel municipal, no admite filtro por `estado`: siempre 'disponible'. */
+export const ListarVitrinaAdopcionPublicoQuerySchema = z.object({
+  pagina: z.coerce.number().int().min(1).catch(1),
+  porPagina: z.coerce.number().int().min(1).max(TOPE_POR_PAGINA).catch(TOPE_POR_PAGINA),
+});
+
+export type ParametrosListarVitrinaAdopcionPublico = z.infer<typeof ListarVitrinaAdopcionPublicoQuerySchema>;
+
+registroOpenApi.registerPath({
+  method: 'get',
+  path: '/adopciones',
+  tags: ['Adopciones'],
+  summary:
+    'Vitrina pública y paginada (tope 50) de fichas en estado "disponible" — sin autenticación (GRANT SELECT a anon, RLS vitrina_select_publico).',
+  request: {
+    query: z.object({
+      pagina: z.coerce.number().int().min(1).optional(),
+      porPagina: z.coerce.number().int().min(1).max(TOPE_POR_PAGINA).optional(),
+    }),
+  },
+  responses: {
+    200: {
+      description: 'Página de fichas disponibles, ordenadas por fecha de publicación descendente.',
+      content: { 'application/json': { schema: PaginaFichasAdopcionSchema } },
+    },
+  },
+});
+
 registroOpenApi.registerPath({
   method: 'post',
   path: '/municipio/adopciones',

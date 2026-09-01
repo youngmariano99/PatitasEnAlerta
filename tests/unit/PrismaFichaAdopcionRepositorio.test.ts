@@ -124,4 +124,31 @@ describe('PrismaFichaAdopcionRepositorio', () => {
       expect.objectContaining({ where: { deletedAt: null, municipioId } }),
     );
   });
+
+  describe('listarPublico', () => {
+    it('AC: filtra EXCLUSIVAMENTE por estado="disponible", sin importar el municipio', async () => {
+      prisma.vitrinaAdopcion.findMany.mockResolvedValue([filaBase]);
+      prisma.vitrinaAdopcion.count.mockResolvedValue(1);
+      const adapter = new PrismaFichaAdopcionRepositorio();
+
+      const resultado = await adapter.listarPublico(1, 50);
+
+      expect(resultado.items).toHaveLength(1);
+      expect(resultado.total).toBe(1);
+      expect(prisma.vitrinaAdopcion.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { deletedAt: null, estado: 'disponible' }, skip: 0, take: 50 }),
+      );
+      expect(prisma.vitrinaAdopcion.count).toHaveBeenCalledWith({ where: { deletedAt: null, estado: 'disponible' } });
+    });
+
+    it('respeta la paginación (skip/take) según pagina/porPagina', async () => {
+      prisma.vitrinaAdopcion.findMany.mockResolvedValue([]);
+      prisma.vitrinaAdopcion.count.mockResolvedValue(0);
+      const adapter = new PrismaFichaAdopcionRepositorio();
+
+      await adapter.listarPublico(3, 20);
+
+      expect(prisma.vitrinaAdopcion.findMany).toHaveBeenCalledWith(expect.objectContaining({ skip: 40, take: 20 }));
+    });
+  });
 });
