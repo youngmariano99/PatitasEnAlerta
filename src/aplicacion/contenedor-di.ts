@@ -10,6 +10,7 @@ import type { IRepositorioMunicipios } from '@dominio/puertos/IRepositorioMunici
 import type { IRepositorioVerificaciones } from '@dominio/puertos/IRepositorioVerificaciones';
 import type { INotificacionesRepositorio } from '@dominio/puertos/INotificacionesRepositorio';
 import type { IRepositorioReportes } from '@dominio/puertos/IRepositorioReportes';
+import type { IRepositorioEventos } from '@dominio/puertos/IRepositorioEventos';
 import type { IControlDeTasa } from '@dominio/puertos/IControlDeTasa';
 import type { IControlDeTasaConReintento } from '@dominio/puertos/IControlDeTasaConReintento';
 import { PrismaUsuarioRepositorio } from '@infraestructura/adaptadores/PrismaUsuarioRepositorio';
@@ -22,6 +23,7 @@ import { PrismaMunicipioRepositorio } from '@infraestructura/adaptadores/PrismaM
 import { PrismaVerificacionesRepositorio } from '@infraestructura/adaptadores/PrismaVerificacionesRepositorio';
 import { PrismaNotificacionesRepositorio } from '@infraestructura/adaptadores/PrismaNotificacionesRepositorio';
 import { PrismaReporteRepositorio } from '@infraestructura/adaptadores/PrismaReporteRepositorio';
+import { PrismaEventoRepositorio } from '@infraestructura/adaptadores/PrismaEventoRepositorio';
 import { UpstashControlDeTasa } from '@infraestructura/adaptadores/UpstashControlDeTasa';
 import { UpstashControlDeTasaAntiSaturacion } from '@infraestructura/adaptadores/UpstashControlDeTasaAntiSaturacion';
 
@@ -46,6 +48,7 @@ container.registerSingleton<IRepositorioMunicipios>('IRepositorioMunicipios', Pr
 container.registerSingleton<IRepositorioVerificaciones>('IRepositorioVerificaciones', PrismaVerificacionesRepositorio);
 container.registerSingleton<INotificacionesRepositorio>('INotificacionesRepositorio', PrismaNotificacionesRepositorio);
 container.registerSingleton<IRepositorioReportes>('IRepositorioReportes', PrismaReporteRepositorio);
+container.registerSingleton<IRepositorioEventos>('IRepositorioEventos', PrismaEventoRepositorio);
 container.registerSingleton<IControlDeTasa>('IControlDeTasa', UpstashControlDeTasa);
 container.registerSingleton<IControlDeTasaConReintento>('IControlDeTasaConReintento', UpstashControlDeTasaAntiSaturacion);
 
