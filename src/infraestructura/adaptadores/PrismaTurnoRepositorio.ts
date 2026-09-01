@@ -5,10 +5,15 @@ import type {
   IRepositorioTurnos,
   PaginaTurnosPropios,
   TurnoActual,
+  TurnoCancelado,
   TurnoGenerado,
   TurnoPropio,
+  TurnoReprogramado,
   TurnoReservado,
 } from '@dominio/puertos/IRepositorioTurnos';
+
+/** Señal interna para forzar el rollback de `reprogramar` — nunca escapa del propio método (ver el `catch` al final). */
+class PasoDeReprogramacionFallidoError extends Error {}
 
 const SELECT_TURNO = {
   id: true,
@@ -52,7 +57,7 @@ export class PrismaTurnoRepositorio implements IRepositorioTurnos {
   async obtenerActual(turnoId: string): Promise<TurnoActual | null> {
     const fila = await prisma.turno.findFirst({
       where: { id: turnoId, deletedAt: null },
-      select: { id: true, estado: true, version: true },
+      select: { id: true, estado: true, version: true, reservadoPor: true, proveedorId: true },
     });
     return fila;
   }
@@ -107,5 +112,83 @@ export class PrismaTurnoRepositorio implements IRepositorioTurnos {
     }));
 
     return { items, total, pagina, porPagina };
+  }
+
+  async cancelar(turnoId: string, versionEsperada: number): Promise<TurnoCancelado | null> {
+    const actual = await prisma.turno.findFirst({
+      where: { id: turnoId, deletedAt: null },
+      select: { reservadoPor: true, proveedorId: true },
+    });
+    if (!actual) return null;
+
+    // `reservado_por` deliberadamente ausente de `data`: se conserva tal
+    // cual (ver TurnoCancelado en el puerto) — nunca se limpia a `null`.
+    const resultado = await prisma.turno.updateMany({
+      where: { id: turnoId, estado: 'reservado', version: versionEsperada, deletedAt: null },
+      data: { estado: 'cancelado', version: { increment: 1 } },
+    });
+
+    if (resultado.count === 0) return null;
+
+    return {
+      id: turnoId,
+      estado: 'cancelado',
+      reservadoPor: actual.reservadoPor,
+      proveedorId: actual.proveedorId,
+      version: versionEsperada + 1,
+    };
+  }
+
+  async reprogramar(
+    turnoActualId: string,
+    turnoNuevoId: string,
+    usuarioId: string,
+    versionActualEsperada: number,
+    versionNuevaEsperada: number,
+  ): Promise<TurnoReprogramado | null> {
+    try {
+      return await prisma.$transaction(async (tx) => {
+        const actual = await tx.turno.findFirst({
+          where: { id: turnoActualId, deletedAt: null },
+          select: { reservadoPor: true, proveedorId: true },
+        });
+        if (!actual) throw new PasoDeReprogramacionFallidoError();
+
+        const cancelacion = await tx.turno.updateMany({
+          where: { id: turnoActualId, estado: 'reservado', version: versionActualEsperada, deletedAt: null },
+          data: { estado: 'cancelado', version: { increment: 1 } },
+        });
+        if (cancelacion.count === 0) throw new PasoDeReprogramacionFallidoError();
+
+        const reserva = await tx.turno.updateMany({
+          where: { id: turnoNuevoId, estado: 'disponible', version: versionNuevaEsperada, deletedAt: null },
+          data: { estado: 'reservado', reservadoPor: usuarioId, version: { increment: 1 } },
+        });
+        // Si este paso falla, lanzar acá revierte TAMBIÉN la cancelación de
+        // arriba (misma transacción) — el turno actual nunca queda
+        // cancelado sin que el nuevo haya quedado reservado (Paso 2,
+        // "todo o nada").
+        if (reserva.count === 0) throw new PasoDeReprogramacionFallidoError();
+
+        return {
+          turnoCancelado: {
+            id: turnoActualId,
+            estado: 'cancelado',
+            reservadoPor: actual.reservadoPor,
+            proveedorId: actual.proveedorId,
+            version: versionActualEsperada + 1,
+          },
+          turnoReservado: {
+            id: turnoNuevoId,
+            estado: 'reservado',
+            reservadoPor: usuarioId,
+            version: versionNuevaEsperada + 1,
+          },
+        };
+      });
+    } catch (error) {
+      if (error instanceof PasoDeReprogramacionFallidoError) return null;
+      throw error;
+    }
   }
 }

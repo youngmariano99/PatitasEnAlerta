@@ -10,13 +10,21 @@ import { EventoOTurnoNoEncontradoError, TurnoYaReservadoError } from '@dominio/e
 const turnoId = '11111111-1111-4111-8111-111111111111';
 const reservadoPor = '22222222-2222-4222-8222-222222222222';
 
-const turnoDisponible: TurnoActual = { id: turnoId, estado: 'disponible', version: 3 };
+const turnoDisponible: TurnoActual = {
+  id: turnoId,
+  estado: 'disponible',
+  version: 3,
+  reservadoPor: null,
+  proveedorId: 'municipio-1',
+};
 
 function crearFakes(opciones?: { turnoActual?: TurnoActual | null; reservarDevuelve?: TurnoReservado | null }) {
   const repositorioTurnos: jest.Mocked<IRepositorioTurnos> = {
     contarDisponiblesPorEvento: jest.fn(),
     crearLote: jest.fn(),
     listarPropios: jest.fn(),
+    cancelar: jest.fn(),
+    reprogramar: jest.fn(),
     obtenerActual: jest.fn().mockResolvedValue(opciones?.turnoActual === undefined ? turnoDisponible : opciones.turnoActual),
     reservar: jest
       .fn()
@@ -77,7 +85,9 @@ describe('ReservarTurnoCommand', () => {
   });
 
   it('propaga a IRepositorioTurnos.reservar exactamente la version leída por obtenerActual (control optimista)', async () => {
-    const fakes = crearFakes({ turnoActual: { id: turnoId, estado: 'disponible', version: 17 } });
+    const fakes = crearFakes({
+      turnoActual: { id: turnoId, estado: 'disponible', version: 17, reservadoPor: null, proveedorId: 'municipio-1' },
+    });
     const caso = new ReservarTurnoCommand(fakes.repositorioTurnos, fakes.repositorioNotificaciones);
 
     await caso.ejecutar({ datosCrudos: { turnoId }, reservadoPor });

@@ -16,11 +16,19 @@ export interface TurnoGenerado {
   estado: string;
 }
 
-/** Proyección mínima leída antes de intentar la reserva — ver ReservarTurnoCommand.ts. */
+/**
+ * Proyección mínima leída antes de intentar reservar/cancelar/reprogramar —
+ * ver ReservarTurnoCommand.ts/CancelarTurnoCommand.ts/ReprogramarTurnoCommand.ts.
+ * `reservadoPor`/`proveedorId` son los que CancelarTurnoCommand.autorizar()
+ * usa para el chequeo "reservado_por=usuario_actual() (o proveedor_id)"
+ * (Paso 1 del ticket "Cancelación o reprogramación de turno propio").
+ */
 export interface TurnoActual {
   id: string;
   estado: string;
   version: number;
+  reservadoPor: string | null;
+  proveedorId: string;
 }
 
 /** Resultado de una reserva exitosa. */
@@ -29,6 +37,28 @@ export interface TurnoReservado {
   estado: string;
   reservadoPor: string;
   version: number;
+}
+
+/**
+ * Resultado de una cancelación exitosa. `reservadoPor` se conserva TAL CUAL
+ * estaba (nunca se limpia a `null`) — a propósito: es lo que mantiene
+ * funcionando la suscripción Realtime de "Mis turnos"
+ * (app/turnos/mis-turnos/page.tsx, filtro `reservado_por=eq.<usuarioId>`)
+ * cuando el proveedor cancela un turno ajeno, y preserva quién había
+ * reservado para auditoría/histórico.
+ */
+export interface TurnoCancelado {
+  id: string;
+  estado: string;
+  reservadoPor: string | null;
+  proveedorId: string;
+  version: number;
+}
+
+/** Resultado de una reprogramación exitosa — ambos turnos, dentro de la misma transacción Prisma (Paso 2 del ticket). */
+export interface TurnoReprogramado {
+  turnoCancelado: TurnoCancelado;
+  turnoReservado: TurnoReservado;
 }
 
 /** Proyección de "mis turnos" — `eventoTitulo` es `null` para turnos de proveedor 'veterinario' (`evento_id IS NULL`, docs/SCHEMA.md). */
@@ -76,4 +106,29 @@ export interface IRepositorioTurnos {
   reservar(turnoId: string, reservadoPor: string, versionEsperada: number): Promise<TurnoReservado | null>;
   /** "Mis turnos" (Historia "Monitoreo en tiempo real del turno reservado"): paginado (tope 50), filtrado exclusivamente por `reservado_por`, orden por `franja_inicio` ascendente (el próximo turno primero). */
   listarPropios(reservadoPor: string, pagina: number, porPagina: number): Promise<PaginaTurnosPropios>;
+  /**
+   * Control optimista de concurrencia, mismo criterio que `reservar`:
+   * `UPDATE turnos SET estado='cancelado', version=version+1 WHERE id=? AND
+   * estado='reservado' AND version=?` (Paso 1 del ticket). `null` si 0
+   * filas afectadas — el turno ya no estaba 'reservado' con esa `version`
+   * (no encontrado, soft-deleted, o ya cancelado por otra request). El
+   * caso de uso decide ahí mismo que es PEA-MUN-003 (404), nunca un error
+   * de sistema.
+   */
+  cancelar(turnoId: string, versionEsperada: number): Promise<TurnoCancelado | null>;
+  /**
+   * Reprogramación (Paso 2): cancela `turnoActualId` y reserva
+   * `turnoNuevoId` para el mismo `usuarioId`, ambos pasos dentro de una
+   * única transacción Prisma (`$transaction`) — todo o nada. `null` si
+   * cualquiera de los dos pasos falla (0 filas afectadas): la transacción
+   * completa se revierte, el turno actual NUNCA queda cancelado sin que el
+   * nuevo haya quedado reservado.
+   */
+  reprogramar(
+    turnoActualId: string,
+    turnoNuevoId: string,
+    usuarioId: string,
+    versionActualEsperada: number,
+    versionNuevaEsperada: number,
+  ): Promise<TurnoReprogramado | null>;
 }

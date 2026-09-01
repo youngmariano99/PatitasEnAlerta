@@ -13,6 +13,8 @@ function crearFakes(pagina: PaginaTurnosPropios) {
     obtenerActual: jest.fn(),
     reservar: jest.fn(),
     listarPropios: jest.fn().mockResolvedValue(pagina),
+    cancelar: jest.fn(),
+    reprogramar: jest.fn(),
   };
   return { repositorioTurnos };
 }

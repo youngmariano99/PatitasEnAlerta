@@ -70,6 +70,14 @@ class RepositorioTurnosFalso implements IRepositorioTurnos {
   async listarPropios(): Promise<{ items: never[]; total: number; pagina: number; porPagina: number }> {
     return { items: [], total: 0, pagina: 1, porPagina: 50 };
   }
+
+  async cancelar(): Promise<null> {
+    return null;
+  }
+
+  async reprogramar(): Promise<null> {
+    return null;
+  }
 }
 
 function autenticarComo(usuarioId: string | null) {

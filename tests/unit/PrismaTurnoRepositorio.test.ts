@@ -95,16 +95,28 @@ describe('PrismaTurnoRepositorio', () => {
   });
 
   describe('obtenerActual', () => {
-    it('devuelve id/estado/version filtrando por deletedAt: null', async () => {
-      prisma.turno.findFirst.mockResolvedValue({ id: turnoId, estado: 'disponible', version: 3 });
+    it('devuelve id/estado/version/reservadoPor/proveedorId filtrando por deletedAt: null', async () => {
+      prisma.turno.findFirst.mockResolvedValue({
+        id: turnoId,
+        estado: 'disponible',
+        version: 3,
+        reservadoPor: null,
+        proveedorId: municipioId,
+      });
       const adapter = new PrismaTurnoRepositorio();
 
       const resultado = await adapter.obtenerActual(turnoId);
 
-      expect(resultado).toEqual({ id: turnoId, estado: 'disponible', version: 3 });
+      expect(resultado).toEqual({
+        id: turnoId,
+        estado: 'disponible',
+        version: 3,
+        reservadoPor: null,
+        proveedorId: municipioId,
+      });
       expect(prisma.turno.findFirst).toHaveBeenCalledWith({
         where: { id: turnoId, deletedAt: null },
-        select: { id: true, estado: true, version: true },
+        select: { id: true, estado: true, version: true, reservadoPor: true, proveedorId: true },
       });
     });
 
@@ -215,6 +227,115 @@ describe('PrismaTurnoRepositorio', () => {
       await adapter.listarPropios(reservadoPor, 3, 20);
 
       expect(prisma.turno.findMany).toHaveBeenCalledWith(expect.objectContaining({ skip: 40, take: 20 }));
+    });
+  });
+
+  describe('cancelar', () => {
+    it('AC (Paso 1): ejecuta el UPDATE condicionado por id/estado="reservado"/version, conservando reservadoPor', async () => {
+      prisma.turno.findFirst.mockResolvedValue({ reservadoPor, proveedorId: municipioId });
+      prisma.turno.updateMany.mockResolvedValue({ count: 1 });
+      const adapter = new PrismaTurnoRepositorio();
+
+      const resultado = await adapter.cancelar(turnoId, 3);
+
+      expect(prisma.turno.updateMany).toHaveBeenCalledWith({
+        where: { id: turnoId, estado: 'reservado', version: 3, deletedAt: null },
+        data: { estado: 'cancelado', version: { increment: 1 } },
+      });
+      // `reservadoPor` deliberadamente ausente de `data` (Realtime "Mis turnos").
+      expect(prisma.turno.updateMany.mock.calls[0]![0].data).not.toHaveProperty('reservadoPor');
+      expect(resultado).toEqual({ id: turnoId, estado: 'cancelado', reservadoPor, proveedorId: municipioId, version: 4 });
+    });
+
+    it('devuelve null si el turno no existe', async () => {
+      prisma.turno.findFirst.mockResolvedValue(null);
+      const adapter = new PrismaTurnoRepositorio();
+
+      const resultado = await adapter.cancelar(turnoId, 3);
+
+      expect(resultado).toBeNull();
+      expect(prisma.turno.updateMany).not.toHaveBeenCalled();
+    });
+
+    it('AC/Paso 4: devuelve null cuando 0 filas fueron afectadas (ya cancelado, o carrera perdida)', async () => {
+      prisma.turno.findFirst.mockResolvedValue({ reservadoPor, proveedorId: municipioId });
+      prisma.turno.updateMany.mockResolvedValue({ count: 0 });
+      const adapter = new PrismaTurnoRepositorio();
+
+      const resultado = await adapter.cancelar(turnoId, 3);
+
+      expect(resultado).toBeNull();
+    });
+  });
+
+  describe('reprogramar', () => {
+    const turnoNuevoId = '55555555-5555-5555-5555-555555555555';
+
+    function crearTxMock() {
+      return { turno: { findFirst: jest.fn(), updateMany: jest.fn() } };
+    }
+
+    it('AC (Paso 2): cancela el turno actual y reserva el nuevo dentro de la misma transacción Prisma', async () => {
+      const tx = crearTxMock();
+      tx.turno.findFirst.mockResolvedValue({ reservadoPor, proveedorId: municipioId });
+      tx.turno.updateMany.mockResolvedValueOnce({ count: 1 }).mockResolvedValueOnce({ count: 1 });
+      prisma.$transaction.mockImplementation(async (callback: (tx: unknown) => unknown) => callback(tx));
+      const adapter = new PrismaTurnoRepositorio();
+
+      const resultado = await adapter.reprogramar(turnoId, turnoNuevoId, reservadoPor, 3, 0);
+
+      expect(tx.turno.updateMany).toHaveBeenNthCalledWith(1, {
+        where: { id: turnoId, estado: 'reservado', version: 3, deletedAt: null },
+        data: { estado: 'cancelado', version: { increment: 1 } },
+      });
+      expect(tx.turno.updateMany).toHaveBeenNthCalledWith(2, {
+        where: { id: turnoNuevoId, estado: 'disponible', version: 0, deletedAt: null },
+        data: { estado: 'reservado', reservadoPor, version: { increment: 1 } },
+      });
+      expect(resultado).toEqual({
+        turnoCancelado: { id: turnoId, estado: 'cancelado', reservadoPor, proveedorId: municipioId, version: 4 },
+        turnoReservado: { id: turnoNuevoId, estado: 'reservado', reservadoPor, version: 1 },
+      });
+    });
+
+    it('AC ("todo o nada"): si la reserva del turno nuevo falla, revierte también la cancelación del actual (transacción completa)', async () => {
+      const tx = crearTxMock();
+      tx.turno.findFirst.mockResolvedValue({ reservadoPor, proveedorId: municipioId });
+      tx.turno.updateMany.mockResolvedValueOnce({ count: 1 }).mockResolvedValueOnce({ count: 0 });
+      prisma.$transaction.mockImplementation(async (callback: (tx: unknown) => unknown) => callback(tx));
+      const adapter = new PrismaTurnoRepositorio();
+
+      const resultado = await adapter.reprogramar(turnoId, turnoNuevoId, reservadoPor, 3, 0);
+
+      expect(resultado).toBeNull();
+      // Ambos pasos SÍ se intentaron dentro de la misma transacción — Prisma
+      // revierte el primer UPDATE porque el callback termina lanzando.
+      expect(tx.turno.updateMany).toHaveBeenCalledTimes(2);
+    });
+
+    it('devuelve null si el turno actual no puede cancelarse (0 filas), sin intentar la reserva del nuevo', async () => {
+      const tx = crearTxMock();
+      tx.turno.findFirst.mockResolvedValue({ reservadoPor, proveedorId: municipioId });
+      tx.turno.updateMany.mockResolvedValueOnce({ count: 0 });
+      prisma.$transaction.mockImplementation(async (callback: (tx: unknown) => unknown) => callback(tx));
+      const adapter = new PrismaTurnoRepositorio();
+
+      const resultado = await adapter.reprogramar(turnoId, turnoNuevoId, reservadoPor, 3, 0);
+
+      expect(resultado).toBeNull();
+      expect(tx.turno.updateMany).toHaveBeenCalledTimes(1);
+    });
+
+    it('devuelve null si el turno actual no existe', async () => {
+      const tx = crearTxMock();
+      tx.turno.findFirst.mockResolvedValue(null);
+      prisma.$transaction.mockImplementation(async (callback: (tx: unknown) => unknown) => callback(tx));
+      const adapter = new PrismaTurnoRepositorio();
+
+      const resultado = await adapter.reprogramar(turnoId, turnoNuevoId, reservadoPor, 3, 0);
+
+      expect(resultado).toBeNull();
+      expect(tx.turno.updateMany).not.toHaveBeenCalled();
     });
   });
 });
