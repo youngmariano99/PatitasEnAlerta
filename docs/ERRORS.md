@@ -55,6 +55,7 @@
 | PEA-VET-005 | No encontramos esa mascota o no tenés acceso a su información. | Dominio (soft delete / anti-IDOR) — 404 | Volver al listado de pacientes con autorización activa. |
 | PEA-VET-006 | Elegí un tipo de entrada válido (vacuna, visita u observación). | Aplicación (Zod, `CHECK tipo`) — 400 | Selección visual, no texto libre, para el tipo de entrada. |
 | PEA-VET-007 | Tu cuenta profesional todavía no está verificada. Esta función se habilita al confirmarse tu matrícula. | Middleware (RLS, `estado_verificacion`) — 403 | Mostrar el estado de verificación pendiente con tiempo estimado. |
+| PEA-VET-008 | No encontramos esa franja de disponibilidad o ya no está activa. | Dominio (soft delete / no encontrada) — 404 | Volver a la vista de "Configuración de agenda" con la lista actualizada. |
 
 ## Módulo 5 (Post-MVP) — Red de Colaboración entre ONGs y Rescatistas
 

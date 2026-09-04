@@ -96,6 +96,10 @@ class RepositorioTurnosEnMemoria implements IRepositorioTurnos {
       turnoReservado: { id: nuevo.id, estado: nuevo.estado, reservadoPor: usuarioId, version: nuevo.version },
     };
   }
+
+  async listarFranjasExistentes(): Promise<Date[]> {
+    return [];
+  }
 }
 
 function crearRequest(body: unknown): NextRequest {

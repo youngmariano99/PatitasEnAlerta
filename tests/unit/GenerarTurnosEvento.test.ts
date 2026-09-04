@@ -23,6 +23,7 @@ function crearFakes(opciones?: { yaDisponibles?: number }) {
       return generados;
     }),
     obtenerActual: jest.fn(),
+    listarFranjasExistentes: jest.fn(),
     reservar: jest.fn(),
     listarPropios: jest.fn(),
     cancelar: jest.fn(),

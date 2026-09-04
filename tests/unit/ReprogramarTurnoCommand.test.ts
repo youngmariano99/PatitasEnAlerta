@@ -42,6 +42,7 @@ function crearFakes(opciones?: {
     crearLote: jest.fn(),
     listarPropios: jest.fn(),
     reservar: jest.fn(),
+    listarFranjasExistentes: jest.fn(),
     cancelar: jest.fn(),
     obtenerActual: jest.fn().mockImplementation(async (id: string) => {
       if (id === turnoActualId) return opciones?.actual === undefined ? actualReservado : opciones.actual;

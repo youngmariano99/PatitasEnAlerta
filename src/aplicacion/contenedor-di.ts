@@ -14,7 +14,8 @@ import type { IRepositorioEventos } from '@dominio/puertos/IRepositorioEventos';
 import type { IRepositorioTurnos } from '@dominio/puertos/IRepositorioTurnos';
 import type { IRepositorioFichasAdopcion } from '@dominio/puertos/IRepositorioFichasAdopcion';
 import type { IRepositorioDashboardMunicipal } from '@dominio/puertos/IRepositorioDashboardMunicipal';
-import type { FuenteDisponibilidadEvento, ProveedorTurnera } from '@dominio/estrategias/ProveedorTurnera';
+import type { IRepositorioDisponibilidad } from '@dominio/puertos/IRepositorioDisponibilidad';
+import type { FuenteDisponibilidadEvento, FuenteDisponibilidadVeterinario, ProveedorTurnera } from '@dominio/estrategias/ProveedorTurnera';
 import type { IControlDeTasa } from '@dominio/puertos/IControlDeTasa';
 import type { IControlDeTasaConReintento } from '@dominio/puertos/IControlDeTasaConReintento';
 import { PrismaUsuarioRepositorio } from '@infraestructura/adaptadores/PrismaUsuarioRepositorio';
@@ -31,7 +32,8 @@ import { PrismaEventoRepositorio } from '@infraestructura/adaptadores/PrismaEven
 import { PrismaTurnoRepositorio } from '@infraestructura/adaptadores/PrismaTurnoRepositorio';
 import { PrismaFichaAdopcionRepositorio } from '@infraestructura/adaptadores/PrismaFichaAdopcionRepositorio';
 import { PrismaDashboardMunicipalRepositorio } from '@infraestructura/adaptadores/PrismaDashboardMunicipalRepositorio';
-import { TurneraMunicipio } from '@dominio/estrategias/ProveedorTurnera';
+import { PrismaDisponibilidadRepositorio } from '@infraestructura/adaptadores/PrismaDisponibilidadRepositorio';
+import { TurneraMunicipio, TurneraVeterinario } from '@dominio/estrategias/ProveedorTurnera';
 import { UpstashControlDeTasa } from '@infraestructura/adaptadores/UpstashControlDeTasa';
 import { UpstashControlDeTasaAntiSaturacion } from '@infraestructura/adaptadores/UpstashControlDeTasaAntiSaturacion';
 
@@ -60,7 +62,9 @@ container.registerSingleton<IRepositorioEventos>('IRepositorioEventos', PrismaEv
 container.registerSingleton<IRepositorioTurnos>('IRepositorioTurnos', PrismaTurnoRepositorio);
 container.registerSingleton<IRepositorioFichasAdopcion>('IRepositorioFichasAdopcion', PrismaFichaAdopcionRepositorio);
 container.registerSingleton<IRepositorioDashboardMunicipal>('IRepositorioDashboardMunicipal', PrismaDashboardMunicipalRepositorio);
+container.registerSingleton<IRepositorioDisponibilidad>('IRepositorioDisponibilidad', PrismaDisponibilidadRepositorio);
 container.registerSingleton<ProveedorTurnera<FuenteDisponibilidadEvento>>('ProveedorTurneraMunicipio', TurneraMunicipio);
+container.registerSingleton<ProveedorTurnera<FuenteDisponibilidadVeterinario>>('ProveedorTurneraVeterinario', TurneraVeterinario);
 container.registerSingleton<IControlDeTasa>('IControlDeTasa', UpstashControlDeTasa);
 container.registerSingleton<IControlDeTasaConReintento>('IControlDeTasaConReintento', UpstashControlDeTasaAntiSaturacion);
 
