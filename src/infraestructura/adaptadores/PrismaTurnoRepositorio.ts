@@ -4,12 +4,14 @@ import type {
   DatosNuevoTurno,
   IRepositorioTurnos,
   PaginaTurnosPropios,
+  PaginaTurnosReservadosVeterinario,
   TurnoActual,
   TurnoCancelado,
   TurnoGenerado,
   TurnoPropio,
   TurnoReprogramado,
   TurnoReservado,
+  TurnoReservadoVeterinario,
 } from '@dominio/puertos/IRepositorioTurnos';
 
 /** Señal interna para forzar el rollback de `reprogramar` — nunca escapa del propio método (ver el `catch` al final). */
@@ -198,5 +200,37 @@ export class PrismaTurnoRepositorio implements IRepositorioTurnos {
       select: { franjaInicio: true },
     });
     return filas.map((fila) => fila.franjaInicio);
+  }
+
+  async listarReservadosPorProveedor(proveedorId: string, pagina: number, porPagina: number): Promise<PaginaTurnosReservadosVeterinario> {
+    const where = { proveedorId, estado: 'reservado', deletedAt: null };
+
+    const [filas, total] = await Promise.all([
+      prisma.turno.findMany({
+        where,
+        orderBy: { franjaInicio: 'asc' },
+        skip: (pagina - 1) * porPagina,
+        take: porPagina,
+        select: {
+          id: true,
+          franjaInicio: true,
+          franjaFin: true,
+          reservante: { select: { email: true } },
+        },
+      }),
+      prisma.turno.count({ where }),
+    ]);
+
+    // `reservante` no puede ser null acá: el `where` exige `estado='reservado'`,
+    // y un turno solo llega a ese estado junto con `reservado_por` seteado
+    // (ver `reservar()` arriba) — nunca queda 'reservado' con `reservadoPor` null.
+    const items: TurnoReservadoVeterinario[] = filas.map((fila) => ({
+      id: fila.id,
+      franjaInicio: fila.franjaInicio,
+      franjaFin: fila.franjaFin,
+      reservadoPorEmail: fila.reservante!.email,
+    }));
+
+    return { items, total, pagina, porPagina };
   }
 }

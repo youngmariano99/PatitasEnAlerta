@@ -28,6 +28,7 @@ function crearFakes(opciones?: { turnoActual?: TurnoActual | null; cancelarDevue
     reservar: jest.fn(),
     reprogramar: jest.fn(),
     listarFranjasExistentes: jest.fn(),
+    listarReservadosPorProveedor: jest.fn(),
     obtenerActual: jest.fn().mockResolvedValue(opciones?.turnoActual === undefined ? turnoReservado : opciones.turnoActual),
     cancelar: jest
       .fn()
