@@ -62,6 +62,10 @@ class RepositorioTurnosEnMemoria implements IRepositorioTurnos {
   async reprogramar(): Promise<null> {
     return null;
   }
+
+  async listarFranjasExistentes(): Promise<Date[]> {
+    return [];
+  }
 }
 
 function crearRequest(query = ''): NextRequest {

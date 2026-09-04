@@ -67,6 +67,10 @@ class RepositorioTurnosFalso implements IRepositorioTurnos {
     return null;
   }
 
+  async listarFranjasExistentes(): Promise<Date[]> {
+    return [];
+  }
+
   async listarPropios(): Promise<{ items: never[]; total: number; pagina: number; porPagina: number }> {
     return { items: [], total: 0, pagina: 1, porPagina: 50 };
   }

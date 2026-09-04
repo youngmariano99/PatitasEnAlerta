@@ -191,4 +191,12 @@ export class PrismaTurnoRepositorio implements IRepositorioTurnos {
       throw error;
     }
   }
+
+  async listarFranjasExistentes(proveedorId: string, desde: Date, hasta: Date): Promise<Date[]> {
+    const filas = await prisma.turno.findMany({
+      where: { proveedorId, franjaInicio: { gte: desde, lt: hasta }, deletedAt: null },
+      select: { franjaInicio: true },
+    });
+    return filas.map((fila) => fila.franjaInicio);
+  }
 }

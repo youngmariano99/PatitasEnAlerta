@@ -71,6 +71,10 @@ class RepositorioTurnosEnMemoria implements IRepositorioTurnos {
   async reprogramar(): Promise<TurnoReprogramado | null> {
     return null;
   }
+
+  async listarFranjasExistentes(): Promise<Date[]> {
+    return [];
+  }
 }
 
 class RepositorioNotificacionesFalso implements INotificacionesRepositorio {

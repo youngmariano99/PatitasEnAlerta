@@ -131,4 +131,14 @@ export interface IRepositorioTurnos {
     versionActualEsperada: number,
     versionNuevaEsperada: number,
   ): Promise<TurnoReprogramado | null>;
+  /**
+   * Franjas (`franja_inicio`) ya persistidas para ese proveedor dentro de
+   * `[desde, hasta)`, sin importar `estado` — `GenerarTurnosVeterinario.ts`
+   * la usa para no duplicar turnos ya generados en una corrida previa, ya
+   * que a diferencia de un evento (identificado por `evento_id`, reconciliado
+   * por conteo en `GenerarTurnosEvento.ts`) un veterinario no tiene una
+   * referencia externa por la que contar: la propia franja horaria es la
+   * identidad de reconciliación.
+   */
+  listarFranjasExistentes(proveedorId: string, desde: Date, hasta: Date): Promise<Date[]>;
 }
