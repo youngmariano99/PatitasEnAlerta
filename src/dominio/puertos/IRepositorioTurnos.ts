@@ -81,6 +81,29 @@ export interface PaginaTurnosPropios {
 }
 
 /**
+ * Proyección de "agenda propia del veterinario" (Historia "Listado de
+ * turnos reservados del veterinario", Módulo 4) — a diferencia de
+ * `TurnoPropio` (vista de quien RESERVÓ), esta es la vista del PROVEEDOR:
+ * siempre `proveedorTipo='veterinario'` y `estado='reservado'`, así que no
+ * hace falta repetirlos acá. `reservadoPorEmail` es lo único que identifica
+ * a quién le corresponde el turno — `usuarios` (docs/SCHEMA.md) todavía no
+ * tiene un campo de nombre para mostrar.
+ */
+export interface TurnoReservadoVeterinario {
+  id: string;
+  franjaInicio: Date;
+  franjaFin: Date;
+  reservadoPorEmail: string;
+}
+
+export interface PaginaTurnosReservadosVeterinario {
+  items: TurnoReservadoVeterinario[];
+  total: number;
+  pagina: number;
+  porPagina: number;
+}
+
+/**
  * Puerto hacia la persistencia del Motor de Turnera compartido (Módulo 3 y,
  * a futuro, Módulo 4) — genérico sobre `proveedorTipo`, nunca conoce si
  * quien lo llama es municipio o veterinario. GenerarTurnosEvento.ts/
@@ -141,4 +164,14 @@ export interface IRepositorioTurnos {
    * identidad de reconciliación.
    */
   listarFranjasExistentes(proveedorId: string, desde: Date, hasta: Date): Promise<Date[]>;
+  /**
+   * Agenda propia del veterinario (Historia "Listado de turnos reservados
+   * del veterinario"): filtrado exclusivamente por `proveedorId` y
+   * `estado='reservado'`, paginado (tope 50), orden por `franjaInicio`
+   * ascendente (el próximo turno primero) — mismo criterio de paginación
+   * que `listarPropios`. Nunca incluye 'disponible' (eso ya lo cubre
+   * `IRepositorioDisponibilidad.listarPropias`/`listarActivas`) ni
+   * 'cancelado' (ruido para la agenda operativa del día a día).
+   */
+  listarReservadosPorProveedor(proveedorId: string, pagina: number, porPagina: number): Promise<PaginaTurnosReservadosVeterinario>;
 }

@@ -100,6 +100,10 @@ class RepositorioTurnosEnMemoria implements IRepositorioTurnos {
   async listarFranjasExistentes(): Promise<Date[]> {
     return [];
   }
+
+  async listarReservadosPorProveedor() {
+    return { items: [], total: 0, pagina: 1, porPagina: 50 };
+  }
 }
 
 function crearRequest(body: unknown): NextRequest {

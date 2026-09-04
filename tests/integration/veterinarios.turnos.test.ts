@@ -7,10 +7,11 @@ import type {
   DatosNuevoTurno,
   IRepositorioTurnos,
   PaginaTurnosPropios,
+  PaginaTurnosReservadosVeterinario,
   TurnoActual,
   TurnoGenerado,
-  TurnoPropio,
   TurnoReservado,
+  TurnoReservadoVeterinario,
 } from '@dominio/puertos/IRepositorioTurnos';
 
 const getUserMock = jest.fn();
@@ -20,15 +21,15 @@ jest.mock('@supabase/ssr', () => ({
 }));
 
 // Importa el route handler DESPUÉS del mock de '@supabase/ssr' (mismo
-// criterio que tests/integration/turnos.reservar.test.ts).
-import { GET } from '@app/api/turnos/mis-turnos/route';
+// criterio que tests/integration/turnos.misTurnos.test.ts).
+import { GET } from '@app/api/veterinarios/turnos/route';
 
-/** Turno propio con el dueño de la reserva — `TurnoPropio` (proyección pública) no incluye `reservadoPor`, así que el fake lo guarda aparte para poder filtrar. */
-type TurnoConDueno = TurnoPropio & { reservadoPor: string };
+/** Turno reservado con su proveedor — la proyección pública no incluye `proveedorId`, así que el fake lo guarda aparte para poder filtrar. */
+type TurnoConProveedor = TurnoReservadoVeterinario & { proveedorId: string };
 
-/** Simula, en memoria, la tabla `turnos` — filtra/pagina en O(n) por reservado_por, igual que RepositorioReportesEnMemoria en otros tests de integración. */
+/** Simula, en memoria, la tabla `turnos` filtrada a `estado='reservado'` — filtra/pagina en O(n) por proveedor_id, igual que RepositorioTurnosEnMemoria en turnos.misTurnos.test.ts. */
 class RepositorioTurnosEnMemoria implements IRepositorioTurnos {
-  public turnos: TurnoConDueno[] = [];
+  public turnos: TurnoConProveedor[] = [];
 
   async contarDisponiblesPorEvento(): Promise<number> {
     return 0;
@@ -46,13 +47,8 @@ class RepositorioTurnosEnMemoria implements IRepositorioTurnos {
     return null;
   }
 
-  async listarPropios(reservadoPor: string, pagina: number, porPagina: number): Promise<PaginaTurnosPropios> {
-    // El propio in-memory fake filtra EXCLUSIVAMENTE por reservadoPor, igual
-    // que el where real de Prisma — reforzando la verificación técnica del
-    // ticket a nivel repositorio, no solo a nivel RLS.
-    const propios = this.turnos.filter((t) => t.reservadoPor === reservadoPor);
-    const inicio = (pagina - 1) * porPagina;
-    return { items: propios.slice(inicio, inicio + porPagina), total: propios.length, pagina, porPagina };
+  async listarPropios(): Promise<PaginaTurnosPropios> {
+    return { items: [], total: 0, pagina: 1, porPagina: 50 };
   }
 
   async cancelar(): Promise<null> {
@@ -67,13 +63,18 @@ class RepositorioTurnosEnMemoria implements IRepositorioTurnos {
     return [];
   }
 
-  async listarReservadosPorProveedor() {
-    return { items: [], total: 0, pagina: 1, porPagina: 50 };
+  async listarReservadosPorProveedor(proveedorId: string, pagina: number, porPagina: number): Promise<PaginaTurnosReservadosVeterinario> {
+    // El propio in-memory fake filtra EXCLUSIVAMENTE por proveedorId, igual
+    // que el where real de Prisma — reforzando la verificación técnica del
+    // ticket a nivel repositorio, no solo a nivel RLS.
+    const propios = this.turnos.filter((t) => t.proveedorId === proveedorId);
+    const inicio = (pagina - 1) * porPagina;
+    return { items: propios.slice(inicio, inicio + porPagina), total: propios.length, pagina, porPagina };
   }
 }
 
 function crearRequest(query = ''): NextRequest {
-  return new NextRequest(`http://localhost/api/turnos/mis-turnos${query}`, { method: 'GET' });
+  return new NextRequest(`http://localhost/api/veterinarios/turnos${query}`, { method: 'GET' });
 }
 
 function autenticarComo(usuarioId: string | null) {
@@ -82,22 +83,18 @@ function autenticarComo(usuarioId: string | null) {
   );
 }
 
-/** Genera N turnos propios para probar paginación (AC: volumen > 50). */
-function generarTurnosPropios(cantidad: number, reservadoPor: string): TurnoConDueno[] {
+/** Genera N turnos reservados para probar paginación (AC: volumen > 50). */
+function generarTurnosReservados(cantidad: number, proveedorId: string): TurnoConProveedor[] {
   return Array.from({ length: cantidad }, (_, indice) => ({
     id: `turno-${indice + 1}`,
-    proveedorTipo: 'municipio',
-    proveedorId: 'municipio-1',
-    eventoId: 'evento-1',
-    eventoTitulo: `Jornada #${indice + 1}`,
+    proveedorId,
     franjaInicio: new Date(2026, 8, 1 + indice),
     franjaFin: new Date(2026, 8, 1 + indice, 0, 20),
-    estado: 'reservado',
-    reservadoPor,
+    reservadoPorEmail: `dueno-${indice + 1}@example.com`,
   }));
 }
 
-describe('GET /api/turnos/mis-turnos (Monitoreo en tiempo real del turno reservado)', () => {
+describe('GET /api/veterinarios/turnos (Listado de turnos reservados del veterinario)', () => {
   let repositorioTurnos: RepositorioTurnosEnMemoria;
 
   beforeEach(() => {
@@ -117,11 +114,11 @@ describe('GET /api/turnos/mis-turnos (Monitoreo en tiempo real del turno reserva
     expect(cuerpo.codigo).toBe('PEA-SIS-001');
   });
 
-  it('AC/Paso 1: devuelve solo los turnos del usuario autenticado (reservado_por=usuario_actual())', async () => {
-    autenticarComo('dueno-1');
+  it('AC: devuelve solo los turnos de la agenda propia (proveedor_id=usuario_actual())', async () => {
+    autenticarComo('veterinario-1');
     repositorioTurnos.turnos = [
-      ...generarTurnosPropios(2, 'dueno-1'),
-      ...generarTurnosPropios(3, 'dueno-2'), // de otro usuario — nunca debe aparecer
+      ...generarTurnosReservados(2, 'veterinario-1'),
+      ...generarTurnosReservados(3, 'veterinario-2'), // de otro veterinario — nunca debe aparecer
     ];
 
     const respuesta = await GET(crearRequest());
@@ -132,9 +129,9 @@ describe('GET /api/turnos/mis-turnos (Monitoreo en tiempo real del turno reserva
     expect(cuerpo.total).toBe(2);
   });
 
-  it('AC: aplica paginación server-side (tope 50) con más de 50 turnos propios', async () => {
-    autenticarComo('dueno-1');
-    repositorioTurnos.turnos = generarTurnosPropios(75, 'dueno-1');
+  it('AC: aplica paginación server-side (tope 50) con más de 50 turnos reservados', async () => {
+    autenticarComo('veterinario-1');
+    repositorioTurnos.turnos = generarTurnosReservados(75, 'veterinario-1');
 
     const respuesta = await GET(crearRequest());
 
@@ -146,8 +143,8 @@ describe('GET /api/turnos/mis-turnos (Monitoreo en tiempo real del turno reserva
   });
 
   it('ignora un porPagina por encima de 50 y aplica el tope', async () => {
-    autenticarComo('dueno-1');
-    repositorioTurnos.turnos = generarTurnosPropios(75, 'dueno-1');
+    autenticarComo('veterinario-1');
+    repositorioTurnos.turnos = generarTurnosReservados(75, 'veterinario-1');
 
     const respuesta = await GET(crearRequest('?porPagina=200'));
 
@@ -156,9 +153,9 @@ describe('GET /api/turnos/mis-turnos (Monitoreo en tiempo real del turno reserva
     expect(cuerpo.items).toHaveLength(50);
   });
 
-  it('devuelve una página vacía cuando el usuario no reservó ningún turno', async () => {
-    autenticarComo('dueno-sin-turnos');
-    repositorioTurnos.turnos = generarTurnosPropios(5, 'dueno-1');
+  it('devuelve una página vacía cuando el veterinario no tiene turnos reservados', async () => {
+    autenticarComo('veterinario-sin-turnos');
+    repositorioTurnos.turnos = generarTurnosReservados(5, 'veterinario-1');
 
     const respuesta = await GET(crearRequest());
 

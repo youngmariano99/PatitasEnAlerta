@@ -16,6 +16,7 @@ function crearFakes(pagina: PaginaTurnosPropios) {
     cancelar: jest.fn(),
     reprogramar: jest.fn(),
     listarFranjasExistentes: jest.fn(),
+    listarReservadosPorProveedor: jest.fn(),
   };
   return { repositorioTurnos };
 }
