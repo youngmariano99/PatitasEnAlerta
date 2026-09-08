@@ -3,3 +3,4 @@
 | N | Nombre | Tag | Ticket |
 |---|---|---|---|
 | 1 | Agenda propia del veterinario — listado de turnos reservados | Backend | Endpoint de agenda propia del veterinario |
+| 2 | Registro de entrada en la libreta sanitaria | Backend | Caso de uso RegistrarEntradaLibreta con verificación de autorización activa |

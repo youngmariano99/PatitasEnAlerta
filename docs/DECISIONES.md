@@ -1,0 +1,6 @@
+# Decisiones técnicas fuera del ticket literal
+
+## 2026-09-08 Caso de uso RegistrarEntradaLibreta con verificación de autorización activa
+**Pedía:** el ticket nombraba un único archivo a crear/modificar (`src/aplicacion/casos-de-uso/veterinarios/RegistrarEntradaLibreta.ts`).
+**Se hizo:** además del caso de uso, se creó toda la porción vertical necesaria para que sea ejecutable de punta a punta: dos puertos nuevos (`IRepositorioAutorizacionesLibreta`, `IRepositorioEntradasLibreta`), sus adaptadores Prisma, cuatro errores de dominio nuevos (`PEA-VET-003/004/005/006`, ya definidos en `docs/ERRORS.md` — no se inventó ningún código), el DTO con su registro OpenAPI, el registro en `contenedor-di.ts`, el endpoint `POST /api/veterinarios/libreta`, y tests unitarios + de integración.
+**Motivo:** el caso de uso solo no es invocable sin sus puertos/adaptadores/endpoint; los tickets previos del mismo sprint (`ConfigurarDisponibilidad`, `ListarTurnosVeterinario`) siguieron el mismo patrón de entrega — una porción vertical completa por historia — y los criterios de aceptación ("confirmar funcionamiento y robustez") exigen que la funcionalidad sea verificable con una request real, no solo compilar en aislamiento.

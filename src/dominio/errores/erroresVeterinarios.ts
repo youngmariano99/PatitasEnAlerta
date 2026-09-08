@@ -28,3 +28,35 @@ export class DisponibilidadNoEncontradaError extends ErrorDominio {
     super('PEA-VET-008', 'No encontramos esa franja de disponibilidad o ya no está activa.', 404);
   }
 }
+
+/** El dueño nunca autorizó a este veterinario para esta mascota — `autorizaciones_libreta` no tiene ninguna fila para el par (mascotaId, veterinarioId). */
+export class SinAutorizacionLibretaError extends ErrorDominio {
+  constructor() {
+    super(
+      'PEA-VET-003',
+      'No tenés autorización del dueño para escribir en la libreta sanitaria de esta mascota.',
+      403,
+    );
+  }
+}
+
+/** Hubo una autorización, pero el dueño la revocó (`autorizaciones_libreta.revocada_en` no nulo) — distinto de "nunca autorizó" (PEA-VET-003) según docs/ERRORS.md. */
+export class AutorizacionLibretaRevocadaError extends ErrorDominio {
+  constructor() {
+    super('PEA-VET-004', 'El dueño de esta mascota revocó tu acceso a su libreta sanitaria.', 403);
+  }
+}
+
+/** La mascota no existe (o está soft-deleted) — mensaje deliberadamente genérico (anti-IDOR, docs/ERRORS.md). */
+export class MascotaSinAccesoLibretaError extends ErrorDominio {
+  constructor() {
+    super('PEA-VET-005', 'No encontramos esa mascota o no tenés acceso a su información.', 404);
+  }
+}
+
+/** `tipo` fuera de ('vacuna','visita','observacion') — docs/ERRORS.md lo marca explícitamente como capa Aplicación (Zod), no el PEA-SIS-005 genérico. */
+export class TipoEntradaInvalidoError extends ErrorDominio {
+  constructor() {
+    super('PEA-VET-006', 'Elegí un tipo de entrada válido (vacuna, visita u observación).', 400);
+  }
+}
