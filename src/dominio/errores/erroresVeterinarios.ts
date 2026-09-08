@@ -60,3 +60,31 @@ export class TipoEntradaInvalidoError extends ErrorDominio {
     super('PEA-VET-006', 'Elegí un tipo de entrada válido (vacuna, visita u observación).', 400);
   }
 }
+
+/**
+ * Ya existe una fila en `autorizaciones_libreta` con `revocada_en IS NULL`
+ * para ese par (mascotaId, veterinarioId) — el mismo caso que dispararía la
+ * constraint `ux_autorizacion_activa` (docs/SCHEMA.md) si se dejara llegar
+ * al INSERT. Código agregado en esta actividad (CRUD de autorizaciones
+ * controlado por el dueño): docs/ERRORS.md Módulo 4 solo cubría la
+ * perspectiva del veterinario (003-008) — ver docs/DECISIONES.md.
+ */
+export class AutorizacionLibretaYaActivaError extends ErrorDominio {
+  constructor() {
+    super('PEA-VET-009', 'Ya autorizaste a este veterinario para escribir en la libreta sanitaria de esta mascota.', 409);
+  }
+}
+
+/** No hay ninguna autorización activa para revocar sobre ese par (mascotaId, veterinarioId) — nunca se autorizó, o ya estaba revocada. */
+export class AutorizacionLibretaNoEncontradaError extends ErrorDominio {
+  constructor() {
+    super('PEA-VET-010', 'No encontramos esa autorización o ya no está activa.', 404);
+  }
+}
+
+/** El `veterinarioId` indicado por el dueño no corresponde a ningún usuario con rol veterinario — mensaje genérico anti-enumeración, igual criterio que `MascotaSinAccesoLibretaError`. */
+export class VeterinarioNoEncontradoError extends ErrorDominio {
+  constructor() {
+    super('PEA-VET-011', 'No encontramos ese veterinario o no está disponible para autorizar.', 404);
+  }
+}

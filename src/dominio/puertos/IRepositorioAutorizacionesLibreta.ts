@@ -9,16 +9,14 @@ export interface AutorizacionLibretaPersistida {
 }
 
 /**
- * Puerto de solo lectura hacia `autorizaciones_libreta` (Módulo 4, Historia
- * "Registro de entrada en la libreta sanitaria"). `RegistrarEntradaLibreta.ts`
- * depende únicamente de esta abstracción para decidir si el veterinario
- * autenticado puede escribir en la libreta de una mascota puntual — mismo
- * criterio que la RLS `autorizado_sobre_mascota()` (docs/ROLES.md).
- *
- * El alta/revocación de autorizaciones (Historia "Control de accesos a la
- * libreta", VET-05) es un caso de uso propio del dueño, fuera de este
- * ticket — este puerto solo expone la lectura que necesita la escritura de
- * entradas.
+ * Puerto hacia `autorizaciones_libreta` (Módulo 4). `RegistrarEntradaLibreta.ts`
+ * depende de `obtenerActual` para decidir si el veterinario autenticado
+ * puede escribir en la libreta de una mascota puntual — mismo criterio que
+ * la RLS `autorizado_sobre_mascota()` (docs/ROLES.md). El alta/listado/
+ * revocación (Historia "Control de accesos a la libreta", VET-05) son casos
+ * de uso propios del dueño — `AutorizarVeterinario.ts`,
+ * `ListarAutorizacionesLibreta.ts`, `RevocarAutorizacionLibreta.ts` — que
+ * dependen del resto de estos métodos.
  */
 export interface IRepositorioAutorizacionesLibreta {
   /**
@@ -29,4 +27,24 @@ export interface IRepositorioAutorizacionesLibreta {
    * habido una autorización activa en el pasado.
    */
   obtenerActual(mascotaId: string, veterinarioId: string): Promise<AutorizacionLibretaPersistida | null>;
+
+  /**
+   * Inserta una nueva fila de autorización (nunca upsert): `ux_autorizacion_activa`
+   * (docs/SCHEMA.md) permite múltiples filas históricas revocadas para el
+   * mismo par, solo exige unicidad mientras `revocadaEn IS NULL`. El caso de
+   * uso (`AutorizarVeterinario.ts`) verifica con `obtenerActual` que no haya
+   * ya una activa ANTES de llamar a este método, para devolver un error de
+   * negocio (PEA-VET-009) en vez de dejar reventar la constraint de la base.
+   */
+  crear(mascotaId: string, veterinarioId: string): Promise<AutorizacionLibretaPersistida>;
+
+  /**
+   * Marca `revocadaEn = now()` sobre la autorización actualmente activa de
+   * ese par. `null` si no hay ninguna activa (nunca se autorizó, o ya estaba
+   * revocada) — `RevocarAutorizacionLibreta.ts` lo traduce a PEA-VET-010 (404).
+   */
+  revocar(mascotaId: string, veterinarioId: string): Promise<AutorizacionLibretaPersistida | null>;
+
+  /** Historial completo (vigentes y revocadas) de una mascota, más reciente primero — auditoría exigida por VET-05. */
+  listarPorMascota(mascotaId: string): Promise<AutorizacionLibretaPersistida[]>;
 }
