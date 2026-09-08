@@ -42,7 +42,9 @@ registroOpenApi.registerPath({
   method: 'post',
   path: '/turnos/reservar',
   tags: ['Turnos'],
-  summary: 'Reserva un turno "disponible" para el usuario autenticado — control optimista de concurrencia (anti doble-reserva).',
+  summary:
+    'Reserva un turno "disponible" para el usuario autenticado — control optimista de concurrencia (anti doble-reserva). ' +
+    'Motor de Turnera compartido: mismo endpoint para proveedor_tipo="municipio" (turno de un operativo) y "veterinario" (turno de agenda propia), sin distinción de rol en la reserva.',
   request: {
     body: { content: { 'application/json': { schema: ReservarTurnoSchema } } },
   },

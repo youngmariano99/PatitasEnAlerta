@@ -111,4 +111,32 @@ describe('ReservarTurnoCommand', () => {
 
     await expect(caso.ejecutar({ datosCrudos: { turnoId }, reservadoPor })).resolves.toMatchObject({ estado: 'reservado' });
   });
+
+  it('AC (Reutilización — Historia "Reserva de turno con un veterinario"): reserva idéntica sobre un turno con proveedor_tipo=\'veterinario\' (evento_id nulo), sin ninguna rama de código distinta', async () => {
+    const turnoDeVeterinario: TurnoActual = {
+      id: turnoId,
+      estado: 'disponible',
+      version: 0,
+      reservadoPor: null,
+      // `TurnoActual` (IRepositorioTurnos.ts) ni siquiera expone `proveedorTipo`/`eventoId`:
+      // el caso de uso no tiene forma de bifurcar por tipo de proveedor aunque quisiera.
+      proveedorId: 'veterinario-1',
+    };
+    const fakes = crearFakes({
+      turnoActual: turnoDeVeterinario,
+      reservarDevuelve: { id: turnoId, estado: 'reservado', reservadoPor, version: 1 },
+    });
+    const caso = new ReservarTurnoCommand(fakes.repositorioTurnos, fakes.repositorioNotificaciones);
+
+    const resultado = await caso.ejecutar({ datosCrudos: { turnoId }, reservadoPor });
+
+    expect(resultado).toEqual({ id: turnoId, estado: 'reservado', reservadoPor, version: 1 });
+    expect(fakes.repositorioTurnos.reservar).toHaveBeenCalledWith(turnoId, reservadoPor, 0);
+    expect(fakes.repositorioNotificaciones.crear).toHaveBeenCalledWith({
+      usuarioId: reservadoPor,
+      tipo: 'turno_confirmado',
+      referenciaTabla: 'turnos',
+      referenciaId: turnoId,
+    });
+  });
 });

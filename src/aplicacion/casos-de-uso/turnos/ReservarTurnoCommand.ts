@@ -14,8 +14,19 @@ export interface EntradaReservarTurno {
 }
 
 /**
- * Command (GoF) + Template Method (CasoDeUsoBase) — "Reserva de turno en un
- * operativo municipal" (Módulo 3). `autorizar()` es un no-op deliberado:
+ * Command (GoF) + Template Method (CasoDeUsoBase) — reserva de un turno
+ * 'disponible' sobre el Motor de Turnera compartido (Módulo 3), sin
+ * distinguir `proveedor_tipo`: sirve tanto para "Reserva de turno en un
+ * operativo municipal" (`proveedor_tipo='municipio'`, `evento_id` no nulo)
+ * como para "Reserva de turno con un veterinario"
+ * (`proveedor_tipo='veterinario'`, `evento_id` nulo — docs/SCHEMA.md,
+ * `ck_turnos_proveedor_evento`). Ninguno de los pasos del Template Method
+ * lee `proveedor_tipo`: `IRepositorioTurnos.obtenerActual`/`reservar`
+ * operan únicamente sobre `turnoId` (ver `TurnoActual`, que ni siquiera
+ * expone `proveedorTipo`), así que no hace falta bifurcar esta clase por
+ * tipo de proveedor — el turno generado por `GenerarTurnosVeterinario` ya
+ * es indistinguible, para este caso de uso, de uno generado por
+ * `GenerarTurnosEvento`. `autorizar()` es un no-op deliberado:
  * cualquier usuario autenticado puede reservar un turno 'disponible' para sí
  * mismo (docs/ROLES.md 3.5, `turnos_update` — sin restricción de rol), la
  * RLS es la última línea de defensa si algo se saltea esta capa.

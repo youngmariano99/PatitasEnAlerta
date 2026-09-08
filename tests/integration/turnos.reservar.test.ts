@@ -15,6 +15,7 @@ import type { DatosNotificacion, INotificacionesRepositorio } from '@dominio/pue
 const turnoId = '11111111-1111-4111-8111-111111111111';
 const usuarioA = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const usuarioB = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+const veterinarioId = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
 
 // createServerClient se mockea leyendo una cookie propia del test
 // ('usuario-simulado') en vez de un getUserMock global compartido: dos
@@ -51,14 +52,19 @@ import { POST } from '@app/api/turnos/reservar/route';
  * podría (incorrectamente) dejar pasar a los dos usuarios.
  */
 class RepositorioTurnosConcurrencia implements IRepositorioTurnos {
-  private turno = {
-    id: turnoId,
-    estado: 'disponible',
-    version: 0,
-    reservadoPor: null as string | null,
-    proveedorId: 'municipio-1',
-  };
+  private turno: { id: string; estado: string; version: number; reservadoPor: string | null; proveedorId: string };
   public intentosDeReserva: Array<{ reservadoPor: string; versionEsperada: number }> = [];
+
+  /**
+   * `proveedorId` es configurable a propósito: el test "Reutilización — turno
+   * de un veterinario" (más abajo) instancia este mismo fake con un
+   * `proveedorId` de veterinario para probar, end-to-end vía el route
+   * handler, que el Motor de Turnera compartido reserva ese turno con
+   * exactamente el mismo código que uno de proveedor 'municipio'.
+   */
+  constructor(proveedorId: string = 'municipio-1') {
+    this.turno = { id: turnoId, estado: 'disponible', version: 0, reservadoPor: null, proveedorId };
+  }
 
   async contarDisponiblesPorEvento(): Promise<number> {
     return 0;
@@ -221,5 +227,22 @@ describe('POST /api/turnos/reservar (Reserva de turno — control optimista de c
     expect(respuesta.status).toBe(400);
     const cuerpo = await respuesta.json();
     expect(cuerpo.codigo).toBe('PEA-SIS-005');
+  });
+
+  it('AC (Historia "Reserva de turno con un veterinario"): reserva end-to-end, vía el mismo endpoint, un turno cuyo proveedor es un veterinario (proveedor_tipo=\'veterinario\', evento_id nulo)', async () => {
+    container.reset();
+    const repositorioTurnosVeterinario = new RepositorioTurnosConcurrencia(veterinarioId);
+    const repositorioNotificacionesVeterinario = new RepositorioNotificacionesFalso();
+    container.registerInstance<IRepositorioTurnos>('IRepositorioTurnos', repositorioTurnosVeterinario);
+    container.registerInstance<INotificacionesRepositorio>('INotificacionesRepositorio', repositorioNotificacionesVeterinario);
+
+    const respuesta = await POST(crearRequest(usuarioA));
+
+    expect(respuesta.status).toBe(200);
+    const cuerpo = await respuesta.json();
+    expect(cuerpo).toEqual({ id: turnoId, estado: 'reservado', reservadoPor: usuarioA, version: 1 });
+    expect(repositorioNotificacionesVeterinario.creadas).toEqual([
+      { usuarioId: usuarioA, tipo: 'turno_confirmado', referenciaTabla: 'turnos', referenciaId: turnoId },
+    ]);
   });
 });
