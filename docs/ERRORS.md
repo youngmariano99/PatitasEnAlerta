@@ -56,6 +56,9 @@
 | PEA-VET-006 | Elegí un tipo de entrada válido (vacuna, visita u observación). | Aplicación (Zod, `CHECK tipo`) — 400 | Selección visual, no texto libre, para el tipo de entrada. |
 | PEA-VET-007 | Tu cuenta profesional todavía no está verificada. Esta función se habilita al confirmarse tu matrícula. | Middleware (RLS, `estado_verificacion`) — 403 | Mostrar el estado de verificación pendiente con tiempo estimado. |
 | PEA-VET-008 | No encontramos esa franja de disponibilidad o ya no está activa. | Dominio (soft delete / no encontrada) — 404 | Volver a la vista de "Configuración de agenda" con la lista actualizada. |
+| PEA-VET-009 | Ya autorizaste a este veterinario para escribir en la libreta sanitaria de esta mascota. | Dominio (constraint `ux_autorizacion_activa`) — 409 | Mostrar el estado de la autorización vigente en vez del formulario de alta. |
+| PEA-VET-010 | No encontramos esa autorización o ya no está activa. | Dominio (no encontrada / ya revocada) — 404 | Refrescar el listado de autorizaciones de la mascota. |
+| PEA-VET-011 | No encontramos ese veterinario o no está disponible para autorizar. | Aplicación (`veterinarioId` no corresponde a un usuario con rol veterinario) — 404 | Verificar el id ingresado; sugerir buscarlo nuevamente antes de reintentar. |
 
 ## Módulo 5 (Post-MVP) — Red de Colaboración entre ONGs y Rescatistas
 

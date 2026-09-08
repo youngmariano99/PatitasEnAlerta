@@ -26,6 +26,7 @@ import '@aplicacion/dtos/municipio/FichaAdopcionDto';
 import '@aplicacion/dtos/municipio/DashboardMunicipalDto';
 import '@aplicacion/dtos/municipio/ExportarDashboardMunicipalDto';
 import '@aplicacion/dtos/veterinarios/RegistrarEntradaLibretaDto';
+import '@aplicacion/dtos/veterinarios/AutorizarVeterinarioDto';
 
 export const dynamic = 'force-dynamic';
 

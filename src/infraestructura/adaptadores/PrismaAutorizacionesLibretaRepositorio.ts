@@ -28,4 +28,41 @@ export class PrismaAutorizacionesLibretaRepositorio implements IRepositorioAutor
       select: SELECT_AUTORIZACION,
     });
   }
+
+  async crear(mascotaId: string, veterinarioId: string): Promise<AutorizacionLibretaPersistida> {
+    return prisma.autorizacionLibreta.create({
+      data: { mascotaId, veterinarioId },
+      select: SELECT_AUTORIZACION,
+    });
+  }
+
+  async revocar(mascotaId: string, veterinarioId: string): Promise<AutorizacionLibretaPersistida | null> {
+    const actual = await prisma.autorizacionLibreta.findFirst({
+      where: { mascotaId, veterinarioId, revocadaEn: null },
+      select: SELECT_AUTORIZACION,
+    });
+    if (!actual) return null;
+
+    const revocadaEn = new Date();
+    // updateMany (no update): repite el `WHERE revocadaEn IS NULL` de la
+    // lectura anterior como defensa ante una carrera (dos revocaciones
+    // concurrentes del mismo par) — si otra ya la revocó entremedio, `count`
+    // da 0 y esta llamada devuelve `null` en vez de pisar el `revocadaEn`
+    // ya escrito, mismo criterio que `PrismaDisponibilidadRepositorio.eliminar`.
+    const resultado = await prisma.autorizacionLibreta.updateMany({
+      where: { mascotaId, veterinarioId, revocadaEn: null },
+      data: { revocadaEn },
+    });
+    if (resultado.count === 0) return null;
+
+    return { ...actual, revocadaEn };
+  }
+
+  async listarPorMascota(mascotaId: string): Promise<AutorizacionLibretaPersistida[]> {
+    return prisma.autorizacionLibreta.findMany({
+      where: { mascotaId },
+      orderBy: { otorgadaEn: 'desc' },
+      select: SELECT_AUTORIZACION,
+    });
+  }
 }

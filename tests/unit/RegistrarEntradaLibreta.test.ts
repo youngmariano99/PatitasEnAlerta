@@ -63,6 +63,9 @@ function crearFakes(opciones?: {
 }) {
   const repositorioAutorizaciones: jest.Mocked<IRepositorioAutorizacionesLibreta> = {
     obtenerActual: jest.fn().mockResolvedValue(opciones?.autorizacion === undefined ? autorizacionActiva : opciones.autorizacion),
+    crear: jest.fn(),
+    revocar: jest.fn(),
+    listarPorMascota: jest.fn(),
   };
   const repositorioEntradas: jest.Mocked<IRepositorioEntradasLibreta> = {
     crear: jest.fn().mockResolvedValue(entradaPersistida),

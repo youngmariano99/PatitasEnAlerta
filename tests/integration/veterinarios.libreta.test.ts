@@ -31,6 +31,18 @@ class RepositorioAutorizacionesEnMemoria implements IRepositorioAutorizacionesLi
       .sort((a, b) => b.otorgadaEn.getTime() - a.otorgadaEn.getTime());
     return propias[0] ?? null;
   }
+
+  async crear(): Promise<AutorizacionLibretaPersistida> {
+    throw new Error('no usado en este test');
+  }
+
+  async revocar(): Promise<AutorizacionLibretaPersistida | null> {
+    throw new Error('no usado en este test');
+  }
+
+  async listarPorMascota(): Promise<AutorizacionLibretaPersistida[]> {
+    return [];
+  }
 }
 
 class RepositorioEntradasEnMemoria implements IRepositorioEntradasLibreta {
