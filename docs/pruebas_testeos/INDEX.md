@@ -7,3 +7,4 @@
 | 3 | Reserva de turno con un veterinario | Backend | Reutilización de ReservarTurnoCommand con proveedor_tipo='veterinario' |
 | 4 | CRUD de autorizaciones a veterinarios sobre la libreta sanitaria | Backend | CRUD de autorizaciones_libreta controlado por el dueño |
 | 5 | Consulta del historial cronológico de la libreta sanitaria | Backend | Endpoint de historial cronológico de libreta sanitaria por mascota |
+| 6 | Publicación de solicitudes de recurso | Backend | Caso de uso PublicarSolicitudRecurso (Post-MVP, Módulo 5) |
