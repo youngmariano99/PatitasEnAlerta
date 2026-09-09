@@ -58,6 +58,7 @@
 |---|---|---|---|---|---|
 | solicitudes_recurso | CRUD(p) | R(t, abiertas) | R(t, abiertas) | R(t) | R(t) |
 | colaboraciones | RU(p, sobre sus solicitudes) | CR(p) | CR(p) | — | R(t) |
+| colaboraciones_historial_estado | R(p, sobre sus solicitudes) | R(p, propias) | R(p, propias) | — | R(t) |
 
 ### Módulo 6 (Post-MVP) — Veterinarios Avanzado
 
@@ -240,4 +241,5 @@ CREATE POLICY verificaciones_resolver_admin ON verificaciones FOR UPDATE
 | turnos, colaboraciones, pedidos_producto, solicitudes_recurso, inscripciones_curso | D |
 | verificaciones, comercios (verificación) | E |
 | roles, reportes_historial_estado, sugerencias_compatibilidad | Solo lectura filtrada por pertenencia (`usuario_id`/`reporte_id` propio) o `rol_actual() = 'administrador'`; sin escritura directa de usuario final (generadas por la aplicación) |
+| colaboraciones_historial_estado | Solo lectura, generada por la aplicación (nunca INSERT/UPDATE directo de usuario final) — a diferencia de `reportes_historial_estado`, la pertenencia no es una columna directa: se resuelve transitivamente vía `colaboraciones.stakeholder_id` (propio) o `colaboraciones.solicitud_id → solicitudes_recurso.organizacion_id` (organización dueña de la solicitud), o `rol_actual() = 'administrador'` — ver `IRepositorioColaboraciones.obtenerActual` y `ListarHistorialColaboracion.ts` |
 | notificaciones | Igual que la fila anterior para SELECT/INSERT (generadas por la aplicación, nunca insertadas directo por el usuario final) — más un UPDATE propio acotado a "marcarla como leída": `USING/WITH CHECK (usuario_id = auth.uid())`, coherente con la columna RU(p) de la matriz de la Sección 2 |
