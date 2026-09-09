@@ -69,6 +69,7 @@ function crearFakes(opciones?: {
   };
   const repositorioEntradas: jest.Mocked<IRepositorioEntradasLibreta> = {
     crear: jest.fn().mockResolvedValue(entradaPersistida),
+    listarPorMascota: jest.fn(),
   };
   const repositorioMascotas: jest.Mocked<IRepositorioMascotas> = {
     crear: jest.fn(),

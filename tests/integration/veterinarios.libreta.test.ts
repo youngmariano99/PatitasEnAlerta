@@ -4,7 +4,12 @@
 import { NextRequest } from 'next/server';
 import { container } from '@aplicacion/contenedor-di';
 import type { AutorizacionLibretaPersistida, IRepositorioAutorizacionesLibreta } from '@dominio/puertos/IRepositorioAutorizacionesLibreta';
-import type { DatosEntradaLibreta, EntradaLibretaPersistida, IRepositorioEntradasLibreta } from '@dominio/puertos/IRepositorioEntradasLibreta';
+import type {
+  DatosEntradaLibreta,
+  EntradaLibretaPersistida,
+  IRepositorioEntradasLibreta,
+  PaginaEntradasLibreta,
+} from '@dominio/puertos/IRepositorioEntradasLibreta';
 import type { CambiosMascota, IRepositorioMascotas } from '@dominio/puertos/IRepositorioMascotas';
 import type { IRepositorioPerfil, ResumenPerfilPropio } from '@dominio/puertos/IRepositorioPerfil';
 import { Mascota } from '@dominio/entidades/Mascota';
@@ -58,6 +63,11 @@ class RepositorioEntradasEnMemoria implements IRepositorioEntradasLibreta {
     };
     this.entradas.push(entrada);
     return entrada;
+  }
+
+  async listarPorMascota(mascotaId: string, pagina: number, porPagina: number): Promise<PaginaEntradasLibreta> {
+    const propias = this.entradas.filter((e) => e.mascotaId === mascotaId);
+    return { items: propias, total: propias.length, pagina, porPagina };
   }
 }
 
