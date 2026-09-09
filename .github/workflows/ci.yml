@@ -1,10 +1,16 @@
 name: CI
 
 on:
+  # Sin filtro de `branches`: el equipo trabaja con ramas apiladas (cada
+  # feature branch sale de la anterior, no de `main` — ver docs/DECISIONES.md
+  # y la convención de nombres `feature/mc-act-*`), así que un PR puede
+  # abrirse contra `main` o contra la rama padre todavía sin mergear. Filtrar
+  # `pull_request`/`push` a `branches: [main]` dejaba esos PRs sin ningún
+  # trigger que matcheara ("no checks reported"). La protección real de
+  # `main` (status checks obligatorios) la define la branch protection rule
+  # de GitHub (docs/SETUP.md paso 1.3), no este filtro.
   pull_request:
-    branches: [main]
   push:
-    branches: [main]
 
 # Evita que corridas viejas de un mismo PR sigan consumiendo minutos
 concurrency:
