@@ -4,6 +4,7 @@ import type {
   DatosEntradaLibreta,
   EntradaLibretaPersistida,
   IRepositorioEntradasLibreta,
+  PaginaEntradasLibreta,
   TipoEntradaLibreta,
 } from '@dominio/puertos/IRepositorioEntradasLibreta';
 
@@ -58,5 +59,22 @@ export class PrismaEntradasLibretaRepositorio implements IRepositorioEntradasLib
       select: SELECT_ENTRADA,
     });
     return aEntrada(fila);
+  }
+
+  async listarPorMascota(mascotaId: string, pagina: number, porPagina: number): Promise<PaginaEntradasLibreta> {
+    const where = { mascotaId, deletedAt: null };
+
+    const [filas, total] = await Promise.all([
+      prisma.entradaLibretaSanitaria.findMany({
+        where,
+        orderBy: [{ fecha: 'desc' }, { createdAt: 'desc' }],
+        skip: (pagina - 1) * porPagina,
+        take: porPagina,
+        select: SELECT_ENTRADA,
+      }),
+      prisma.entradaLibretaSanitaria.count({ where }),
+    ]);
+
+    return { items: filas.map(aEntrada), total, pagina, porPagina };
   }
 }
