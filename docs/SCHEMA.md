@@ -370,6 +370,22 @@ CREATE TABLE colaboraciones (
 );
 CREATE INDEX ix_colaboraciones_solicitud ON colaboraciones (solicitud_id);
 CREATE INDEX ix_colaboraciones_stakeholder ON colaboraciones (stakeholder_id);
+
+-- Hilo de coordinación con historial persistente ("Coordinar el seguimiento
+-- de una colaboración aceptada en un hilo dedicado, con historial
+-- persistente", docs/REQUISITOS.md Módulo 5). INSERT-only, mismo diseño que
+-- reportes_historial_estado (Módulo 2) — cada fila es una transición ya
+-- ocurrida, escrita por ActualizarEstadoColaboracionCommand.ts en la misma
+-- transacción que el UPDATE de colaboraciones.estado.
+CREATE TABLE colaboraciones_historial_estado (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  colaboracion_id UUID NOT NULL REFERENCES colaboraciones(id),
+  estado_anterior TEXT NOT NULL,
+  estado_nuevo TEXT NOT NULL,
+  usuario_id UUID NOT NULL REFERENCES usuarios(id),
+  registrado_en TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX ix_colaboraciones_historial_colaboracion ON colaboraciones_historial_estado (colaboracion_id);
 ```
 
 ## Módulo 6: Veterinarios — Funcionalidades Avanzadas

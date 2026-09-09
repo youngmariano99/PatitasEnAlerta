@@ -68,6 +68,8 @@
 | PEA-RED-002 | Ya te ofreciste como colaborador/a en esta solicitud. | Aplicación (evitar duplicados) — 409 | Mostrar el estado de tu colaboración existente en vez del botón de ofrecerse. |
 | PEA-RED-003 | No encontramos esa solicitud o ya no está disponible. | Dominio (soft delete / no encontrado) — 404 | Volver al listado de solicitudes de la organización o de la red. |
 | PEA-RED-004 | Solo la organización que publicó la solicitud puede aceptar o rechazar colaboraciones. | Middleware (RLS, ownership) — 403 | Ocultar los controles de aceptar/rechazar a quien no sea la organización dueña. |
+| PEA-RED-005 | No encontramos esa colaboración o ya no está disponible. | Dominio (soft delete / no encontrado) — 404 | Volver al hilo de coordinación / listado de colaboraciones de la solicitud. |
+| PEA-RED-006 | Ese cambio de estado no es válido para esta colaboración. | Dominio (máquina de estados `ColaboracionEstado`) — 409 | Mostrar solo las transiciones válidas desde el estado actual en la interfaz. |
 
 ## Módulo 6 (Post-MVP) — Veterinarios: Funcionalidades Avanzadas
 

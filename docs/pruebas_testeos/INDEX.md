@@ -9,3 +9,4 @@
 | 5 | Consulta del historial cronológico de la libreta sanitaria | Backend | Endpoint de historial cronológico de libreta sanitaria por mascota |
 | 6 | Publicación de solicitudes de recurso | Backend | Caso de uso PublicarSolicitudRecurso (Post-MVP, Módulo 5) |
 | 7 | Directorio de aliados verificados | Backend | Endpoint de directorio filtrable por rol y zona (Post-MVP, Módulo 5) |
+| 8 | Vista de seguimiento de colaboraciones con historial persistente | Backend | Vista de seguimiento de colaboraciones con historial persistente (Post-MVP, Módulo 5) |

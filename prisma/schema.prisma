@@ -371,9 +371,31 @@ model Colaboracion {
   updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at")
   deletedAt     DateTime? @map("deleted_at")
 
+  historialEstado ColaboracionHistorialEstado[]
+
   @@map("colaboraciones")
   @@index([solicitudId])
   @@index([stakeholderId])
+}
+
+// Hilo de coordinación con historial persistente (Módulo 5, docs/REQUISITOS.md:
+// "Coordinar el seguimiento de una colaboración aceptada... con historial
+// persistente") — mismo criterio que ReporteHistorialEstado (Módulo 2): cada
+// fila es una transición de estado ya ocurrida, nunca se actualiza ni se
+// borra (INSERT-only), escrita por ActualizarEstadoColaboracionCommand en la
+// misma transacción que el UPDATE de `colaboraciones.estado`.
+model ColaboracionHistorialEstado {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  colaboracionId String   @map("colaboracion_id") @db.Uuid
+  estadoAnterior String   @map("estado_anterior")
+  estadoNuevo    String   @map("estado_nuevo")
+  usuarioId      String   @map("usuario_id") @db.Uuid
+  registradoEn   DateTime @default(now()) @map("registrado_en")
+
+  colaboracion Colaboracion @relation(fields: [colaboracionId], references: [id])
+
+  @@map("colaboraciones_historial_estado")
+  @@index([colaboracionId])
 }
 
 model ProductoVeterinario {
