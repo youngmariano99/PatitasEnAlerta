@@ -47,6 +47,7 @@ const RUTAS_API_PROTEGIDAS = [
   '/api/municipio',
   '/api/turnos',
   '/api/veterinarios',
+  '/api/red-colaboracion',
 ];
 
 // Excepción de método sobre RUTAS_API_PROTEGIDAS: un GET a estas rutas
