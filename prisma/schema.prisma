@@ -33,6 +33,11 @@ model Usuario {
   passwordHash       String    @map("password_hash")
   rolId              Int       @map("rol_id")
   estadoVerificacion String    @default("no_requerido") @map("estado_verificacion")
+  // Ubicación opcional del propio usuario (distinta de la de sus reportes/eventos/comercios).
+  // Nullable: no se pide en el alta de ningún rol hoy — solo la completan quienes quieran
+  // aparecer con filtro de zona en el directorio de aliados (Módulo 5, ver docs/DECISIONES.md).
+  latitud            Float?
+  longitud           Float?
   createdAt          DateTime  @default(now()) @map("created_at")
   updatedAt          DateTime  @default(now()) @updatedAt @map("updated_at")
   deletedAt          DateTime? @map("deleted_at")

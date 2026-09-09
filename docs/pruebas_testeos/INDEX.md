@@ -8,3 +8,4 @@
 | 4 | CRUD de autorizaciones a veterinarios sobre la libreta sanitaria | Backend | CRUD de autorizaciones_libreta controlado por el dueño |
 | 5 | Consulta del historial cronológico de la libreta sanitaria | Backend | Endpoint de historial cronológico de libreta sanitaria por mascota |
 | 6 | Publicación de solicitudes de recurso | Backend | Caso de uso PublicarSolicitudRecurso (Post-MVP, Módulo 5) |
+| 7 | Directorio de aliados verificados | Backend | Endpoint de directorio filtrable por rol y zona (Post-MVP, Módulo 5) |

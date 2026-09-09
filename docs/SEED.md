@@ -88,12 +88,17 @@ WITH ins AS (
 SELECT id, row_number() OVER () AS rn FROM ins;
 
 -- 3. Usuarios: Veterinarios
+-- latitud/longitud: jitter ±~5km alrededor de Coronel Pringles, mismo criterio
+-- geográfico que el resto del seed — sostiene el filtro de zona de
+-- ListarDirectorioAliados.ts (Módulo 5, ver docs/DECISIONES.md).
 CREATE TEMP TABLE tmp_veterinarios AS
 WITH ins AS (
-  INSERT INTO usuarios (email, password_hash, rol_id, estado_verificacion)
+  INSERT INTO usuarios (email, password_hash, rol_id, estado_verificacion, latitud, longitud)
   SELECT 'vet' || gs || '@ejemplo.test',
          '$2b$10$devSeedOnlyNotForProduction00000000000000000000000',
-         2, (ARRAY['pendiente','verificado','verificado','verificado'])[1 + floor(random()*4)::int]
+         2, (ARRAY['pendiente','verificado','verificado','verificado'])[1 + floor(random()*4)::int],
+         -37.9989 + (random() - 0.5) * 0.08,
+         -61.3565 + (random() - 0.5) * 0.08
   FROM generate_series(1, 8) AS gs
   RETURNING id
 )
@@ -350,11 +355,17 @@ REFRESH MATERIALIZED VIEW mv_metricas_turnos_periodo;
 -- =====================================================================
 
 -- 19. Usuarios: rescatistas, comerciantes, organizaciones
+-- latitud/longitud (rescatistas/organizaciones): mismo jitter que los
+-- veterinarios del bloque 1.A — sostiene el filtro de zona del directorio de
+-- aliados (ListarDirectorioAliados.ts, Módulo 5). comerciantes queda fuera:
+-- no es un rol del directorio de aliados (docs/REQUISITOS.md línea 85).
 CREATE TEMP TABLE tmp_rescatistas AS
 WITH ins AS (
-  INSERT INTO usuarios (email, password_hash, rol_id, estado_verificacion)
+  INSERT INTO usuarios (email, password_hash, rol_id, estado_verificacion, latitud, longitud)
   SELECT 'rescatista' || gs || '@ejemplo.test',
-         '$2b$10$devSeedOnlyNotForProduction00000000000000000000000', 5, 'no_requerido'
+         '$2b$10$devSeedOnlyNotForProduction00000000000000000000000', 5, 'no_requerido',
+         -37.9989 + (random() - 0.5) * 0.08,
+         -61.3565 + (random() - 0.5) * 0.08
   FROM generate_series(1, 15) AS gs RETURNING id
 ) SELECT id FROM ins;
 
@@ -368,9 +379,11 @@ WITH ins AS (
 
 CREATE TEMP TABLE tmp_organizaciones AS
 WITH ins AS (
-  INSERT INTO usuarios (email, password_hash, rol_id, estado_verificacion)
+  INSERT INTO usuarios (email, password_hash, rol_id, estado_verificacion, latitud, longitud)
   SELECT 'ong' || gs || '@ejemplo.test',
-         '$2b$10$devSeedOnlyNotForProduction00000000000000000000000', 7, 'verificado'
+         '$2b$10$devSeedOnlyNotForProduction00000000000000000000000', 7, 'verificado',
+         -37.9989 + (random() - 0.5) * 0.08,
+         -61.3565 + (random() - 0.5) * 0.08
   FROM generate_series(1, 10) AS gs RETURNING id
 ) SELECT id FROM ins;
 
