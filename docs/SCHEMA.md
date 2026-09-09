@@ -41,12 +41,19 @@ CREATE TABLE usuarios (
   rol_id SMALLINT NOT NULL REFERENCES roles(id),
   estado_verificacion TEXT NOT NULL DEFAULT 'no_requerido'
     CHECK (estado_verificacion IN ('no_requerido','pendiente','verificado','rechazado')),
+  -- Ubicación opcional del propio usuario (distinta de la de sus reportes/eventos/comercios).
+  -- Nullable: ningún alta de rol la pide hoy — solo la completan quienes quieran aparecer
+  -- con filtro de zona en el directorio de aliados (Módulo 5, ListarDirectorioAliados.ts;
+  -- ver docs/DECISIONES.md).
+  latitud DOUBLE PRECISION NULL,
+  longitud DOUBLE PRECISION NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   deleted_at TIMESTAMPTZ NULL
 );
 CREATE UNIQUE INDEX ux_usuarios_email ON usuarios (email) WHERE deleted_at IS NULL;
 CREATE INDEX ix_usuarios_rol ON usuarios (rol_id) WHERE deleted_at IS NULL;
+CREATE INDEX ix_usuarios_latitud_longitud ON usuarios (latitud, longitud);
 
 -- AUTH-verificación: BadgeVerificacion (src/presentacion/componentes/auth)
 -- se suscribe a esta tabla vía Supabase Realtime (Postgres Changes) para
@@ -332,7 +339,12 @@ CREATE INDEX ix_libreta_veterinario ON entradas_libreta_sanitaria (veterinario_i
 
 ```sql
 -- Rol 'rescatista' ya sembrado en tabla roles (Módulo 1). Sin perfil propio:
--- el relevamiento no define atributos distintivos más allá del rol.
+-- el relevamiento no define atributos distintivos más allá del rol. Lo mismo
+-- aplica a 'organizacion' (id 7): ninguna de las dos tiene tabla de perfil
+-- propia hoy (a diferencia de perfiles_veterinario/perfiles_municipio) —
+-- ListarDirectorioAliados.ts (directorio de aliados verificados) expone
+-- `email` como único identificador visible para esos dos roles hasta que
+-- exista una. Ver docs/DECISIONES.md.
 
 CREATE TABLE solicitudes_recurso (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
