@@ -48,6 +48,10 @@ class RepositorioReportesFalso implements IRepositorioReportes {
   async listarHistorialEstado(): Promise<never[]> {
     throw new Error('no usado en este test');
   }
+
+  async buscarPorSimilitudSemantica(): Promise<never[]> {
+    throw new Error('no usado en este test');
+  }
 }
 
 class RepositorioPerfilFalso implements IRepositorioPerfil {

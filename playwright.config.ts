@@ -19,6 +19,11 @@ export default defineConfig({
     command: 'npm run build && npm run start',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
+    // `npm run build` compila cada ruta agregada sprint a sprint (ya son
+    // varias decenas de app/api/**/route.ts) antes de siquiera arrancar
+    // `next start` — 120s dejó de alcanzar y el webServer nunca llegaba a
+    // responder en http://localhost:3000 dentro del timeout, sin relación
+    // con ningún caso de negocio puntual. Ver docs/DECISIONES.md.
+    timeout: 300_000,
   },
 });

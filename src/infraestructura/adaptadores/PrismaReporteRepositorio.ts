@@ -1,6 +1,8 @@
 import { injectable } from 'tsyringe';
+import { Prisma } from '@prisma/client';
 import { prisma } from '@infraestructura/adaptadores/prisma-client';
 import type {
+  CriteriosBusquedaSemantica,
   CriteriosCoincidenciaReporte,
   DatosNuevoReporte,
   FiltrosListadoReportes,
@@ -11,6 +13,7 @@ import type {
   ReporteActivoResumen,
   ReporteEstadoActualizado,
   ReporteListado,
+  ReporteSimilar,
 } from '@dominio/puertos/IRepositorioReportes';
 import type { DatosReporte } from '@dominio/entidades/Reporte';
 import { ESTADOS_REPORTE_ACTIVOS, Reporte } from '@dominio/entidades/Reporte';
@@ -82,6 +85,29 @@ function aEntidad(fila: FilaReporte): Reporte {
 // precisión mayor (Haversine exacto, PostGIS) queda para si el matching
 // semántico post-MVP la termina necesitando.
 const KM_POR_GRADO_LATITUD = 111;
+
+// Distancia coseno (`<=>`, pgvector) máxima aceptada para considerar un
+// reporte "similar" en BuscarReportesSimilares — sin este piso, una consulta
+// sin ningún reporte realmente parecido igual devolvería `limite` resultados
+// arbitrarios ordenados por "el menos distinto entre los distintos", que no
+// es lo que pide la Historia ("similitud semántica", no "los más recientes").
+// Equivale a similitud coseno >= 0.75; docs/DECISIONES.md documenta el
+// porqué de este valor concreto (gap que la planificación no cubría).
+const DISTANCIA_COSENO_MAXIMA = 0.25;
+
+type FilaReporteSimilar = {
+  id: string;
+  tipo: string;
+  subtipo: string | null;
+  descripcion: string;
+  fotoUrl: string;
+  latitud: number;
+  longitud: number;
+  especie: string | null;
+  estado: string;
+  createdAt: Date;
+  similitud: number;
+};
 
 function calcularRangoGeografico(zona: FiltroZona) {
   const deltaLatitud = zona.radioKm / KM_POR_GRADO_LATITUD;
@@ -213,5 +239,38 @@ export class PrismaReporteRepositorio implements IRepositorioReportes {
       select: { id: true, estadoAnterior: true, estadoNuevo: true, usuarioId: true, registradoEn: true },
     });
     return filas;
+  }
+
+  // Prisma no soporta pgvector nativamente (ver prisma/schema.prisma, campo
+  // `descripcion_embedding`) — única consulta de este repositorio resuelta
+  // con SQL crudo. Sigue siendo anti-inyección: todo valor variable entra
+  // como parámetro vía Prisma.sql/Prisma.join, nunca concatenado como texto.
+  async buscarPorSimilitudSemantica(criterios: CriteriosBusquedaSemantica): Promise<ReporteSimilar[]> {
+    const vectorLiteral = `[${criterios.vectorConsulta.join(',')}]`;
+
+    const condiciones: Prisma.Sql[] = [
+      Prisma.sql`deleted_at IS NULL`,
+      Prisma.sql`descripcion_embedding IS NOT NULL`,
+      Prisma.sql`(descripcion_embedding <=> ${vectorLiteral}::vector) <= ${DISTANCIA_COSENO_MAXIMA}`,
+    ];
+    if (criterios.tipo) condiciones.push(Prisma.sql`tipo = ${criterios.tipo}`);
+    if (criterios.estado) condiciones.push(Prisma.sql`estado = ${criterios.estado}`);
+    if (criterios.especie) condiciones.push(Prisma.sql`especie ILIKE ${criterios.especie}`);
+    if (criterios.zona) {
+      const rango = calcularRangoGeografico(criterios.zona);
+      condiciones.push(Prisma.sql`latitud BETWEEN ${rango.latitud.gte} AND ${rango.latitud.lte}`);
+      condiciones.push(Prisma.sql`longitud BETWEEN ${rango.longitud.gte} AND ${rango.longitud.lte}`);
+    }
+
+    const filas = await prisma.$queryRaw<FilaReporteSimilar[]>`
+      SELECT id, tipo, subtipo, descripcion, foto_url AS "fotoUrl", latitud, longitud, especie, estado,
+             created_at AS "createdAt", 1 - (descripcion_embedding <=> ${vectorLiteral}::vector) AS similitud
+      FROM reportes
+      WHERE ${Prisma.join(condiciones, ' AND ')}
+      ORDER BY descripcion_embedding <=> ${vectorLiteral}::vector ASC
+      LIMIT ${criterios.limite}
+    `;
+
+    return filas.map((fila) => ({ ...fila, similitud: Number(fila.similitud) }));
   }
 }

@@ -93,6 +93,28 @@ export interface PaginaReportes {
 }
 
 /**
+ * Filtros exactos combinables con la similitud semántica en
+ * BuscarReportesSimilares (Módulo 5/9, búsqueda híbrida). `vectorConsulta`
+ * ya sale del texto libre del usuario procesado por IGeneradorEmbeddings —
+ * este puerto no sabe de dónde vino, solo lo usa para ordenar por distancia
+ * coseno sobre `descripcion_embedding`.
+ */
+export interface CriteriosBusquedaSemantica {
+  vectorConsulta: number[];
+  tipo?: string;
+  estado?: string;
+  especie?: string;
+  zona?: FiltroZona;
+  /** Tope de resultados (ya clampeado por BuscarReportesSimilaresDto — defensa en profundidad acá también). */
+  limite: number;
+}
+
+/** Proyección de ReporteListado + el score de similitud coseno (0 a 1, 1 = idéntico) que motivó el resultado. */
+export interface ReporteSimilar extends ReporteListado {
+  similitud: number;
+}
+
+/**
  * Puerto hacia la persistencia de reportes. CrearReporte,
  * EvaluarCoincidenciaReporte y ListarReportes dependen únicamente de esta
  * abstracción — nunca de Prisma directamente.
@@ -111,4 +133,11 @@ export interface IRepositorioReportes {
   obtenerPropietario(id: string): Promise<string | null>;
   /** Historial completo de transiciones, ordenado cronológicamente por `registrado_en` (ascendente). */
   listarHistorialEstado(reporteId: string): Promise<HistorialEstadoItem[]>;
+  /**
+   * Búsqueda híbrida (Módulo 5/9): ordena por distancia coseno sobre
+   * `descripcion_embedding` (índice HNSW, `ix_reportes_embedding_hnsw`) y
+   * aplica los filtros exactos combinables. Excluye soft-deleted y reportes
+   * sin embedding poblado todavía.
+   */
+  buscarPorSimilitudSemantica(criterios: CriteriosBusquedaSemantica): Promise<ReporteSimilar[]>;
 }

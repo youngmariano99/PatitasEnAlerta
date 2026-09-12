@@ -126,7 +126,7 @@ CREATE TABLE reportes (
   mascota_id UUID NULL REFERENCES mascotas(id)
     CHECK (tipo <> 'problematica' OR mascota_id IS NULL),
   descripcion TEXT NOT NULL,
-  descripcion_embedding VECTOR(1536) NULL, -- poblado desde el MVP; consumido recién en Módulo 5/9
+  descripcion_embedding VECTOR(1536) NULL, -- poblado desde el MVP; consumido por BuscarReportesSimilares.ts (Módulo 5/9)
   foto_url TEXT NOT NULL,
   latitud DOUBLE PRECISION NOT NULL,
   longitud DOUBLE PRECISION NOT NULL,
