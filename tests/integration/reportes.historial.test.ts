@@ -47,6 +47,10 @@ class RepositorioReportesFalso implements IRepositorioReportes {
   async listarHistorialEstado(): Promise<HistorialEstadoItem[]> {
     return HISTORIAL;
   }
+
+  async buscarPorSimilitudSemantica(): Promise<never[]> {
+    throw new Error('no usado en este test');
+  }
 }
 
 class RepositorioPerfilFalso implements IRepositorioPerfil {

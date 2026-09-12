@@ -31,6 +31,7 @@ import '@aplicacion/dtos/veterinarios/ListarLibretaSanitariaDto';
 import '@aplicacion/dtos/red-colaboracion/ListarDirectorioAliadosDto';
 import '@aplicacion/dtos/red-colaboracion/ActualizarEstadoColaboracionDto';
 import '@aplicacion/dtos/red-colaboracion/HistorialColaboracionDto';
+import '@aplicacion/dtos/red-colaboracion/BuscarReportesSimilaresDto';
 
 export const dynamic = 'force-dynamic';
 

@@ -23,6 +23,7 @@ import type { IRepositorioColaboraciones } from '@dominio/puertos/IRepositorioCo
 import type { FuenteDisponibilidadEvento, FuenteDisponibilidadVeterinario, ProveedorTurnera } from '@dominio/estrategias/ProveedorTurnera';
 import type { IControlDeTasa } from '@dominio/puertos/IControlDeTasa';
 import type { IControlDeTasaConReintento } from '@dominio/puertos/IControlDeTasaConReintento';
+import type { IGeneradorEmbeddings } from '@dominio/puertos/IGeneradorEmbeddings';
 import { PrismaUsuarioRepositorio } from '@infraestructura/adaptadores/PrismaUsuarioRepositorio';
 import { SupabaseAuthAdapter } from '@infraestructura/adaptadores/SupabaseAuthAdapter';
 import { PrismaMascotaRepositorio } from '@infraestructura/adaptadores/PrismaMascotaRepositorio';
@@ -46,6 +47,7 @@ import { PrismaColaboracionesRepositorio } from '@infraestructura/adaptadores/Pr
 import { TurneraMunicipio, TurneraVeterinario } from '@dominio/estrategias/ProveedorTurnera';
 import { UpstashControlDeTasa } from '@infraestructura/adaptadores/UpstashControlDeTasa';
 import { UpstashControlDeTasaAntiSaturacion } from '@infraestructura/adaptadores/UpstashControlDeTasaAntiSaturacion';
+import { OpenAIGeneradorEmbeddings } from '@infraestructura/adaptadores/OpenAIGeneradorEmbeddings';
 
 /**
  * Punto único de registro de dependencias (patrón Singleton para el propio
@@ -91,5 +93,6 @@ container.registerSingleton<ProveedorTurnera<FuenteDisponibilidadEvento>>('Prove
 container.registerSingleton<ProveedorTurnera<FuenteDisponibilidadVeterinario>>('ProveedorTurneraVeterinario', TurneraVeterinario);
 container.registerSingleton<IControlDeTasa>('IControlDeTasa', UpstashControlDeTasa);
 container.registerSingleton<IControlDeTasaConReintento>('IControlDeTasaConReintento', UpstashControlDeTasaAntiSaturacion);
+container.registerSingleton<IGeneradorEmbeddings>('IGeneradorEmbeddings', OpenAIGeneradorEmbeddings);
 
 export { container };

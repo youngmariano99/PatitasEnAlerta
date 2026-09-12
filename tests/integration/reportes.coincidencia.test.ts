@@ -89,6 +89,10 @@ class RepositorioReportesEnMemoria implements IRepositorioReportes {
   async listarHistorialEstado(): Promise<never[]> {
     throw new Error('no usado en este test');
   }
+
+  async buscarPorSimilitudSemantica(): Promise<never[]> {
+    throw new Error('no usado en este test');
+  }
 }
 
 class NotificacionesRepositorioFalso implements INotificacionesRepositorio {

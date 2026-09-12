@@ -39,6 +39,7 @@ function crearFakes(opciones?: { rol?: string; estadoActual?: string | null }) {
     })),
     obtenerPropietario: jest.fn(),
     listarHistorialEstado: jest.fn(),
+    buscarPorSimilitudSemantica: jest.fn(),
   };
   const repositorioPerfil: jest.Mocked<IRepositorioPerfil> = {
     obtenerPerfilPropio: jest.fn().mockResolvedValue(crearPerfil(opciones?.rol ?? 'municipio')),

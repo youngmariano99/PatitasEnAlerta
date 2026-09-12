@@ -14,6 +14,7 @@ function crearFakes(pagina: PaginaReportes) {
     actualizarEstado: jest.fn(),
     obtenerPropietario: jest.fn(),
     listarHistorialEstado: jest.fn(),
+    buscarPorSimilitudSemantica: jest.fn(),
   };
   return { repositorioReportes };
 }
