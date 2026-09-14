@@ -1,4 +1,5 @@
 import type { SolicitudRecurso } from '@dominio/entidades/SolicitudRecurso';
+import type { FiltroZona } from '@dominio/puertos/IRepositorioReportes';
 
 export interface DatosNuevaSolicitudRecurso {
   organizacionId: string;
@@ -20,19 +21,47 @@ export interface SolicitudActual {
   organizacionId: string;
 }
 
+/** Una fila del listado de solicitudes de asistencia veterinaria — ver ListarSolicitudesVeterinarias.ts. */
+export interface SolicitudListada {
+  id: string;
+  organizacionId: string;
+  tipo: string;
+  descripcion: string;
+  reporteId: string | null;
+  estado: string;
+  createdAt: Date;
+}
+
+export interface PaginaSolicitudesVeterinarias {
+  items: SolicitudListada[];
+  total: number;
+  pagina: number;
+  porPagina: number;
+}
+
 /**
  * Puerto hacia `solicitudes_recurso` (Módulo 5 — Red de Colaboración,
- * Post-MVP). `PublicarSolicitudRecurso.ts` y `OfrecerseComoColaboradorCommand.ts`
- * dependen únicamente de esta abstracción, nunca de Prisma directamente
- * (mismo criterio que IRepositorioEventos). Alcance acotado a lo que esas
- * historias necesitan: alta, y lectura mínima de una solicitud puntual. El
- * resto del CRUD descrito en docs/ROLES.md (`organizacion CRUD(p)`) —
- * listado propio, edición, baja — queda para los tickets que implementen
- * esas historias puntuales, mismo criterio de entrega incremental que
- * autorizaciones_libreta.
+ * Post-MVP). `PublicarSolicitudRecurso.ts`, `OfrecerseComoColaboradorCommand.ts`
+ * y `ListarSolicitudesVeterinarias.ts` dependen únicamente de esta
+ * abstracción, nunca de Prisma directamente (mismo criterio que
+ * IRepositorioEventos). Alcance acotado a lo que esas historias necesitan:
+ * alta, lectura mínima de una solicitud puntual, y el listado filtrado de
+ * asistencia veterinaria. El resto del CRUD descrito en docs/ROLES.md
+ * (`organizacion CRUD(p)`) — listado propio general, edición, baja — queda
+ * para los tickets que implementen esas historias puntuales, mismo criterio
+ * de entrega incremental que autorizaciones_libreta.
  */
 export interface IRepositorioSolicitudesRecurso {
   crear(datos: DatosNuevaSolicitudRecurso): Promise<SolicitudRecurso>;
   /** `null` si no existe o está soft-deleted (PEA-RED-003). */
   obtenerActual(solicitudId: string): Promise<SolicitudActual | null>;
+  /**
+   * Solicitudes con `tipo='asistencia_veterinaria' AND estado='abierta'`,
+   * paginadas (server-side) y opcionalmente filtradas por la zona de la
+   * organización dueña (`zona` es todo-o-nada, igual que
+   * `ListarDirectorioAliados`/`ListarReportes` — se resuelve vía las
+   * columnas `usuarios.latitud`/`longitud`, `solicitudes_recurso` no tiene
+   * columna de ubicación propia).
+   */
+  listarAsistenciaVeterinariaAbiertas(zona: FiltroZona | undefined, pagina: number, porPagina: number): Promise<PaginaSolicitudesVeterinarias>;
 }
