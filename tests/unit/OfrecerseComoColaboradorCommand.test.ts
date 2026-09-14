@@ -52,6 +52,7 @@ function crearFakes(opciones?: {
   const repositorioSolicitudes: jest.Mocked<IRepositorioSolicitudesRecurso> = {
     crear: jest.fn(),
     obtenerActual: jest.fn().mockResolvedValue(solicitud),
+    listarAsistenciaVeterinariaAbiertas: jest.fn(),
   };
   const repositorioPerfil: jest.Mocked<IRepositorioPerfil> = {
     obtenerPerfilPropio: jest.fn().mockResolvedValue(crearPerfil(opciones?.rol ?? 'rescatista')),

@@ -33,6 +33,10 @@ class RepositorioSolicitudesFalso implements IRepositorioSolicitudesRecurso {
   async obtenerActual(): Promise<never> {
     throw new Error('no usado en este test');
   }
+
+  async listarAsistenciaVeterinariaAbiertas(): Promise<never> {
+    throw new Error('no usado en este test');
+  }
 }
 
 class RepositorioPerfilFalso implements IRepositorioPerfil {

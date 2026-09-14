@@ -103,6 +103,10 @@ class RepositorioSolicitudesFalso implements IRepositorioSolicitudesRecurso {
   async obtenerActual(): Promise<never> {
     throw new Error('no usado en este test');
   }
+
+  async listarAsistenciaVeterinariaAbiertas(): Promise<never> {
+    throw new Error('no usado en este test');
+  }
 }
 
 function autenticarComo(usuarioId: string | null) {

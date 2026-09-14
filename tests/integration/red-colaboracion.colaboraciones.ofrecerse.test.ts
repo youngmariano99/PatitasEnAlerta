@@ -36,6 +36,10 @@ class RepositorioSolicitudesFalso implements IRepositorioSolicitudesRecurso {
   async obtenerActual(): Promise<SolicitudActual | null> {
     return this.actual;
   }
+
+  async listarAsistenciaVeterinariaAbiertas(): Promise<never> {
+    throw new Error('no usado en este test');
+  }
 }
 
 class RepositorioColaboracionesFalso implements IRepositorioColaboraciones {
