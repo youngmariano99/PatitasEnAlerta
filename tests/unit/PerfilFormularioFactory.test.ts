@@ -5,10 +5,14 @@ describe('PerfilFormularioFactory (Abstract Factory)', () => {
     const esquemaDueño = PerfilFormularioFactory.crear('dueño');
     const esquemaVeterinario = PerfilFormularioFactory.crear('veterinario');
     const esquemaMunicipio = PerfilFormularioFactory.crear('municipio');
+    const esquemaRescatista = PerfilFormularioFactory.crear('rescatista');
 
     expect(esquemaDueño).not.toBe(esquemaVeterinario);
     expect(esquemaVeterinario).not.toBe(esquemaMunicipio);
     expect(esquemaDueño).not.toBe(esquemaMunicipio);
+    expect(esquemaRescatista).not.toBe(esquemaDueño);
+    expect(esquemaRescatista).not.toBe(esquemaVeterinario);
+    expect(esquemaRescatista).not.toBe(esquemaMunicipio);
   });
 
   it('el esquema de dueño solo exige email y password', () => {
@@ -50,5 +54,25 @@ describe('PerfilFormularioFactory (Abstract Factory)', () => {
     expect(
       esquema.safeParse({ email: 'municipio@ejemplo.test', password: 'contraseñaSegura123' }).success,
     ).toBe(false);
+  });
+
+  it('el esquema de rescatista solo exige email y password — sin matrícula, colegio emisor ni ningún otro dato de verificación profesional', () => {
+    const esquema = PerfilFormularioFactory.crear('rescatista');
+
+    const datosMinimos = { email: 'rescatista@ejemplo.test', password: 'contraseñaSegura123' };
+    expect(esquema.safeParse(datosMinimos).success).toBe(true);
+    expect(esquema.safeParse({ email: 'rescatista@ejemplo.test' }).success).toBe(false);
+
+    // Verificación técnica del ticket: el esquema es distinto y más simple
+    // que el de veterinario/municipio — no expone ninguno de sus campos
+    // adicionales como obligatorio.
+    const conCamposDeOtrosRoles = esquema.safeParse({
+      ...datosMinimos,
+      matricula: 'MP-1001',
+      colegioEmisor: 'Colegio de Veterinarios de la Provincia de Buenos Aires',
+      nombreInstitucional: 'Municipalidad de Coronel Pringles',
+    });
+    expect(conCamposDeOtrosRoles.success).toBe(true);
+    expect(conCamposDeOtrosRoles.data).toEqual(datosMinimos);
   });
 });

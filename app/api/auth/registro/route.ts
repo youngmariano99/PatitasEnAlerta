@@ -3,13 +3,15 @@ import { ZodError, z } from 'zod';
 import { container } from '@aplicacion/contenedor-di';
 import { RegistrarUsuario } from '@aplicacion/casos-de-uso/auth/RegistrarUsuario';
 import { RegistrarVeterinario } from '@aplicacion/casos-de-uso/auth/RegistrarVeterinario';
+import { RegistrarRescatista } from '@aplicacion/casos-de-uso/auth/RegistrarRescatista';
 import type { RegistrarDuenoDto } from '@aplicacion/dtos/auth/RegistrarDuenoDto';
 import type { RegistrarVeterinarioDto } from '@aplicacion/dtos/auth/RegistrarVeterinarioDto';
+import type { RegistrarRescatistaDto } from '@aplicacion/dtos/auth/RegistrarRescatistaDto';
 import { ErrorDominio } from '@dominio/errores/ErrorDominio';
 import { PayloadInvalidoError } from '@dominio/errores/erroresAutenticacion';
 import { logger } from '@infraestructura/logging/logger';
 
-const RolSchema = z.enum(['dueño', 'veterinario']).catch('dueño');
+const RolSchema = z.enum(['dueño', 'veterinario', 'rescatista']).catch('dueño');
 
 function respuestaDeError(codigo: string, mensaje: string, statusHttp: number) {
   return NextResponse.json({ codigo, mensaje }, { status: statusHttp });
@@ -24,16 +26,22 @@ export async function POST(request: NextRequest) {
     return respuestaDeError(error.codigo, error.message, error.statusHttp);
   }
 
-  // /auth/registro es un único endpoint para dueño y veterinario (SITEMAP.md);
-  // PerfilFormularioFactory decide qué campos pide el cliente, y este `rol`
-  // decide qué caso de uso resuelve el server — nunca un tercer esquema
-  // ad hoc acá, cada uno vuelve a validar con su propio schema Zod.
+  // /auth/registro es un único endpoint para dueño, veterinario y rescatista
+  // (SITEMAP.md); PerfilFormularioFactory decide qué campos pide el cliente,
+  // y este `rol` decide qué caso de uso resuelve el server — nunca un tercer
+  // esquema ad hoc acá, cada uno vuelve a validar con su propio schema Zod.
   const rol = RolSchema.parse((payload as { rol?: unknown } | null)?.rol);
 
   try {
     if (rol === 'veterinario') {
       const casoDeUso = container.resolve(RegistrarVeterinario);
       const resultado = await casoDeUso.ejecutar(payload as RegistrarVeterinarioDto);
+      return NextResponse.json(resultado, { status: 201 });
+    }
+
+    if (rol === 'rescatista') {
+      const casoDeUso = container.resolve(RegistrarRescatista);
+      const resultado = await casoDeUso.ejecutar(payload as RegistrarRescatistaDto);
       return NextResponse.json(resultado, { status: 201 });
     }
 
