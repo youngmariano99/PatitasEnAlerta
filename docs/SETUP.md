@@ -103,6 +103,18 @@ El dashboard municipal (Módulo 3, `docs/SCHEMA.md` — "Vistas materializadas �
 
 Para probar el refresco manualmente sin esperar al cron: `supabase functions invoke refresh-metricas-dashboard`.
 
+## 7.2 Job de recordatorio de turnos próximos (endpoint + scheduler externo)
+
+A diferencia del refresco del dashboard (7.1, una Edge Function de Supabase), `RecordatorioTurnoJob` (Módulo 6) vive dentro de esta app Next.js — se expone como un endpoint HTTP (`POST /api/webhooks/recordatorios-turnos`) que un scheduler externo dispara periódicamente. `/api/webhooks/*` está excluido del `matcher` de `middleware.ts` (no hay sesión de usuario en una llamada de scheduler), así que el endpoint se autentica con un secreto compartido en vez de una sesión:
+
+1. Generar el secreto: `openssl rand -hex 32` → cargarlo como `CRON_JOBS_SECRET` (ver `.env.example`) en el entorno donde corre la app.
+2. Programar la llamada periódica — cualquiera de estas dos opciones sirve, elegir según la infraestructura disponible:
+   - **GitHub Actions** (`schedule: cron:` en un workflow — mismo runner que ya usa este repo para CI): `curl -X POST https://<host>/api/webhooks/recordatorios-turnos -H "x-cron-secret: $CRON_JOBS_SECRET"`, con `CRON_JOBS_SECRET` cargado como GitHub Actions Secret.
+   - **Supabase pg_cron / Edge Function** programada (mismo mecanismo que 7.1) que haga ese mismo `POST` con `net.http_post` o `fetch`.
+3. Frecuencia sugerida: cada 1 hora (la ventana de recordatorio es de 24hs — `VENTANA_RECORDATORIO_HORAS` en `RecordatorioTurnoJob.ts` —, así que corridas más espaciadas igual notifican a tiempo; el job es idempotente entre corridas, nunca duplica un recordatorio ya enviado).
+
+Para probar manualmente: `curl -X POST http://localhost:3000/api/webhooks/recordatorios-turnos -H "x-cron-secret: $CRON_JOBS_SECRET"`.
+
 ## 8. Verificación final antes de desarrollar
 
 ```bash

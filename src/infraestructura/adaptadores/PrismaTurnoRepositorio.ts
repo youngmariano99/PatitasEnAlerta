@@ -5,10 +5,13 @@ import type {
   IRepositorioTurnos,
   PaginaTurnosPropios,
   PaginaTurnosReservadosVeterinario,
+  TasaNoShow,
   TurnoActual,
+  TurnoAsistioActualizado,
   TurnoCancelado,
   TurnoGenerado,
   TurnoPropio,
+  TurnoRecordatorio,
   TurnoReprogramado,
   TurnoReservado,
   TurnoReservadoVeterinario,
@@ -232,5 +235,36 @@ export class PrismaTurnoRepositorio implements IRepositorioTurnos {
     }));
 
     return { items, total, pagina, porPagina };
+  }
+
+  async listarReservadosEnVentana(desde: Date, hasta: Date): Promise<TurnoRecordatorio[]> {
+    const filas = await prisma.turno.findMany({
+      where: { estado: 'reservado', franjaInicio: { gte: desde, lt: hasta }, deletedAt: null },
+      select: { id: true, reservadoPor: true, franjaInicio: true },
+    });
+
+    // `reservadoPor` nunca null acá: mismo invariante que
+    // `listarReservadosPorProveedor` (estado='reservado' siempre trae
+    // reservado_por seteado, ver `reservar()` arriba).
+    return filas.map((fila) => ({ id: fila.id, reservadoPor: fila.reservadoPor!, franjaInicio: fila.franjaInicio }));
+  }
+
+  async actualizarAsistio(turnoId: string, proveedorId: string, asistio: boolean): Promise<TurnoAsistioActualizado | null> {
+    const resultado = await prisma.turno.updateMany({
+      where: { id: turnoId, proveedorId, estado: 'reservado', franjaFin: { lte: new Date() }, deletedAt: null },
+      data: { asistio },
+    });
+
+    if (resultado.count === 0) return null;
+    return { id: turnoId, asistio };
+  }
+
+  async calcularTasaNoShow(proveedorId: string): Promise<TasaNoShow> {
+    const [totalConcluidos, totalNoShow] = await Promise.all([
+      prisma.turno.count({ where: { proveedorId, asistio: { not: null }, deletedAt: null } }),
+      prisma.turno.count({ where: { proveedorId, asistio: false, deletedAt: null } }),
+    ]);
+
+    return { totalConcluidos, totalNoShow, tasa: totalConcluidos > 0 ? totalNoShow / totalConcluidos : 0 };
   }
 }

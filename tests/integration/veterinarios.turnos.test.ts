@@ -71,6 +71,18 @@ class RepositorioTurnosEnMemoria implements IRepositorioTurnos {
     const inicio = (pagina - 1) * porPagina;
     return { items: propios.slice(inicio, inicio + porPagina), total: propios.length, pagina, porPagina };
   }
+
+  async listarReservadosEnVentana(): Promise<never[]> {
+    return [];
+  }
+
+  async actualizarAsistio(): Promise<null> {
+    return null;
+  }
+
+  async calcularTasaNoShow() {
+    return { totalConcluidos: 0, totalNoShow: 0, tasa: 0 };
+  }
 }
 
 function crearRequest(query = ''): NextRequest {

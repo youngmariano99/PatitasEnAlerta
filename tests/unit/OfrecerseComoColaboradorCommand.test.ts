@@ -59,6 +59,7 @@ function crearFakes(opciones?: {
   };
   const repositorioNotificaciones: jest.Mocked<INotificacionesRepositorio> = {
     crear: jest.fn().mockResolvedValue(undefined),
+    existePorReferencia: jest.fn(),
     listarPorUsuario: jest.fn(),
     marcarComoLeida: jest.fn(),
   };

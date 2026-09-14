@@ -75,6 +75,18 @@ class RepositorioTurnosFalso implements IRepositorioTurnos {
     return { items: [], total: 0, pagina: 1, porPagina: 50 };
   }
 
+  async listarReservadosEnVentana(): Promise<never[]> {
+    return [];
+  }
+
+  async actualizarAsistio(): Promise<null> {
+    return null;
+  }
+
+  async calcularTasaNoShow() {
+    return { totalConcluidos: 0, totalNoShow: 0, tasa: 0 };
+  }
+
   async listarPropios(): Promise<{ items: never[]; total: number; pagina: number; porPagina: number }> {
     return { items: [], total: 0, pagina: 1, porPagina: 50 };
   }

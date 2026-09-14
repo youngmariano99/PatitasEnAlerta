@@ -7,6 +7,7 @@ import type { INotificacionesRepositorio, PaginaNotificaciones } from '@dominio/
 function crearFakes(pagina: PaginaNotificaciones) {
   const repositorioNotificaciones: jest.Mocked<INotificacionesRepositorio> = {
     crear: jest.fn(),
+    existePorReferencia: jest.fn(),
     listarPorUsuario: jest.fn().mockResolvedValue(pagina),
     marcarComoLeida: jest.fn(),
   };

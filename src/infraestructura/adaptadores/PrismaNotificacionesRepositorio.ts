@@ -39,6 +39,14 @@ export class PrismaNotificacionesRepositorio implements INotificacionesRepositor
     return { items, total, pagina, porPagina, noLeidas };
   }
 
+  async existePorReferencia(usuarioId: string, tipo: string, referenciaTabla: string, referenciaId: string): Promise<boolean> {
+    const existente = await prisma.notificacion.findFirst({
+      where: { usuarioId, tipo, referenciaTabla, referenciaId },
+      select: { id: true },
+    });
+    return existente !== null;
+  }
+
   async marcarComoLeida(id: string, usuarioId: string): Promise<boolean> {
     // updateMany (no update): con `usuarioId` en el WHERE, una notificación
     // ajena da count=0 en vez de lanzar — nunca hay que "buscar primero para

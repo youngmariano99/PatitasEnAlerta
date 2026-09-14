@@ -15,3 +15,4 @@
 | 11 | Ofrecimiento como colaborador sobre una solicitud de recurso | Backend | Comando OfrecerseComoColaboradorCommand (Post-MVP, Módulo 5) |
 | 12 | Métricas personales de contribución | Backend-Frontend | Endpoint de métricas propias sin comparación pública (Post-MVP, Módulo 5) |
 | 13 | Solicitudes de asistencia veterinaria filtradas por zona | Backend | Endpoint de solicitudes filtradas por zona y especialidad para veterinarios (Post-MVP, Módulo 5) |
+| 14 | Recordatorios de turnos próximos con seguimiento de no-show | Backend | Job de recordatorios sobre turnos próximos con seguimiento de no-show (Post-MVP, Módulo 6) |

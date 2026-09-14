@@ -103,6 +103,32 @@ export interface PaginaTurnosReservadosVeterinario {
   porPagina: number;
 }
 
+/** Proyección mínima para el recordatorio (RecordatorioTurnoJob) — a quién notificar y cuándo es el turno. */
+export interface TurnoRecordatorio {
+  id: string;
+  reservadoPor: string;
+  franjaInicio: Date;
+}
+
+/** Resultado de marcar asistencia — ver ActualizarAsistioTurnoCommand.ts. */
+export interface TurnoAsistioActualizado {
+  id: string;
+  asistio: boolean;
+}
+
+/**
+ * Tasa de no-show agregada (Módulo 6, "sin requerir una tabla adicional" —
+ * verificación técnica del ticket): se calcula en el momento sobre
+ * `turnos.asistio`, nunca se persiste. `totalConcluidos` son los turnos con
+ * `asistio` ya registrado (no `null`); `tasa` es `0` si todavía no hay
+ * ninguno (evita dividir por cero).
+ */
+export interface TasaNoShow {
+  totalConcluidos: number;
+  totalNoShow: number;
+  tasa: number;
+}
+
 /**
  * Puerto hacia la persistencia del Motor de Turnera compartido (Módulo 3 y,
  * a futuro, Módulo 4) — genérico sobre `proveedorTipo`, nunca conoce si
@@ -174,4 +200,22 @@ export interface IRepositorioTurnos {
    * 'cancelado' (ruido para la agenda operativa del día a día).
    */
   listarReservadosPorProveedor(proveedorId: string, pagina: number, porPagina: number): Promise<PaginaTurnosReservadosVeterinario>;
+  /**
+   * Turnos `estado='reservado'` con `franjaInicio` dentro de `[desde, hasta)`
+   * — ventana de recordatorio (RecordatorioTurnoJob, Paso 1). Sin paginar:
+   * el job recorre el resultado completo de cada corrida.
+   */
+  listarReservadosEnVentana(desde: Date, hasta: Date): Promise<TurnoRecordatorio[]>;
+  /**
+   * Marca `asistio` SOLO si el turno le pertenece a `proveedorId`, sigue
+   * `estado='reservado'` y su `franjaFin` ya pasó ("Tras la franja", Paso 2)
+   * — `WHERE proveedor_id=? AND estado='reservado' AND franja_fin <= now()`.
+   * `null` si 0 filas afectadas: no existe, no es de ese proveedor, o la
+   * franja todavía no concluyó (`ActualizarAsistioTurnoCommand` decide ahí
+   * mismo que es PEA-VETADV-005, nunca un error de sistema) — mismo
+   * criterio de "el UPDATE condicionado es la última palabra" que `cancelar`.
+   */
+  actualizarAsistio(turnoId: string, proveedorId: string, asistio: boolean): Promise<TurnoAsistioActualizado | null>;
+  /** Agregado en el momento sobre `turnos.asistio` para los turnos del proveedor (Paso 3). */
+  calcularTasaNoShow(proveedorId: string): Promise<TasaNoShow>;
 }
