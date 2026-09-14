@@ -29,6 +29,9 @@ function crearFakes(opciones?: { turnoActual?: TurnoActual | null; cancelarDevue
     reprogramar: jest.fn(),
     listarFranjasExistentes: jest.fn(),
     listarReservadosPorProveedor: jest.fn(),
+    listarReservadosEnVentana: jest.fn(),
+    actualizarAsistio: jest.fn(),
+    calcularTasaNoShow: jest.fn(),
     obtenerActual: jest.fn().mockResolvedValue(opciones?.turnoActual === undefined ? turnoReservado : opciones.turnoActual),
     cancelar: jest
       .fn()
@@ -40,6 +43,7 @@ function crearFakes(opciones?: { turnoActual?: TurnoActual | null; cancelarDevue
   };
   const repositorioNotificaciones: jest.Mocked<INotificacionesRepositorio> = {
     crear: jest.fn().mockResolvedValue(undefined),
+    existePorReferencia: jest.fn(),
     listarPorUsuario: jest.fn(),
     marcarComoLeida: jest.fn(),
   };

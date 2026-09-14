@@ -160,7 +160,7 @@ CREATE TABLE notificaciones (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   usuario_id UUID NOT NULL REFERENCES usuarios(id),
   tipo TEXT NOT NULL CHECK (tipo IN
-    ('reporte_coincidente','turno_confirmado','turno_cancelado','verificacion_resuelta')),
+    ('reporte_coincidente','turno_confirmado','turno_cancelado','verificacion_resuelta','colaboracion_propuesta','turno_recordatorio')),
   referencia_tabla TEXT NOT NULL,
   referencia_id UUID NOT NULL,
   leido BOOLEAN NOT NULL DEFAULT false,
@@ -370,6 +370,13 @@ CREATE TABLE colaboraciones (
 );
 CREATE INDEX ix_colaboraciones_solicitud ON colaboraciones (solicitud_id);
 CREATE INDEX ix_colaboraciones_stakeholder ON colaboraciones (stakeholder_id);
+-- Evita que el mismo stakeholder se ofrezca dos veces sobre la misma
+-- solicitud (PEA-RED-002). Mismo criterio que ux_autorizacion_activa:
+-- OfrecerseComoColaboradorCommand.ts ya hace el chequeo de aplicación
+-- (existePropuestaDe) antes del INSERT; este índice queda documentado como
+-- la defensa de base de datos equivalente, todavía no migrada.
+CREATE UNIQUE INDEX ux_colaboraciones_solicitud_stakeholder
+  ON colaboraciones (solicitud_id, stakeholder_id) WHERE deleted_at IS NULL;
 
 -- Hilo de coordinación con historial persistente ("Coordinar el seguimiento
 -- de una colaboración aceptada en un hilo dedicado, con historial

@@ -104,6 +104,18 @@ class RepositorioTurnosEnMemoria implements IRepositorioTurnos {
   async listarReservadosPorProveedor() {
     return { items: [], total: 0, pagina: 1, porPagina: 50 };
   }
+
+  async listarReservadosEnVentana(): Promise<never[]> {
+    return [];
+  }
+
+  async actualizarAsistio(): Promise<null> {
+    return null;
+  }
+
+  async calcularTasaNoShow() {
+    return { totalConcluidos: 0, totalNoShow: 0, tasa: 0 };
+  }
 }
 
 function crearRequest(body: unknown): NextRequest {

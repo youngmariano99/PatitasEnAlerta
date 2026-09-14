@@ -17,6 +17,9 @@ function crearFakes(pagina: PaginaTurnosReservadosVeterinario) {
     reprogramar: jest.fn(),
     listarFranjasExistentes: jest.fn(),
     listarReservadosPorProveedor: jest.fn().mockResolvedValue(pagina),
+    listarReservadosEnVentana: jest.fn(),
+    actualizarAsistio: jest.fn(),
+    calcularTasaNoShow: jest.fn(),
   };
   return { repositorioTurnos };
 }

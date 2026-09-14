@@ -79,10 +79,26 @@ class RepositorioTurnosEnMemoria implements IRepositorioTurnos {
   async listarReservadosPorProveedor() {
     return { items: [], total: 0, pagina: 1, porPagina: 50 };
   }
+
+  async listarReservadosEnVentana(): Promise<never[]> {
+    return [];
+  }
+
+  async actualizarAsistio(): Promise<null> {
+    return null;
+  }
+
+  async calcularTasaNoShow() {
+    return { totalConcluidos: 0, totalNoShow: 0, tasa: 0 };
+  }
 }
 
 class RepositorioNotificacionesFalso implements INotificacionesRepositorio {
   public creadas: DatosNotificacion[] = [];
+
+  async existePorReferencia(): Promise<boolean> {
+    return false;
+  }
 
   async crear(datos: DatosNotificacion): Promise<void> {
     this.creadas.push(datos);
