@@ -32,6 +32,8 @@ function crearFakes(opciones?: { actual?: ColaboracionActual | null }) {
       estadoAnterior: actual?.estado,
     })),
     listarHistorialEstado: jest.fn(),
+    existePropuestaDe: jest.fn(),
+    crear: jest.fn(),
   };
   return { repositorioColaboraciones };
 }

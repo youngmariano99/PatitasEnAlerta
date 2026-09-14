@@ -3,6 +3,8 @@ import { prisma } from '@infraestructura/adaptadores/prisma-client';
 import type {
   ColaboracionActual,
   ColaboracionEstadoActualizado,
+  ColaboracionPropuesta,
+  DatosNuevaColaboracion,
   HistorialEstadoColaboracionItem,
   IRepositorioColaboraciones,
 } from '@dominio/puertos/IRepositorioColaboraciones';
@@ -67,5 +69,37 @@ export class PrismaColaboracionesRepositorio implements IRepositorioColaboracion
       select: { id: true, estadoAnterior: true, estadoNuevo: true, usuarioId: true, registradoEn: true },
     });
     return filas;
+  }
+
+  async existePropuestaDe(solicitudId: string, stakeholderId: string): Promise<boolean> {
+    const existente = await prisma.colaboracion.findFirst({
+      where: { solicitudId, stakeholderId, deletedAt: null },
+      select: { id: true },
+    });
+    return existente !== null;
+  }
+
+  async crear(datos: DatosNuevaColaboracion): Promise<ColaboracionPropuesta> {
+    const creada = await prisma.colaboracion.create({
+      data: { solicitudId: datos.solicitudId, stakeholderId: datos.stakeholderId },
+      select: { id: true, solicitudId: true, stakeholderId: true, estado: true, createdAt: true },
+    });
+
+    // Misma resolución en dos consultas secuenciales que obtenerActual() de
+    // acá arriba — sin relación Prisma Colaboracion→SolicitudRecurso
+    // (docs/DECISIONES.md, decisión "Vista de seguimiento de colaboraciones").
+    const solicitud = await prisma.solicitudRecurso.findUniqueOrThrow({
+      where: { id: creada.solicitudId },
+      select: { organizacionId: true },
+    });
+
+    return {
+      id: creada.id,
+      solicitudId: creada.solicitudId,
+      stakeholderId: creada.stakeholderId,
+      organizacionId: solicitud.organizacionId,
+      estado: creada.estado,
+      createdAt: creada.createdAt,
+    };
   }
 }

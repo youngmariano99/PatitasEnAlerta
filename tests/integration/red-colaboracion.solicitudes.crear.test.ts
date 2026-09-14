@@ -29,6 +29,10 @@ class RepositorioSolicitudesFalso implements IRepositorioSolicitudesRecurso {
       new Date('2026-09-09T09:00:00.000Z'),
     );
   }
+
+  async obtenerActual(): Promise<never> {
+    throw new Error('no usado en este test');
+  }
 }
 
 class RepositorioPerfilFalso implements IRepositorioPerfil {
