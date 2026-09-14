@@ -21,6 +21,7 @@ const RUTAS_PAGINA_PROTEGIDAS = [
   '/turnos',
   '/admin',
   '/reportes/nuevo',
+  '/red-colaboracion',
 ];
 
 // Coincidencia EXACTA (no por prefijo) de páginas públicas dentro de un

@@ -119,7 +119,16 @@ describe('middleware — expiración automática de sesión', () => {
   });
 
   describe('páginas protegidas (verificación técnica: 100% de las rutas privadas del sitemap)', () => {
-    it.each(['/panel', '/mascotas', '/municipio', '/veterinario', '/turnos', '/admin/verificaciones', '/admin/auditoria'])(
+    it.each([
+      '/panel',
+      '/mascotas',
+      '/municipio',
+      '/veterinario',
+      '/turnos',
+      '/admin/verificaciones',
+      '/admin/auditoria',
+      '/red-colaboracion/metricas',
+    ])(
       'redirige a /auth/login conservando la ruta de origen en %s cuando la sesión venció',
       async (ruta) => {
         getUserMock.mockResolvedValue({ data: { user: null }, error: { message: 'jwt expired' } });

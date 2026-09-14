@@ -13,3 +13,4 @@
 | 9 | Búsqueda híbrida de reportes por similitud semántica | Backend | Búsqueda híbrida con pgvector sobre descripcion_embedding (Post-MVP, Módulo 5/9) |
 | 10 | Registro de rescatista/activista vía Abstract Factory de formularios | Backend | Alta de usuario con rol rescatista vía Abstract Factory de formularios (Post-MVP, Módulo 5) |
 | 11 | Ofrecimiento como colaborador sobre una solicitud de recurso | Backend | Comando OfrecerseComoColaboradorCommand (Post-MVP, Módulo 5) |
+| 12 | Métricas personales de contribución | Backend-Frontend | Endpoint de métricas propias sin comparación pública (Post-MVP, Módulo 5) |

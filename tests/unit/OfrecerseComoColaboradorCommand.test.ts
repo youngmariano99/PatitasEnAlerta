@@ -47,6 +47,7 @@ function crearFakes(opciones?: {
       estado: 'propuesta',
       createdAt: new Date('2026-09-14T10:00:00.000Z'),
     })) as jest.MockedFunction<IRepositorioColaboraciones['crear']>,
+    obtenerMetricasPropias: jest.fn(),
   };
   const repositorioSolicitudes: jest.Mocked<IRepositorioSolicitudesRecurso> = {
     crear: jest.fn(),
