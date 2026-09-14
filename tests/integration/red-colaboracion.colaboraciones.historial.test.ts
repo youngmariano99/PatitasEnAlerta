@@ -38,6 +38,14 @@ class RepositorioColaboracionesFalso implements IRepositorioColaboraciones {
   async listarHistorialEstado(): Promise<HistorialEstadoColaboracionItem[]> {
     return HISTORIAL;
   }
+
+  async existePropuestaDe(): Promise<boolean> {
+    throw new Error('no usado en este test');
+  }
+
+  async crear(): Promise<never> {
+    throw new Error('no usado en este test');
+  }
 }
 
 class RepositorioPerfilFalso implements IRepositorioPerfil {

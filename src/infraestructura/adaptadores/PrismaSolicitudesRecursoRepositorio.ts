@@ -1,6 +1,10 @@
 import { injectable } from 'tsyringe';
 import { prisma } from '@infraestructura/adaptadores/prisma-client';
-import type { DatosNuevaSolicitudRecurso, IRepositorioSolicitudesRecurso } from '@dominio/puertos/IRepositorioSolicitudesRecurso';
+import type {
+  DatosNuevaSolicitudRecurso,
+  IRepositorioSolicitudesRecurso,
+  SolicitudActual,
+} from '@dominio/puertos/IRepositorioSolicitudesRecurso';
 import type { DatosSolicitudRecurso } from '@dominio/entidades/SolicitudRecurso';
 import { SolicitudRecurso } from '@dominio/entidades/SolicitudRecurso';
 
@@ -35,5 +39,13 @@ export class PrismaSolicitudesRecursoRepositorio implements IRepositorioSolicitu
       estado: creada.estado,
     };
     return SolicitudRecurso.reconstruir(creada.id, entidad, creada.createdAt);
+  }
+
+  async obtenerActual(solicitudId: string): Promise<SolicitudActual | null> {
+    const solicitud = await prisma.solicitudRecurso.findFirst({
+      where: { id: solicitudId, deletedAt: null },
+      select: { estado: true, organizacionId: true },
+    });
+    return solicitud;
   }
 }

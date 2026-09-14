@@ -29,14 +29,27 @@ export interface HistorialEstadoColaboracionItem {
   registradoEn: Date;
 }
 
+export interface DatosNuevaColaboracion {
+  solicitudId: string;
+  stakeholderId: string;
+}
+
+/** Resultado de un ofrecimiento exitoso — ver OfrecerseComoColaboradorCommand.ts. */
+export interface ColaboracionPropuesta {
+  id: string;
+  solicitudId: string;
+  stakeholderId: string;
+  /** organizacion_id dueña de la solicitud asociada — a quién se notifica el ofrecimiento. */
+  organizacionId: string;
+  estado: string;
+  createdAt: Date;
+}
+
 /**
  * Puerto hacia `colaboraciones` (Módulo 5 — Red de Colaboración, Post-MVP).
- * `ActualizarEstadoColaboracionCommand` y `ListarHistorialColaboracion`
- * dependen únicamente de esta abstracción, nunca de Prisma directamente —
- * mismo criterio que `IRepositorioReportes`. Alcance acotado a esta
- * actividad ("hilo de coordinación... con historial persistente"): el alta
- * de una colaboración (CR(p) de rescatista/veterinario, `docs/ROLES.md`)
- * queda para el ticket que implemente esa historia puntual.
+ * `ActualizarEstadoColaboracionCommand`, `ListarHistorialColaboracion` y
+ * `OfrecerseComoColaboradorCommand` dependen únicamente de esta abstracción,
+ * nunca de Prisma directamente — mismo criterio que `IRepositorioReportes`.
  */
 export interface IRepositorioColaboraciones {
   /** `null` si no existe o está soft-deleted. */
@@ -45,4 +58,16 @@ export interface IRepositorioColaboraciones {
   actualizarEstado(colaboracionId: string, estadoNuevo: string, actualizadoPor: string): Promise<ColaboracionEstadoActualizado>;
   /** Historial completo de transiciones, ordenado cronológicamente por `registrado_en` (ascendente). */
   listarHistorialEstado(colaboracionId: string): Promise<HistorialEstadoColaboracionItem[]>;
+  /**
+   * true si ya existe una colaboración no soft-deleted del mismo
+   * `stakeholderId` sobre la misma `solicitudId` (docs/ERRORS.md
+   * PEA-RED-002) — chequeo de aplicación previo al INSERT, mismo criterio
+   * que `IRepositorioAutorizacionesLibreta.obtenerActual` en
+   * `AutorizarVeterinario.ts` (PEA-VET-009): la unicidad real queda
+   * documentada como índice único en docs/SCHEMA.md, no forzada todavía a
+   * nivel de base de datos.
+   */
+  existePropuestaDe(solicitudId: string, stakeholderId: string): Promise<boolean>;
+  /** INSERT en `colaboraciones` con estado inicial 'propuesta'. */
+  crear(datos: DatosNuevaColaboracion): Promise<ColaboracionPropuesta>;
 }
