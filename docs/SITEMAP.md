@@ -3,7 +3,7 @@
 ```
 /auth
  ├─ /login
- ├─ /registro                     (Dueño de mascota | Veterinario)
+ ├─ /registro                     (Dueño de mascota | Veterinario — UI actual; POST /api/auth/registro ya acepta rol=rescatista, PerfilFormularioFactory.crear('rescatista'), pendiente exponer el selector en esta página)
  └─ /recuperar-password
      └─ /recuperar-password/nueva  (define la nueva contraseña; requiere el enlace de un solo uso enviado por Supabase Auth)
 

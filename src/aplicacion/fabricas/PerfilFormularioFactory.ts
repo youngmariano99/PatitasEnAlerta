@@ -2,8 +2,9 @@ import type { z } from 'zod';
 import { RegistrarDuenoSchema } from '@aplicacion/dtos/auth/RegistrarDuenoDto';
 import { RegistrarVeterinarioSchema } from '@aplicacion/dtos/auth/RegistrarVeterinarioDto';
 import { CrearCuentaMunicipioSchema } from '@aplicacion/dtos/auth/CrearCuentaMunicipioDto';
+import { RegistrarRescatistaSchema } from '@aplicacion/dtos/auth/RegistrarRescatistaDto';
 
-export type RolFormularioPerfil = 'dueño' | 'veterinario' | 'municipio';
+export type RolFormularioPerfil = 'dueño' | 'veterinario' | 'municipio' | 'rescatista';
 
 /**
  * Abstract Factory (PLANIFICACION.md Sección 4.2): una fábrica concreta por
@@ -38,11 +39,22 @@ class FabricaFormularioMunicipio implements IFabricaFormularioPerfil {
   }
 }
 
+class FabricaFormularioRescatista implements IFabricaFormularioPerfil {
+  crearEsquema(): z.ZodTypeAny {
+    // Rescatista/Activista (docs/ROLES.md, Módulo 5): autoregistro sin
+    // perfil adicional y sin verificación profesional obligatoria — el
+    // esquema más simple de los cuatro, mismos campos que dueño
+    // (email + password), sin matrícula/colegioEmisor ni nombreInstitucional.
+    return RegistrarRescatistaSchema;
+  }
+}
+
 export class PerfilFormularioFactory {
   private static readonly fabricas: Record<RolFormularioPerfil, IFabricaFormularioPerfil> = {
     'dueño': new FabricaFormularioDueño(),
     veterinario: new FabricaFormularioVeterinario(),
     municipio: new FabricaFormularioMunicipio(),
+    rescatista: new FabricaFormularioRescatista(),
   };
 
   static crear(rol: RolFormularioPerfil): z.ZodTypeAny {

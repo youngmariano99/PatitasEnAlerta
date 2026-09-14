@@ -48,7 +48,7 @@ export class RegistrarUsuario extends CasoDeUsoBase<RegistrarDuenoDto, UsuarioRe
     });
 
     try {
-      const usuario = Usuario.registrarDueño(credenciales.id, dato.email);
+      const usuario = this.crearEntidad(credenciales.id, dato.email);
       const usuarioCreado = await this.repositorioUsuarios.crear(usuario);
       return { id: usuarioCreado.id, email: usuarioCreado.email, rolId: usuarioCreado.rolId };
     } catch (error) {
@@ -59,6 +59,16 @@ export class RegistrarUsuario extends CasoDeUsoBase<RegistrarDuenoDto, UsuarioRe
       }
       throw error;
     }
+  }
+
+  /**
+   * Hook del Template Method (Sección 4.2 PLANIFICACION.md): qué entidad de
+   * dominio se crea al persistir. RegistrarRescatista.ts lo sobrescribe para
+   * reutilizar todo este caso de uso (validar/autorizar/persistir/rollback)
+   * cambiando únicamente el rol_id asignado — nunca duplica esta clase.
+   */
+  protected crearEntidad(id: string, email: string): Usuario {
+    return Usuario.registrarDueño(id, email);
   }
 
   /**
