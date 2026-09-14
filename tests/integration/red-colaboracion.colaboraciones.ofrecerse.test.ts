@@ -68,6 +68,10 @@ class RepositorioColaboracionesFalso implements IRepositorioColaboraciones {
       createdAt: new Date('2026-09-14T10:00:00.000Z'),
     };
   }
+
+  async obtenerMetricasPropias(): Promise<never> {
+    throw new Error('no usado en este test');
+  }
 }
 
 class RepositorioPerfilFalso implements IRepositorioPerfil {

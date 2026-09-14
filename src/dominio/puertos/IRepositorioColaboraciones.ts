@@ -46,10 +46,25 @@ export interface ColaboracionPropuesta {
 }
 
 /**
+ * Métricas agregadas de las colaboraciones completadas de UN stakeholder
+ * puntual — ver ObtenerMetricasPropias.ts. `porTipo` desglosa por
+ * `solicitudes_recurso.tipo` (docs/SCHEMA.md: 'transito'|'insumos'|
+ * 'asistencia_veterinaria'|'adopcion'). Deliberadamente sin ningún campo
+ * comparativo entre usuarios (ranking, promedio general, percentil) —
+ * docs/REQUISITOS.md: "sin exposición pública comparativa frente a otros
+ * usuarios".
+ */
+export interface MetricasColaboracionPropias {
+  totalCompletadas: number;
+  porTipo: Record<string, number>;
+}
+
+/**
  * Puerto hacia `colaboraciones` (Módulo 5 — Red de Colaboración, Post-MVP).
- * `ActualizarEstadoColaboracionCommand`, `ListarHistorialColaboracion` y
- * `OfrecerseComoColaboradorCommand` dependen únicamente de esta abstracción,
- * nunca de Prisma directamente — mismo criterio que `IRepositorioReportes`.
+ * `ActualizarEstadoColaboracionCommand`, `ListarHistorialColaboracion`,
+ * `OfrecerseComoColaboradorCommand` y `ObtenerMetricasPropias` dependen
+ * únicamente de esta abstracción, nunca de Prisma directamente — mismo
+ * criterio que `IRepositorioReportes`.
  */
 export interface IRepositorioColaboraciones {
   /** `null` si no existe o está soft-deleted. */
@@ -70,4 +85,11 @@ export interface IRepositorioColaboraciones {
   existePropuestaDe(solicitudId: string, stakeholderId: string): Promise<boolean>;
   /** INSERT en `colaboraciones` con estado inicial 'propuesta'. */
   crear(datos: DatosNuevaColaboracion): Promise<ColaboracionPropuesta>;
+  /**
+   * Agrega SIEMPRE filtrado por `stakeholder_id = stakeholderId` — nunca
+   * expone filas de otro usuario (verificación técnica del ticket "Métricas
+   * personales de contribución"). Solo colaboraciones no soft-deleted con
+   * `estado = 'completada'`.
+   */
+  obtenerMetricasPropias(stakeholderId: string): Promise<MetricasColaboracionPropias>;
 }

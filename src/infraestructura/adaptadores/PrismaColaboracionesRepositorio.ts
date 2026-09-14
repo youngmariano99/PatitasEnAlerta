@@ -7,6 +7,7 @@ import type {
   DatosNuevaColaboracion,
   HistorialEstadoColaboracionItem,
   IRepositorioColaboraciones,
+  MetricasColaboracionPropias,
 } from '@dominio/puertos/IRepositorioColaboraciones';
 
 @injectable()
@@ -101,5 +102,34 @@ export class PrismaColaboracionesRepositorio implements IRepositorioColaboracion
       estado: creada.estado,
       createdAt: creada.createdAt,
     };
+  }
+
+  async obtenerMetricasPropias(stakeholderId: string): Promise<MetricasColaboracionPropias> {
+    // Filtro por stakeholder_id SIEMPRE presente en el WHERE — verificación
+    // técnica del ticket "Métricas personales de contribución": nunca hay
+    // forma de que esta consulta devuelva filas de otro usuario.
+    const completadas = await prisma.colaboracion.findMany({
+      where: { stakeholderId, estado: 'completada', deletedAt: null },
+      select: { solicitudId: true },
+    });
+    if (completadas.length === 0) {
+      return { totalCompletadas: 0, porTipo: {} };
+    }
+
+    // Mismo criterio de dos consultas secuenciales que obtenerActual()/crear()
+    // de acá arriba — sin relación Prisma Colaboracion→SolicitudRecurso.
+    const solicitudes = await prisma.solicitudRecurso.findMany({
+      where: { id: { in: completadas.map((c) => c.solicitudId) } },
+      select: { id: true, tipo: true },
+    });
+    const tipoPorSolicitud = new Map(solicitudes.map((s) => [s.id, s.tipo]));
+
+    const porTipo: Record<string, number> = {};
+    for (const { solicitudId } of completadas) {
+      const tipo = tipoPorSolicitud.get(solicitudId) ?? 'desconocido';
+      porTipo[tipo] = (porTipo[tipo] ?? 0) + 1;
+    }
+
+    return { totalCompletadas: completadas.length, porTipo };
   }
 }

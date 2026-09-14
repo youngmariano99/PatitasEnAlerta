@@ -47,6 +47,10 @@ class RepositorioColaboracionesFalso implements IRepositorioColaboraciones {
   async crear(): Promise<never> {
     throw new Error('no usado en este test');
   }
+
+  async obtenerMetricasPropias(): Promise<never> {
+    throw new Error('no usado en este test');
+  }
 }
 
 function autenticarComo(usuarioId: string | null) {
