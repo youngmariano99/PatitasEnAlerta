@@ -80,6 +80,7 @@
 | PEA-VETADV-003 | No podés compartir el historial con vos mismo/a. | Aplicación (`CHECK veterinario_origen ≠ destino`) — 400 | Deshabilitar la opción del propio usuario en el selector de destino. |
 | PEA-VETADV-004 | Este pedido ya no se puede cancelar en su estado actual. | Dominio (máquina de estados `pedidos_producto`) — 409 | Mostrar el estado actual del pedido y las acciones realmente disponibles. |
 | PEA-VETADV-005 | Todavía no terminó ese turno — vas a poder marcar la asistencia una vez que concluya. | Dominio (`turnos.franja_fin > now()`) — 409 | Ocultar el control de "marcar asistencia" hasta que `franja_fin` haya pasado; mostrar cuánto falta. |
+| PEA-VETADV-006 | No encontramos ese historial compartido o ya no está activo. | Dominio (no encontrado / ya revocado) — 404 | Refrescar el listado de historiales compartidos de la mascota. |
 
 ## Módulo 7 (Post-MVP) — Marketplace de Comerciantes
 
