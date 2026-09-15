@@ -25,6 +25,7 @@ import type { IRepositorioPedidosProducto } from '@dominio/puertos/IRepositorioP
 import type { IRepositorioHistorialesCompartidos } from '@dominio/puertos/IRepositorioHistorialesCompartidos';
 import type { IRepositorioComercios } from '@dominio/puertos/IRepositorioComercios';
 import type { IRepositorioProductosComercio } from '@dominio/puertos/IRepositorioProductosComercio';
+import type { IRepositorioCursos } from '@dominio/puertos/IRepositorioCursos';
 import type { FuenteDisponibilidadEvento, FuenteDisponibilidadVeterinario, ProveedorTurnera } from '@dominio/estrategias/ProveedorTurnera';
 import type { IControlDeTasa } from '@dominio/puertos/IControlDeTasa';
 import type { IControlDeTasaConReintento } from '@dominio/puertos/IControlDeTasaConReintento';
@@ -54,6 +55,7 @@ import { PrismaPedidosProductoRepositorio } from '@infraestructura/adaptadores/P
 import { PrismaHistorialesCompartidosRepositorio } from '@infraestructura/adaptadores/PrismaHistorialesCompartidosRepositorio';
 import { PrismaComercioRepositorio } from '@infraestructura/adaptadores/PrismaComercioRepositorio';
 import { PrismaProductosComercioRepositorio } from '@infraestructura/adaptadores/PrismaProductosComercioRepositorio';
+import { PrismaCursosRepositorio } from '@infraestructura/adaptadores/PrismaCursosRepositorio';
 import { TurneraMunicipio, TurneraVeterinario } from '@dominio/estrategias/ProveedorTurnera';
 import { UpstashControlDeTasa } from '@infraestructura/adaptadores/UpstashControlDeTasa';
 import { UpstashControlDeTasaAntiSaturacion } from '@infraestructura/adaptadores/UpstashControlDeTasaAntiSaturacion';
@@ -107,6 +109,7 @@ container.registerSingleton<IRepositorioHistorialesCompartidos>(
 );
 container.registerSingleton<IRepositorioComercios>('IRepositorioComercios', PrismaComercioRepositorio);
 container.registerSingleton<IRepositorioProductosComercio>('IRepositorioProductosComercio', PrismaProductosComercioRepositorio);
+container.registerSingleton<IRepositorioCursos>('IRepositorioCursos', PrismaCursosRepositorio);
 container.registerSingleton<ProveedorTurnera<FuenteDisponibilidadEvento>>('ProveedorTurneraMunicipio', TurneraMunicipio);
 container.registerSingleton<ProveedorTurnera<FuenteDisponibilidadVeterinario>>('ProveedorTurneraVeterinario', TurneraVeterinario);
 container.registerSingleton<IControlDeTasa>('IControlDeTasa', UpstashControlDeTasa);
