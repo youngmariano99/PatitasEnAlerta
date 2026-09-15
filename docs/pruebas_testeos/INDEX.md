@@ -18,3 +18,4 @@
 | 14 | Recordatorios de turnos próximos con seguimiento de no-show | Backend | Job de recordatorios sobre turnos próximos con seguimiento de no-show (Post-MVP, Módulo 6) |
 | 15 | CRUD de productos_veterinario y generación de pedidos | Backend | CRUD de productos_veterinario y comando GenerarPedidoCommand (Post-MVP, Módulo 6) |
 | 16 | CRUD de historiales_compartidos con autorización explícita y revocable | Backend | CRUD de historiales_compartidos con autorización explícita y revocable (Post-MVP, Módulo 6) |
+| 17 | Alta de comercio sujeta a verificación | Backend | Alta de comercio sujeta a verificación (Post-MVP, Módulo 7) |
