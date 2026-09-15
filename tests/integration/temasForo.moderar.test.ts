@@ -55,6 +55,14 @@ class RepositorioTemasForoFalso implements IRepositorioTemasForo {
     this.temas.set(id, { ...tema, moderado: true });
     return true;
   }
+
+  async listar(): Promise<never> {
+    throw new Error('no usado en este test');
+  }
+
+  async listarRespuestas(): Promise<never> {
+    throw new Error('no usado en este test');
+  }
 }
 
 class RepositorioPerfilFalso implements IRepositorioPerfil {

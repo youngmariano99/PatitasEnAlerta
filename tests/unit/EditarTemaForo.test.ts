@@ -29,6 +29,8 @@ function crearFakes(opciones?: { actual?: TemaForoActual | null }) {
     obtenerActual: jest.fn().mockResolvedValue(opciones?.actual === undefined ? crearTemaActual() : opciones.actual),
     actualizar: jest.fn().mockResolvedValue(temaActualizado),
     moderar: jest.fn(),
+    listar: jest.fn(),
+    listarRespuestas: jest.fn(),
   };
   return { repositorioTemas, temaActualizado };
 }

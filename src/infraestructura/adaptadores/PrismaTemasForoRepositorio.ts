@@ -1,11 +1,26 @@
 import { injectable } from 'tsyringe';
 import { prisma } from '@infraestructura/adaptadores/prisma-client';
-import type { DatosTemaForo, IRepositorioTemasForo, TemaForo, TemaForoActual } from '@dominio/puertos/IRepositorioTemasForo';
+import type {
+  DatosTemaForo,
+  IRepositorioTemasForo,
+  PaginaTemasForo,
+  RespuestaForo,
+  TemaForo,
+  TemaForoActual,
+} from '@dominio/puertos/IRepositorioTemasForo';
 
 const SELECT_TEMA = {
   id: true,
   creadoPor: true,
   titulo: true,
+  contenido: true,
+  createdAt: true,
+} as const;
+
+const SELECT_RESPUESTA = {
+  id: true,
+  temaId: true,
+  usuarioId: true,
   contenido: true,
   createdAt: true,
 } as const;
@@ -46,5 +61,31 @@ export class PrismaTemasForoRepositorio implements IRepositorioTemasForo {
       data: { deletedAt: new Date() },
     });
     return resultado.count > 0;
+  }
+
+  async listar(pagina: number, porPagina: number): Promise<PaginaTemasForo> {
+    const where = { deletedAt: null };
+
+    const [items, total] = await Promise.all([
+      prisma.temaForo.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (pagina - 1) * porPagina,
+        take: porPagina,
+        select: SELECT_TEMA,
+      }),
+      prisma.temaForo.count({ where }),
+    ]);
+
+    return { items, total, pagina, porPagina };
+  }
+
+  async listarRespuestas(temaId: string): Promise<RespuestaForo[]> {
+    // `ix_respuestas_tema` (docs/SCHEMA.md) cubre exactamente este filtro.
+    return prisma.respuestaForo.findMany({
+      where: { temaId, deletedAt: null },
+      orderBy: { createdAt: 'asc' },
+      select: SELECT_RESPUESTA,
+    });
   }
 }

@@ -20,6 +20,8 @@ function crearFakes(opciones?: { rol?: string; moderaOk?: boolean }) {
     obtenerActual: jest.fn(),
     actualizar: jest.fn(),
     moderar: jest.fn().mockResolvedValue(opciones?.moderaOk ?? true),
+    listar: jest.fn(),
+    listarRespuestas: jest.fn(),
   };
   const repositorioPerfil: jest.Mocked<IRepositorioPerfil> = {
     obtenerPerfilPropio: jest.fn().mockResolvedValue(crearPerfil(opciones?.rol ?? 'administrador')),

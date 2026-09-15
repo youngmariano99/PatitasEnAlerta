@@ -50,6 +50,7 @@ const RUTAS_API_PROTEGIDAS = [
   '/api/veterinarios',
   '/api/red-colaboracion',
   '/api/comercios',
+  '/api/foros-cursos',
 ];
 
 // Excepción de método sobre RUTAS_API_PROTEGIDAS: un GET a estas rutas

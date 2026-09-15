@@ -24,13 +24,34 @@ export interface TemaForoActual {
   moderado: boolean;
 }
 
+/** Proyección de listado — misma forma que `TemaForo`, nombrada aparte para no acoplar el contrato de lectura pública al de alta/edición. */
+export type TemaForoListado = TemaForo;
+
+export interface PaginaTemasForo {
+  items: TemaForoListado[];
+  total: number;
+  pagina: number;
+  porPagina: number;
+}
+
+/** Fila de `respuestas_foro` (docs/SCHEMA.md, Módulo 8). */
+export interface RespuestaForo {
+  id: string;
+  temaId: string;
+  usuarioId: string;
+  contenido: string;
+  createdAt: Date;
+}
+
 /**
- * Puerto hacia `temas_foro` (Módulo 8, Historia "Publicación de contenido
- * educativo en el foro"). Acotado al alta (Paso 1), edición propia con
- * bloqueo post-moderación (Paso 3) y moderación por Administrador (Paso 2)
- * — el listado y `respuestas_foro` quedan para el ticket que implemente esa
- * historia puntual, mismo criterio de entrega incremental que
- * `IRepositorioCursos`.
+ * Puerto hacia `temas_foro`/`respuestas_foro` (Módulo 8, Historia
+ * "Publicación de contenido educativo en el foro" + "Consulta del foro de
+ * bienestar animal"). Acotado al alta (Paso 1), edición propia con bloqueo
+ * post-moderación (Paso 3 de CrearTemaForo), moderación por Administrador
+ * (Paso 2 de CrearTemaForo) y el listado paginado de ambas tablas (este
+ * ticket) — las respuestas al foro (alta de una respuesta) quedan para el
+ * ticket que implemente esa historia puntual, mismo criterio de entrega
+ * incremental que `IRepositorioCursos`.
  */
 export interface IRepositorioTemasForo {
   crear(creadoPor: string, datos: DatosTemaForo): Promise<TemaForo>;
@@ -47,4 +68,10 @@ export interface IRepositorioTemasForo {
 
   /** Soft delete de moderación (Administrador) condicionado a `id + deletedAt IS NULL`. `false` si ninguna fila matchea. */
   moderar(id: string): Promise<boolean>;
+
+  /** Temas activos (`deletedAt IS NULL` — un tema moderado no aparece en el listado público), ordenados por `createdAt` descendente, paginados server-side (Paso 1, tope 50 ya clampeado por `ListarForo`). */
+  listar(pagina: number, porPagina: number): Promise<PaginaTemasForo>;
+
+  /** Respuestas activas de un tema, vía `ix_respuestas_tema` (Paso 2), ordenadas por `createdAt` ascendente (orden cronológico de un hilo). */
+  listarRespuestas(temaId: string): Promise<RespuestaForo[]>;
 }

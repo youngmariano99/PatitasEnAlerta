@@ -24,3 +24,4 @@
 | 20 | UI de búsqueda y mapa de comercios cercanos | Frontend-Backend | UI de búsqueda y mapa de comercios cercanos (Post-MVP, Módulo 7) |
 | 21 | Publicación de cursos de tenencia responsable | Backend | CRUD de cursos restringido a Organización/Municipio (Post-MVP, Módulo 8) |
 | 22 | Publicación y moderación de temas del foro | Backend | Caso de uso CrearTemaForo con moderación de Administrador (Post-MVP, Módulo 8) |
+| 23 | Listado paginado de temas del foro y respuestas por tema | Backend | Endpoint paginado de temas_foro y respuestas_foro (Post-MVP, Módulo 8) |

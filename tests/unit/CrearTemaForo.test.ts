@@ -25,6 +25,8 @@ function crearFakes() {
     obtenerActual: jest.fn(),
     actualizar: jest.fn(),
     moderar: jest.fn(),
+    listar: jest.fn(),
+    listarRespuestas: jest.fn(),
   };
   return { repositorioTemas, temaCreado };
 }
