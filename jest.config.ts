@@ -17,6 +17,16 @@ const config: Config = {
     '^@aplicacion/(.*)$': '<rootDir>/src/aplicacion/$1',
     '^@infraestructura/(.*)$': '<rootDir>/src/infraestructura/$1',
     '^@presentacion/(.*)$': '<rootDir>/src/presentacion/$1',
+    // `isomorphic-dompurify` (Módulo 7, sanitización anti-XSS) recurre a
+    // `jsdom` en tests con `@jest-environment node` (sin `window` global) —
+    // su cadena de dependencias (jsdom -> html-encoding-sniffer ->
+    // @exodus/bytes) se distribuye como ESM puro que Jest no puede
+    // transformar dentro de node_modules (`transformIgnorePatterns` de
+    // next/jest no es sobreescribible de forma aislada). Se reemplaza por un
+    // mock funcionalmente equivalente para el único caso de uso real del
+    // proyecto (`ALLOWED_TAGS: []`, texto plano) — DOMPurify real sigue
+    // corriendo sin cambios en runtime (Next.js/webpack, ajeno a Jest).
+    '^isomorphic-dompurify$': '<rootDir>/tests/mocks/isomorphicDompurifyMock.ts',
   },
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',

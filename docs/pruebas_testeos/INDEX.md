@@ -19,3 +19,4 @@
 | 15 | CRUD de productos_veterinario y generación de pedidos | Backend | CRUD de productos_veterinario y comando GenerarPedidoCommand (Post-MVP, Módulo 6) |
 | 16 | CRUD de historiales_compartidos con autorización explícita y revocable | Backend | CRUD de historiales_compartidos con autorización explícita y revocable (Post-MVP, Módulo 6) |
 | 17 | Alta de comercio sujeta a verificación | Backend | Alta de comercio sujeta a verificación (Post-MVP, Módulo 7) |
+| 18 | CRUD de productos_comercio restringido al comercio propio | Backend | CRUD de productos_comercio restringido al comercio propio (Post-MVP, Módulo 7) |

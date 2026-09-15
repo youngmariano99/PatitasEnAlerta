@@ -89,6 +89,7 @@
 | PEA-COM-001 | Tu comercio todavía está en revisión. Podrás publicar productos una vez verificado. | Middleware (RLS, `estado_verificacion`) — 403 | Mostrar estado de verificación y tiempo estimado. |
 | PEA-COM-002 | Elegí un tipo de comercio válido de la lista. | Aplicación (Zod, `CHECK tipo_comercio`) — 400 | Selección visual, no texto libre. |
 | PEA-COM-003 | No encontramos ese comercio o ya no está disponible. | Dominio (soft delete / no encontrado) — 404 | Volver al directorio de comercios verificados. |
+| PEA-COM-004 | No encontramos ese producto o ya no está disponible. | Dominio (soft delete / no encontrado) — 404 | Volver al catálogo propio del comercio. |
 
 ## Módulo 8 (Post-MVP) — Foros y Cursos de Bienestar Animal
 
