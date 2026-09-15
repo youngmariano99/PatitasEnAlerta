@@ -45,6 +45,7 @@ function crearFakes(opciones?: { rol?: string; comercio?: ComercioPropio | null 
   const repositorioComercios: jest.Mocked<IRepositorioComercios> = {
     crear: jest.fn(),
     obtenerPropio: jest.fn().mockResolvedValue(opciones?.comercio === undefined ? crearComercioPropio() : opciones.comercio),
+    listarVerificados: jest.fn(),
   };
   const repositorioPerfil: jest.Mocked<IRepositorioPerfil> = {
     obtenerPerfilPropio: jest.fn().mockResolvedValue(crearPerfil(opciones?.rol ?? 'comerciante')),

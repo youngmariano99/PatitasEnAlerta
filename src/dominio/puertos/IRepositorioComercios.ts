@@ -1,3 +1,5 @@
+import type { FiltroZona } from '@dominio/puertos/IRepositorioReportes';
+
 export interface DatosComercio {
   nombreComercio: string;
   tipoComercio: string;
@@ -36,4 +38,15 @@ export interface IRepositorioComercios {
 
   /** El comercio del usuario autenticado, exista o no. `null` si nunca registró uno (o fue soft-deleted, si se agrega esa baja en el futuro). */
   obtenerPropio(usuarioId: string): Promise<ComercioPropio | null>;
+
+  /**
+   * Comercios con `estado_verificacion = 'verificado'` (Módulo 7, "Endpoint
+   * público de comercios verificados por proximidad"), opcionalmente
+   * acotados a un bounding box (`zona`, sobre `ix_comercios_geo`). Devuelve
+   * SIEMPRE el conjunto completo que matchea (sin paginar ni ordenar acá):
+   * el Paso 3 del ticket exige que el orden por distancia se calcule en la
+   * capa de aplicación — `ListarComerciosCercanos.ts` pagina sobre el
+   * resultado ya ordenado, no sobre esta consulta.
+   */
+  listarVerificados(zona?: FiltroZona): Promise<Comercio[]>;
 }

@@ -47,6 +47,10 @@ class RepositorioComerciosFalso implements IRepositorioComercios {
   async obtenerPropio(): Promise<never> {
     throw new Error('no usado en este test');
   }
+
+  async listarVerificados(): Promise<never> {
+    throw new Error('no usado en este test');
+  }
 }
 
 class RepositorioPerfilFalso implements IRepositorioPerfil {

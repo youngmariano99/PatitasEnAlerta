@@ -131,7 +131,7 @@ CREATE POLICY mascotas_propio ON mascotas FOR ALL
 ```
 
 ### 3.3 Patrón B — Lectura pública + escritura restringida al emisor
-*Aplica a: `reportes`, `eventos`, `vitrina_adopcion`, `productos_comercio`, `cursos`, `temas_foro`/`respuestas_foro`*
+*Aplica a: `reportes`, `eventos`, `vitrina_adopcion`, `productos_comercio`, `cursos`, `temas_foro`/`respuestas_foro`, `comercios` (lectura de verificados)*
 
 ```sql
 ALTER TABLE reportes ENABLE ROW LEVEL SECURITY;
@@ -161,6 +161,19 @@ CREATE POLICY vitrina_crud_municipio ON vitrina_adopcion FOR ALL
   WITH CHECK (municipio_id = auth.uid());
 
 GRANT SELECT ON vitrina_adopcion TO anon;
+```
+
+```sql
+-- comercios: escritura sigue siendo Patrón A (3.2) — esta política cubre
+-- únicamente la lectura pública de comercios verificados (Módulo 7,
+-- "Endpoint público de comercios verificados por proximidad"). El propio
+-- comerciante siempre ve su comercio, esté o no verificado.
+ALTER TABLE comercios ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY comercios_select_publico ON comercios FOR SELECT
+  USING (estado_verificacion = 'verificado' OR usuario_id = auth.uid() OR rol_actual() = 'administrador');
+
+GRANT SELECT ON comercios TO anon;
 ```
 
 ### 3.4 Patrón C — Recurso compartido por autorización explícita del dueño
@@ -236,7 +249,7 @@ CREATE POLICY verificaciones_resolver_admin ON verificaciones FOR UPDATE
 |---|---|
 | usuarios | A (con reglas propias de alta institucional — ver 3.1 extendido para `municipio`) |
 | mascotas, perfiles_veterinario, perfiles_municipio, disponibilidad_veterinario, cuestionarios_adoptante | A |
-| reportes, eventos, vitrina_adopcion, productos_comercio, productos_veterinario (lectura), cursos, temas_foro, respuestas_foro | B |
+| reportes, eventos, vitrina_adopcion, productos_comercio, productos_veterinario (lectura), cursos, temas_foro, respuestas_foro, comercios (lectura de verificados) | B |
 | entradas_libreta_sanitaria, autorizaciones_libreta, historiales_compartidos | C |
 | turnos, colaboraciones, pedidos_producto, solicitudes_recurso, inscripciones_curso | D |
 | verificaciones, comercios (verificación) | E |
