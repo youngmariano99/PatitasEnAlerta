@@ -26,6 +26,7 @@ import type { IRepositorioHistorialesCompartidos } from '@dominio/puertos/IRepos
 import type { IRepositorioComercios } from '@dominio/puertos/IRepositorioComercios';
 import type { IRepositorioProductosComercio } from '@dominio/puertos/IRepositorioProductosComercio';
 import type { IRepositorioCursos } from '@dominio/puertos/IRepositorioCursos';
+import type { IRepositorioTemasForo } from '@dominio/puertos/IRepositorioTemasForo';
 import type { FuenteDisponibilidadEvento, FuenteDisponibilidadVeterinario, ProveedorTurnera } from '@dominio/estrategias/ProveedorTurnera';
 import type { IControlDeTasa } from '@dominio/puertos/IControlDeTasa';
 import type { IControlDeTasaConReintento } from '@dominio/puertos/IControlDeTasaConReintento';
@@ -56,6 +57,7 @@ import { PrismaHistorialesCompartidosRepositorio } from '@infraestructura/adapta
 import { PrismaComercioRepositorio } from '@infraestructura/adaptadores/PrismaComercioRepositorio';
 import { PrismaProductosComercioRepositorio } from '@infraestructura/adaptadores/PrismaProductosComercioRepositorio';
 import { PrismaCursosRepositorio } from '@infraestructura/adaptadores/PrismaCursosRepositorio';
+import { PrismaTemasForoRepositorio } from '@infraestructura/adaptadores/PrismaTemasForoRepositorio';
 import { TurneraMunicipio, TurneraVeterinario } from '@dominio/estrategias/ProveedorTurnera';
 import { UpstashControlDeTasa } from '@infraestructura/adaptadores/UpstashControlDeTasa';
 import { UpstashControlDeTasaAntiSaturacion } from '@infraestructura/adaptadores/UpstashControlDeTasaAntiSaturacion';
@@ -110,6 +112,7 @@ container.registerSingleton<IRepositorioHistorialesCompartidos>(
 container.registerSingleton<IRepositorioComercios>('IRepositorioComercios', PrismaComercioRepositorio);
 container.registerSingleton<IRepositorioProductosComercio>('IRepositorioProductosComercio', PrismaProductosComercioRepositorio);
 container.registerSingleton<IRepositorioCursos>('IRepositorioCursos', PrismaCursosRepositorio);
+container.registerSingleton<IRepositorioTemasForo>('IRepositorioTemasForo', PrismaTemasForoRepositorio);
 container.registerSingleton<ProveedorTurnera<FuenteDisponibilidadEvento>>('ProveedorTurneraMunicipio', TurneraMunicipio);
 container.registerSingleton<ProveedorTurnera<FuenteDisponibilidadVeterinario>>('ProveedorTurneraVeterinario', TurneraVeterinario);
 container.registerSingleton<IControlDeTasa>('IControlDeTasa', UpstashControlDeTasa);

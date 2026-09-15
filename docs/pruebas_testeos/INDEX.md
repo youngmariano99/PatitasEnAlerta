@@ -23,3 +23,4 @@
 | 19 | Endpoint público de comercios verificados por proximidad | Backend | Endpoint público de comercios verificados por proximidad (Post-MVP, Módulo 7) |
 | 20 | UI de búsqueda y mapa de comercios cercanos | Frontend-Backend | UI de búsqueda y mapa de comercios cercanos (Post-MVP, Módulo 7) |
 | 21 | Publicación de cursos de tenencia responsable | Backend | CRUD de cursos restringido a Organización/Municipio (Post-MVP, Módulo 8) |
+| 22 | Publicación y moderación de temas del foro | Backend | Caso de uso CrearTemaForo con moderación de Administrador (Post-MVP, Módulo 8) |
