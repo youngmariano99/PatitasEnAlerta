@@ -59,6 +59,10 @@ export class DarDeBajaFichaAdopcion extends CasoDeUsoBase<ComandoDarDeBajaFichaA
       requisitosAdopcion: ficha.requisitosAdopcion,
       fotoUrl: ficha.fotoUrl,
       estado: ficha.estado,
+      nivelEnergia: ficha.nivelEnergia,
+      compatibleNinos: ficha.compatibleNinos,
+      compatibleOtrosAnimales: ficha.compatibleOtrosAnimales,
+      necesidadesMedicasDetalle: ficha.necesidadesMedicasDetalle,
       createdAt: ficha.createdAt.toISOString(),
     };
   }

@@ -9,6 +9,19 @@ export interface DatosFichaAdopcion {
   requisitosAdopcion: string | null;
   fotoUrl: string;
   estado: string;
+  /**
+   * Atributos estructurados de compatibilidad (Módulo 9, Post-MVP —
+   * "Publicación de ficha de adopción con atributos de compatibilidad").
+   * Nullable/opcionales: ninguna ficha del MVP los completa, y no bloquean
+   * la publicación si faltan. Alimentan `sugerencias_compatibilidad` —
+   * `EstrategiaMatchAdopcion` (cuando se implemente) los lee para calcular
+   * `score_compatibilidad` contra el cuestionario del adoptante
+   * (docs/SCHEMA.md, `cuestionarios_adoptante`/`sugerencias_compatibilidad`).
+   */
+  nivelEnergia: string | null;
+  compatibleNinos: boolean | null;
+  compatibleOtrosAnimales: boolean | null;
+  necesidadesMedicasDetalle: string | null;
 }
 
 /** Todos los estados válidos de una ficha (docs/SCHEMA.md, CHECK estado sobre `vitrina_adopcion`). */
@@ -34,6 +47,10 @@ export class FichaAdopcion {
     public readonly requisitosAdopcion: string | null,
     public readonly fotoUrl: string,
     public readonly estado: string,
+    public readonly nivelEnergia: string | null,
+    public readonly compatibleNinos: boolean | null,
+    public readonly compatibleOtrosAnimales: boolean | null,
+    public readonly necesidadesMedicasDetalle: string | null,
     public readonly createdAt: Date,
   ) {}
 
@@ -50,6 +67,10 @@ export class FichaAdopcion {
       datos.requisitosAdopcion,
       datos.fotoUrl,
       datos.estado,
+      datos.nivelEnergia,
+      datos.compatibleNinos,
+      datos.compatibleOtrosAnimales,
+      datos.necesidadesMedicasDetalle,
       createdAt,
     );
   }

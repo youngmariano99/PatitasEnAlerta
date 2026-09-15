@@ -43,7 +43,9 @@
 | eventos | R(t) | R(t) | CRUD(p) | R(t) | R(t) | R(t) | R(t) | R(t) |
 | disponibilidad_veterinario | R(t, activa) | CRUD(p) | — | R(t) | — | — | — | — |
 | turnos | C(reservar propio) + RU(p) | C(agenda propia) + RU(p) | C(agenda propia) + RU(p) | R(t) | — | — | — | R(t, `estado='disponible'`) |
-| vitrina_adopcion | R(t, disponibles) | R(t, disponibles) | CRUD(p) | R(t) | R(t, disponibles) | R(t, disponibles) | R(t, disponibles) | R(t, disponibles) |
+| vitrina_adopcion | R(t, disponibles) | R(t, disponibles) | CRUD(p) | R(t) | C(p, con atributos de compatibilidad — Módulo 9) + R(t, disponibles) | R(t, disponibles) | R(t, disponibles) | R(t, disponibles) |
+
+`organizacion` gana `C(p)` sobre `vitrina_adopcion` recién en el Módulo 9 ("Publicación de ficha de adopción con atributos de compatibilidad", docs/REQUISITOS.md — "Municipio / Organización... Publicar una ficha de adopción con atributos estructurados"): antes de esa actividad solo tenía `R(t, disponibles)`, igual que dueño/veterinario/rescatista/comerciante/Público. `administrador` NO gana alta directa — sigue en `R(t)`, sin cambios; la actividad de Módulo 9 reemplaza el `['municipio','administrador']` que el caso de uso `PublicarFichaAdopcion` usaba de forma más permisiva que esta matriz durante el MVP (ver docs/DECISIONES.md).
 
 ### Módulo 4 — Veterinarios: Libreta Sanitaria Básica
 

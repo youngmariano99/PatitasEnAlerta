@@ -61,6 +61,10 @@ describe('ListarVitrinaAdopcionPublico', () => {
         requisitosAdopcion: 'Visita previa',
         fotoUrl: 'https://res.cloudinary.com/patitas-en-alerta/adopcion/luna.jpg',
         estado: 'disponible',
+        nivelEnergia: null,
+        compatibleNinos: null,
+        compatibleOtrosAnimales: null,
+        necesidadesMedicasDetalle: null,
       },
       new Date('2026-08-01T12:00:00.000Z'),
     );

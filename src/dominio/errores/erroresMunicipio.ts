@@ -53,3 +53,18 @@ export class RangoFechasInvalidoExportacionError extends ErrorDominio {
     super('PEA-MUN-007', 'El rango de fechas elegido no es válido para exportar el resumen.', 400);
   }
 }
+
+/**
+ * Módulo 9 (extensión de atributos de compatibilidad, "Publicación de ficha
+ * de adopción con atributos de compatibilidad"): a diferencia de
+ * `SoloMunicipioAdministraEventosError` (PEA-MUN-005, todavía vigente para
+ * `ActualizarFichaAdopcion`/`DarDeBajaFichaAdopcion`/eventos/dashboard,
+ * exclusivos de municipio/administrador), la publicación de una ficha ahora
+ * también admite rol `organizacion` — código propio porque el mensaje de
+ * PEA-MUN-005 ("Solo cuentas municipales...") dejaría de ser preciso acá.
+ */
+export class SoloMunicipioUOrganizacionPublicaFichaError extends ErrorDominio {
+  constructor() {
+    super('PEA-MUN-009', 'Solo cuentas municipales o de organizaciones pueden publicar fichas de adopción.', 403);
+  }
+}

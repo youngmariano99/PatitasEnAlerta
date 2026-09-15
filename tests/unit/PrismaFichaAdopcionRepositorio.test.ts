@@ -62,6 +62,10 @@ describe('PrismaFichaAdopcionRepositorio', () => {
       estadoSalud: null,
       requisitosAdopcion: null,
       fotoUrl: filaBase.fotoUrl,
+      nivelEnergia: null,
+      compatibleNinos: null,
+      compatibleOtrosAnimales: null,
+      necesidadesMedicasDetalle: null,
     };
     const adapter = new PrismaFichaAdopcionRepositorio();
 

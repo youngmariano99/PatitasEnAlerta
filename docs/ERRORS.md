@@ -43,6 +43,7 @@
 | PEA-MUN-006 | Ese animal ya no está disponible para adopción. | Dominio (`vitrina_adopcion.estado ≠ disponible`) — 409 | Refrescar la ficha y sugerir animales similares disponibles. |
 | PEA-MUN-007 | El rango de fechas elegido no es válido para exportar el resumen. | Aplicación (Zod) — 400 | Sugerir el rango máximo permitido y ajustar automáticamente si se excede. |
 | PEA-MUN-008 | No encontramos esa ficha de adopción o ya no está disponible. | Dominio (soft delete / no encontrado) — 404 | Volver al listado de fichas de adopción del panel municipal. |
+| PEA-MUN-009 | Solo cuentas municipales o de organizaciones pueden publicar fichas de adopción. | Middleware (RLS, rol requerido — Módulo 9, extensión de atributos de compatibilidad) — 403 | Redirigir al panel correspondiente al rol autenticado. |
 
 ## Módulo 4 — Veterinarios: Agenda y Libreta Sanitaria
 

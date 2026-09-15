@@ -33,7 +33,7 @@
 | eventos | 15 | Pasados y futuros, para calendario y dashboard |
 | disponibilidad_veterinario | 40 | ~5 franjas semanales por veterinario |
 | turnos | 260 | >50 para paginación; mezcla proveedor municipio/veterinario y estado |
-| vitrina_adopcion | 60 | >50 para paginación de la vitrina pública |
+| vitrina_adopcion | 60 | >50 para paginación de la vitrina pública; ~50% con atributos de compatibilidad completos (Módulo 9) |
 | autorizaciones_libreta | 70 | Mezcla activas/revocadas |
 | entradas_libreta_sanitaria | 160 | Varias entradas por mascota autorizada |
 
@@ -310,8 +310,14 @@ CROSS JOIN LATERAL (
 ) ts;
 
 -- 16. Vitrina de adopción
+-- Atributos de compatibilidad (Módulo 9, columnas nullable desde el MVP,
+-- ver docs/SCHEMA.md) completos solo en un SUBCONJUNTO de las 60 fichas
+-- (~50%, `random() < 0.5`) — el resto queda NULL a propósito, para probar
+-- que sugerencias_compatibilidad/EstrategiaMatchAdopcion conviven con fichas
+-- "estilo MVP" que nunca los completaron.
 INSERT INTO vitrina_adopcion (municipio_id, nombre_animal, especie, edad_aproximada, tamano,
-                               temperamento, estado_salud, requisitos_adopcion, foto_url, estado)
+                               temperamento, estado_salud, requisitos_adopcion, foto_url, estado,
+                               nivel_energia, compatible_ninos, compatible_otros_animales, necesidades_medicas_detalle)
 SELECT
   (SELECT id FROM tmp_municipio),
   (ARRAY['Toby','Luna','Rocky','Nina','Max','Bella','Simba','Michi','Kiara','Coco'])[1 + floor(random()*10)::int] || ' ' || gs,
@@ -322,7 +328,14 @@ SELECT
   (ARRAY['Sano, castrado y vacunado','En recuperación, vacunas al día','Sano, pendiente castración'])[1 + floor(random()*3)::int],
   'Adoptante mayor de 18 años, se realiza visita previa a la vivienda.',
   'https://res.cloudinary.com/patitas-en-alerta/adopcion/seed-' || gs || '.jpg',
-  (ARRAY['disponible','disponible','disponible','adoptado','baja'])[1 + floor(random()*5)::int]
+  (ARRAY['disponible','disponible','disponible','adoptado','baja'])[1 + floor(random()*5)::int],
+  CASE WHEN random() < 0.5 THEN (ARRAY['bajo','medio','alto'])[1 + floor(random()*3)::int] END,
+  CASE WHEN random() < 0.5 THEN random() < 0.7 END,
+  CASE WHEN random() < 0.5 THEN random() < 0.6 END,
+  CASE WHEN random() < 0.5 THEN
+    (ARRAY['Requiere medicación diaria para epilepsia','Alergia alimentaria, dieta especial',
+           'Ninguna condición médica relevante'])[1 + floor(random()*3)::int]
+  END
 FROM generate_series(1, 60) AS gs;
 
 -- 17. Autorizaciones de libreta sanitaria

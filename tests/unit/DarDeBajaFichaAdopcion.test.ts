@@ -20,6 +20,10 @@ const DATOS_BASE = {
   estadoSalud: null,
   requisitosAdopcion: null,
   fotoUrl: 'https://res.cloudinary.com/patitas-en-alerta/image/upload/v1/adopciones/luna.jpg',
+  nivelEnergia: null,
+  compatibleNinos: null,
+  compatibleOtrosAnimales: null,
+  necesidadesMedicasDetalle: null,
 };
 
 function crearPerfil(rol: string): ResumenPerfilPropio {

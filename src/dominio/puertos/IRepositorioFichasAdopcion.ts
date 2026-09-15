@@ -10,6 +10,11 @@ export interface DatosNuevaFichaAdopcion {
   estadoSalud: string | null;
   requisitosAdopcion: string | null;
   fotoUrl: string;
+  /** Atributos de compatibilidad (Módulo 9, Post-MVP) — ver `DatosFichaAdopcion` en `@dominio/entidades/FichaAdopcion`. */
+  nivelEnergia: string | null;
+  compatibleNinos: boolean | null;
+  compatibleOtrosAnimales: boolean | null;
+  necesidadesMedicasDetalle: string | null;
 }
 
 /** `estado` deliberadamente ausente: se edita únicamente vía `darDeBaja` (nunca un PATCH genérico de estado). */

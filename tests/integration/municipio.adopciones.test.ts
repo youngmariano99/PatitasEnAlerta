@@ -59,6 +59,10 @@ class RepositorioFichasFalso implements IRepositorioFichasAdopcion {
         requisitosAdopcion: cambios.requisitosAdopcion ?? existente.requisitosAdopcion,
         fotoUrl: cambios.fotoUrl ?? existente.fotoUrl,
         estado: existente.estado,
+        nivelEnergia: cambios.nivelEnergia ?? existente.nivelEnergia,
+        compatibleNinos: cambios.compatibleNinos ?? existente.compatibleNinos,
+        compatibleOtrosAnimales: cambios.compatibleOtrosAnimales ?? existente.compatibleOtrosAnimales,
+        necesidadesMedicasDetalle: cambios.necesidadesMedicasDetalle ?? existente.necesidadesMedicasDetalle,
       },
       existente.createdAt,
     );
@@ -81,6 +85,10 @@ class RepositorioFichasFalso implements IRepositorioFichasAdopcion {
         requisitosAdopcion: existente.requisitosAdopcion,
         fotoUrl: existente.fotoUrl,
         estado: 'baja',
+        nivelEnergia: existente.nivelEnergia,
+        compatibleNinos: existente.compatibleNinos,
+        compatibleOtrosAnimales: existente.compatibleOtrosAnimales,
+        necesidadesMedicasDetalle: existente.necesidadesMedicasDetalle,
       },
       existente.createdAt,
     );
@@ -155,8 +163,11 @@ describe('CRUD de vitrina_adopcion (Módulo 3) — restringido a municipio', () 
       expect(respuesta.status).toBe(401);
     });
 
-    // Paso 4 del checklist + AC explícito.
-    it.each(['dueño', 'veterinario'])('rechaza con 403 / PEA-MUN-005 para un usuario con rol %s', async (rol) => {
+    // Paso 2 del ticket "Extensión de PublicarFichaAdopcion con columnas de
+    // compatibilidad" (Módulo 9): la publicación pasa a ser exclusiva de
+    // municipio/organizacion — `administrador` solo tiene R(t) sobre
+    // vitrina_adopcion (docs/ROLES.md), ya no puede publicar.
+    it.each(['dueño', 'veterinario', 'administrador'])('rechaza con 403 / PEA-MUN-009 para un usuario con rol %s', async (rol) => {
       autenticarComo('usuario-1');
       repositorioPerfil.rol = rol;
 
@@ -164,8 +175,17 @@ describe('CRUD de vitrina_adopcion (Módulo 3) — restringido a municipio', () 
 
       expect(respuesta.status).toBe(403);
       const cuerpo = await respuesta.json();
-      expect(cuerpo.codigo).toBe('PEA-MUN-005');
+      expect(cuerpo.codigo).toBe('PEA-MUN-009');
       expect(repositorioFichas.fichas.size).toBe(0);
+    });
+
+    it('publica la ficha cuando quien invoca tiene rol organizacion (Módulo 9)', async () => {
+      autenticarComo('organizacion-1');
+      repositorioPerfil.rol = 'organizacion';
+
+      const respuesta = await POST(crearRequest('http://localhost/api/municipio/adopciones', 'POST', fichaValida));
+
+      expect(respuesta.status).toBe(201);
     });
 
     // Paso 2 / AC explícito.
@@ -189,6 +209,50 @@ describe('CRUD de vitrina_adopcion (Módulo 3) — restringido a municipio', () 
       const cuerpo = await respuesta.json();
       expect(cuerpo.estado).toBe('disponible');
       expect(cuerpo.municipioId).toBe('municipio-1');
+    });
+
+    // Paso 4 del ticket "Extensión de PublicarFichaAdopcion con columnas de
+    // compatibilidad" (Módulo 9): publica una ficha con los 4 atributos de
+    // compatibilidad completos y confirma que se persisten correctamente.
+    it('AC: publica una ficha con atributos de compatibilidad completos y los persiste', async () => {
+      autenticarComo('municipio-1');
+      const fichaConCompatibilidad = {
+        ...fichaValida,
+        nivelEnergia: 'alto',
+        compatibleNinos: true,
+        compatibleOtrosAnimales: false,
+        necesidadesMedicasDetalle: 'Requiere medicación diaria para epilepsia.',
+      };
+
+      const respuesta = await POST(crearRequest('http://localhost/api/municipio/adopciones', 'POST', fichaConCompatibilidad));
+
+      expect(respuesta.status).toBe(201);
+      const cuerpo = await respuesta.json();
+      expect(cuerpo.nivelEnergia).toBe('alto');
+      expect(cuerpo.compatibleNinos).toBe(true);
+      expect(cuerpo.compatibleOtrosAnimales).toBe(false);
+      expect(cuerpo.necesidadesMedicasDetalle).toBe('Requiere medicación diaria para epilepsia.');
+
+      const fichaPersistida = repositorioFichas.fichas.get(cuerpo.id)!;
+      expect(fichaPersistida.nivelEnergia).toBe('alto');
+      expect(fichaPersistida.compatibleNinos).toBe(true);
+      expect(fichaPersistida.compatibleOtrosAnimales).toBe(false);
+      expect(fichaPersistida.necesidadesMedicasDetalle).toBe('Requiere medicación diaria para epilepsia.');
+    });
+
+    // AC explícito: los campos de compatibilidad son opcionales y no
+    // bloquean la publicación de una ficha "estilo MVP" que no los completa.
+    it('AC: publica una ficha sin atributos de compatibilidad (no bloquean el alta estilo MVP)', async () => {
+      autenticarComo('municipio-1');
+
+      const respuesta = await POST(crearRequest('http://localhost/api/municipio/adopciones', 'POST', fichaValida));
+
+      expect(respuesta.status).toBe(201);
+      const cuerpo = await respuesta.json();
+      expect(cuerpo.nivelEnergia).toBeNull();
+      expect(cuerpo.compatibleNinos).toBeNull();
+      expect(cuerpo.compatibleOtrosAnimales).toBeNull();
+      expect(cuerpo.necesidadesMedicasDetalle).toBeNull();
     });
   });
 
