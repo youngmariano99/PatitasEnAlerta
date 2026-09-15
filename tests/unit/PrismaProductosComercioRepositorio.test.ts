@@ -79,4 +79,48 @@ describe('PrismaProductosComercioRepositorio', () => {
 
     expect(await repo.darDeBaja(productoId, comercioId)).toBe(false);
   });
+
+  it('darDeBaja devuelve true cuando el soft delete afecta la fila propia', async () => {
+    prisma.productoComercio.updateMany.mockResolvedValue({ count: 1 });
+    const repo = new PrismaProductosComercioRepositorio();
+
+    expect(await repo.darDeBaja(productoId, comercioId)).toBe(true);
+    expect(prisma.productoComercio.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: productoId, comercioId, deletedAt: null } }),
+    );
+  });
+
+  it('obtenerActual devuelve la proyección mínima (id + comercioId) filtrando por deletedAt: null', async () => {
+    prisma.productoComercio.findFirst.mockResolvedValue({ id: productoId, comercioId });
+    const repo = new PrismaProductosComercioRepositorio();
+
+    const resultado = await repo.obtenerActual(productoId);
+
+    expect(prisma.productoComercio.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: productoId, deletedAt: null } }),
+    );
+    expect(resultado).toEqual({ id: productoId, comercioId });
+  });
+
+  it('obtenerActual devuelve null si el producto no existe o está soft-deleted', async () => {
+    prisma.productoComercio.findFirst.mockResolvedValue(null);
+    const repo = new PrismaProductosComercioRepositorio();
+
+    expect(await repo.obtenerActual(productoId)).toBeNull();
+  });
+
+  it('convierte un precio null a null (producto sin precio cargado)', async () => {
+    prisma.productoComercio.create.mockResolvedValue({
+      id: productoId,
+      comercioId,
+      ...datos,
+      precio: null,
+      createdAt: new Date('2026-09-14T10:00:00.000Z'),
+    });
+    const repo = new PrismaProductosComercioRepositorio();
+
+    const resultado = await repo.crear(comercioId, { ...datos, precio: null });
+
+    expect(resultado.precio).toBeNull();
+  });
 });

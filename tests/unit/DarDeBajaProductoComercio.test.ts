@@ -53,4 +53,11 @@ describe('DarDeBajaProductoComercio', () => {
 
     await expect(caso.ejecutar({ productoId, usuarioId })).rejects.toBeInstanceOf(ProductoComercioNoEncontradoError);
   });
+
+  it('responde 404 / PEA-COM-004 si el soft delete condicionado no afecta ninguna fila (carrera entre autorizar y persistir)', async () => {
+    const { repositorioProductos, repositorioComercios } = crearFakes({ darDeBajaOk: false });
+    const caso = new DarDeBajaProductoComercio(repositorioProductos, repositorioComercios);
+
+    await expect(caso.ejecutar({ productoId, usuarioId })).rejects.toBeInstanceOf(ProductoComercioNoEncontradoError);
+  });
 });

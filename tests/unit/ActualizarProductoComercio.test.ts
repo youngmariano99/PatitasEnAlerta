@@ -93,4 +93,12 @@ describe('ActualizarProductoComercio', () => {
 
     await expect(caso.ejecutar({ datosCrudos: datosValidos, productoId, usuarioId })).rejects.toBeInstanceOf(ProductoComercioNoEncontradoError);
   });
+
+  it('responde 404 / PEA-COM-004 si el UPDATE condicionado no afecta ninguna fila (carrera entre autorizar y persistir)', async () => {
+    const { repositorioProductos, repositorioComercios } = crearFakes();
+    repositorioProductos.actualizar.mockResolvedValue(null);
+    const caso = new ActualizarProductoComercio(repositorioProductos, repositorioComercios);
+
+    await expect(caso.ejecutar({ datosCrudos: datosValidos, productoId, usuarioId })).rejects.toBeInstanceOf(ProductoComercioNoEncontradoError);
+  });
 });
