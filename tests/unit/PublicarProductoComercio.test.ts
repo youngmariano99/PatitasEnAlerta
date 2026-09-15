@@ -105,4 +105,13 @@ describe('PublicarProductoComercio', () => {
     await expect(caso.ejecutar({ datosCrudos: datosValidos, usuarioId })).rejects.toBeInstanceOf(ComercioNoVerificadoError);
     expect(repositorioProductos.crear).not.toHaveBeenCalled();
   });
+
+  it('responde 404 / PEA-COM-003 si el comercio propio desaparece entre autorizar() y persistir() (carrera)', async () => {
+    const { repositorioProductos, repositorioComercios, repositorioPerfil } = crearFakes();
+    repositorioComercios.obtenerPropio.mockResolvedValueOnce(crearComercioPropio()).mockResolvedValueOnce(null);
+    const caso = new PublicarProductoComercio(repositorioProductos, repositorioComercios, repositorioPerfil);
+
+    await expect(caso.ejecutar({ datosCrudos: datosValidos, usuarioId })).rejects.toBeInstanceOf(ComercioPropioNoEncontradoError);
+    expect(repositorioProductos.crear).not.toHaveBeenCalled();
+  });
 });
