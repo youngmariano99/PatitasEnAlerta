@@ -80,6 +80,10 @@ class RepositorioComerciosFalso implements IRepositorioComercios {
   async obtenerPropio(usuarioIdConsultado: string) {
     return this.porUsuario[usuarioIdConsultado] ?? null;
   }
+
+  async listarVerificados(): Promise<never> {
+    throw new Error('no usado en este test');
+  }
 }
 
 class RepositorioPerfilFalso implements IRepositorioPerfil {

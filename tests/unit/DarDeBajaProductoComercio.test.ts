@@ -23,6 +23,7 @@ function crearFakes(opciones?: { actual?: ProductoComercioActual | null; comerci
   const repositorioComercios: jest.Mocked<IRepositorioComercios> = {
     crear: jest.fn(),
     obtenerPropio: jest.fn().mockResolvedValue(opciones?.comercio === undefined ? { id: comercioId, estadoVerificacion: 'verificado' } : opciones.comercio),
+    listarVerificados: jest.fn(),
   };
   return { repositorioProductos, repositorioComercios };
 }
