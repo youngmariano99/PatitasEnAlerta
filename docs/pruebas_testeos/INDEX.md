@@ -17,3 +17,4 @@
 | 13 | Solicitudes de asistencia veterinaria filtradas por zona | Backend | Endpoint de solicitudes filtradas por zona y especialidad para veterinarios (Post-MVP, Módulo 5) |
 | 14 | Recordatorios de turnos próximos con seguimiento de no-show | Backend | Job de recordatorios sobre turnos próximos con seguimiento de no-show (Post-MVP, Módulo 6) |
 | 15 | CRUD de productos_veterinario y generación de pedidos | Backend | CRUD de productos_veterinario y comando GenerarPedidoCommand (Post-MVP, Módulo 6) |
+| 16 | CRUD de historiales_compartidos con autorización explícita y revocable | Backend | CRUD de historiales_compartidos con autorización explícita y revocable (Post-MVP, Módulo 6) |
