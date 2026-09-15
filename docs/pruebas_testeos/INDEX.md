@@ -21,3 +21,4 @@
 | 17 | Alta de comercio sujeta a verificación | Backend | Alta de comercio sujeta a verificación (Post-MVP, Módulo 7) |
 | 18 | CRUD de productos_comercio restringido al comercio propio | Backend | CRUD de productos_comercio restringido al comercio propio (Post-MVP, Módulo 7) |
 | 19 | Endpoint público de comercios verificados por proximidad | Backend | Endpoint público de comercios verificados por proximidad (Post-MVP, Módulo 7) |
+| 20 | UI de búsqueda y mapa de comercios cercanos | Frontend-Backend | UI de búsqueda y mapa de comercios cercanos (Post-MVP, Módulo 7) |

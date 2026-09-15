@@ -46,9 +46,15 @@ class RepositorioComerciosFalso implements IRepositorioComercios {
   // El fake reproduce el contrato real (docs SCHEMA/ROLES): solo entrega
   // comercios con estado_verificacion='verificado' — un comercio 'pendiente'
   // nunca debería siquiera llegar acá, lo mismo que impone
-  // PrismaComercioRepositorio.listarVerificados con su propio WHERE.
-  async listarVerificados(): Promise<Comercio[]> {
-    return this.verificados;
+  // PrismaComercioRepositorio.listarVerificados con su propio WHERE. También
+  // reproduce el filtro de texto libre (Paso 1) para poder probar de punta a
+  // punta que el `q` de la query llega hasta acá.
+  async listarVerificados(_zona?: unknown, textoLibre?: string): Promise<Comercio[]> {
+    if (!textoLibre) return this.verificados;
+    const texto = textoLibre.toLowerCase();
+    return this.verificados.filter(
+      (c) => c.nombreComercio.toLowerCase().includes(texto) || c.tipoComercio.toLowerCase().includes(texto),
+    );
   }
 }
 
@@ -85,6 +91,18 @@ describe('GET /api/comercios/cercanos (ListarComerciosCercanos, Módulo 7)', () 
     const cuerpo = await respuesta.json();
     expect(cuerpo.items.map((item: { id: string }) => item.id)).toEqual(['cercano', 'lejano']);
     expect(cuerpo.items[0].distanciaKm).toBeLessThan(cuerpo.items[1].distanciaKm);
+  });
+
+  it('Paso 1: filtra por texto libre sobre nombre_comercio/tipo_comercio', async () => {
+    const petShop = crearComercio({ id: 'pet-shop', nombreComercio: 'Pet Shop Pringles', tipoComercio: 'pet_shop' });
+    const peluqueria = crearComercio({ id: 'peluqueria', nombreComercio: 'Peluquería Canina Sur', tipoComercio: 'peluqueria' });
+    container.registerInstance<IRepositorioComercios>('IRepositorioComercios', new RepositorioComerciosFalso([petShop, peluqueria]));
+
+    const respuesta = await listarComerciosCercanos(crearRequest('?q=pet'));
+
+    expect(respuesta.status).toBe(200);
+    const cuerpo = await respuesta.json();
+    expect(cuerpo.items.map((item: { id: string }) => item.id)).toEqual(['pet-shop']);
   });
 
   it('rechaza con 400 / PEA-SIS-005 un filtro de proximidad incompleto', async () => {

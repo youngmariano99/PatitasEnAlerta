@@ -28,9 +28,11 @@ function calcularDistanciaKm(origen: { latitud: number; longitud: number }, dest
  * sesión, sin restricción de rol — mismo criterio que `ListarProductosActivos`
  * (Módulo 6).
  *
- * Paso 1 (bounding box sobre `ix_comercios_geo`) vive en
- * `IRepositorioComercios.listarVerificados` — filtra en SQL, pero SIN
- * ordenar ni paginar. Paso 3 (orden por distancia aproximada) se hace acá,
+ * El bounding box (sobre `ix_comercios_geo`) y el filtro de texto libre
+ * (`q`, sobre `nombre_comercio`/`tipo_comercio` — Historia "Búsqueda de
+ * comercios y servicios cercanos", siempre vía Prisma parametrizado) viven
+ * en `IRepositorioComercios.listarVerificados` — filtran en SQL, pero SIN
+ * ordenar ni paginar. El orden por distancia aproximada se hace acá,
  * en la capa de aplicación, sobre el conjunto completo devuelto por el
  * repositorio: solo así el orden es correcto antes de recortar la página —
  * ordenar después de paginar en SQL hubiera dado páginas con el orden
@@ -57,7 +59,7 @@ export class ListarComerciosCercanos extends CasoDeUsoBase<ComandoListarComercio
         ? { latitud: dato.latitud, longitud: dato.longitud, radioKm: dato.radioKm }
         : undefined;
 
-    const comercios = await this.repositorioComercios.listarVerificados(zona);
+    const comercios = await this.repositorioComercios.listarVerificados(zona, dato.q);
     const ordenados = zona ? this.ordenarPorDistancia(comercios, zona) : this.ordenarPorFecha(comercios);
 
     const inicio = (dato.pagina - 1) * dato.porPagina;

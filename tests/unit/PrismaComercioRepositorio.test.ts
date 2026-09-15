@@ -81,4 +81,22 @@ describe('PrismaComercioRepositorio', () => {
     expect(llamada.where.latitud).toEqual(expect.objectContaining({ gte: expect.any(Number), lte: expect.any(Number) }));
     expect(llamada.where.longitud).toEqual(expect.objectContaining({ gte: expect.any(Number), lte: expect.any(Number) }));
   });
+
+  it('Verificación técnica / Paso 1: listarVerificados filtra por texto libre sobre nombre_comercio/tipo_comercio vía Prisma parametrizado (contains), sin SQL crudo', async () => {
+    prisma.comercio.findMany.mockResolvedValue([]);
+    const repo = new PrismaComercioRepositorio();
+
+    await repo.listarVerificados(undefined, 'pet shop');
+
+    expect(prisma.comercio.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          OR: [
+            { nombreComercio: { contains: 'pet shop', mode: 'insensitive' } },
+            { tipoComercio: { contains: 'pet shop', mode: 'insensitive' } },
+          ],
+        }),
+      }),
+    );
+  });
 });
