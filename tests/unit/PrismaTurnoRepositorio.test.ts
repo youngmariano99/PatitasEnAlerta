@@ -338,4 +338,77 @@ describe('PrismaTurnoRepositorio', () => {
       expect(tx.turno.updateMany).not.toHaveBeenCalled();
     });
   });
+
+  describe('listarReservadosEnVentana', () => {
+    it('Paso 1: filtra estado="reservado" y franja_inicio dentro de [desde, hasta)', async () => {
+      const desde = new Date('2026-09-14T10:00:00.000Z');
+      const hasta = new Date('2026-09-15T10:00:00.000Z');
+      prisma.turno.findMany.mockResolvedValue([
+        { id: turnoId, reservadoPor, franjaInicio: new Date('2026-09-14T15:00:00.000Z') },
+      ]);
+      const adapter = new PrismaTurnoRepositorio();
+
+      const resultado = await adapter.listarReservadosEnVentana(desde, hasta);
+
+      expect(prisma.turno.findMany).toHaveBeenCalledWith({
+        where: { estado: 'reservado', franjaInicio: { gte: desde, lt: hasta }, deletedAt: null },
+        select: { id: true, reservadoPor: true, franjaInicio: true },
+      });
+      expect(resultado).toEqual([{ id: turnoId, reservadoPor, franjaInicio: new Date('2026-09-14T15:00:00.000Z') }]);
+    });
+  });
+
+  describe('actualizarAsistio', () => {
+    it('Paso 2: ejecuta el UPDATE condicionado por proveedor/estado="reservado"/franja_fin ya pasada', async () => {
+      prisma.turno.updateMany.mockResolvedValue({ count: 1 });
+      const adapter = new PrismaTurnoRepositorio();
+
+      const resultado = await adapter.actualizarAsistio(turnoId, municipioId, true);
+
+      expect(prisma.turno.updateMany).toHaveBeenCalledWith({
+        where: {
+          id: turnoId,
+          proveedorId: municipioId,
+          estado: 'reservado',
+          franjaFin: { lte: expect.any(Date) },
+          deletedAt: null,
+        },
+        data: { asistio: true },
+      });
+      expect(resultado).toEqual({ id: turnoId, asistio: true });
+    });
+
+    it('devuelve null cuando 0 filas fueron afectadas (no existe, no es del proveedor, o la franja no concluyó)', async () => {
+      prisma.turno.updateMany.mockResolvedValue({ count: 0 });
+      const adapter = new PrismaTurnoRepositorio();
+
+      await expect(adapter.actualizarAsistio(turnoId, municipioId, false)).resolves.toBeNull();
+    });
+  });
+
+  describe('calcularTasaNoShow', () => {
+    it('Paso 3: agrega sobre turnos.asistio del proveedor, sin dividir por cero cuando no hay concluidos', async () => {
+      prisma.turno.count.mockResolvedValue(0);
+      const adapter = new PrismaTurnoRepositorio();
+
+      const resultado = await adapter.calcularTasaNoShow(municipioId);
+
+      expect(prisma.turno.count).toHaveBeenNthCalledWith(1, {
+        where: { proveedorId: municipioId, asistio: { not: null }, deletedAt: null },
+      });
+      expect(prisma.turno.count).toHaveBeenNthCalledWith(2, {
+        where: { proveedorId: municipioId, asistio: false, deletedAt: null },
+      });
+      expect(resultado).toEqual({ totalConcluidos: 0, totalNoShow: 0, tasa: 0 });
+    });
+
+    it('calcula la tasa como totalNoShow / totalConcluidos', async () => {
+      prisma.turno.count.mockResolvedValueOnce(10).mockResolvedValueOnce(3);
+      const adapter = new PrismaTurnoRepositorio();
+
+      const resultado = await adapter.calcularTasaNoShow(municipioId);
+
+      expect(resultado).toEqual({ totalConcluidos: 10, totalNoShow: 3, tasa: 0.3 });
+    });
+  });
 });

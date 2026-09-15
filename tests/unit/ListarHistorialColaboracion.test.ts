@@ -30,6 +30,9 @@ function crearFakes(opciones?: { actual?: ColaboracionActual | null; rolSolicita
     obtenerActual: jest.fn().mockResolvedValue(actual),
     actualizarEstado: jest.fn(),
     listarHistorialEstado: jest.fn().mockResolvedValue(HISTORIAL),
+    existePropuestaDe: jest.fn(),
+    crear: jest.fn(),
+    obtenerMetricasPropias: jest.fn(),
   };
   const repositorioPerfil: jest.Mocked<IRepositorioPerfil> = {
     obtenerPerfilPropio: jest.fn().mockResolvedValue(crearPerfil(opciones?.rolSolicitante ?? 'dueño')),

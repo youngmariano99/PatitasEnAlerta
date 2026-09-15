@@ -77,6 +77,10 @@ class RepositorioVerificacionesEnMemoria implements IRepositorioVerificaciones {
 class RepositorioNotificacionesFalso implements INotificacionesRepositorio {
   creadas: DatosNotificacion[] = [];
 
+  async existePorReferencia(): Promise<boolean> {
+    return false;
+  }
+
   async crear(datos: DatosNotificacion): Promise<void> {
     this.creadas.push(datos);
   }

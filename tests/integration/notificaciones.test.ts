@@ -19,6 +19,10 @@ class RepositorioNotificacionesFalso implements INotificacionesRepositorio {
   public paginaARetornar: PaginaNotificaciones = { items: [], total: 0, pagina: 1, porPagina: 50, noLeidas: 0 };
   public permitirMarcarComoLeida = true;
 
+  async existePorReferencia(): Promise<boolean> {
+    return false;
+  }
+
   async crear(): Promise<void> {
     throw new Error('no usado en este test');
   }

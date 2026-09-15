@@ -24,6 +24,8 @@ function crearFakes(opciones?: { rol?: string }) {
     crear: jest.fn().mockImplementation(async (datos: DatosNuevaSolicitudRecurso) =>
       SolicitudRecurso.reconstruir('solicitud-1', { ...datos, estado: 'abierta' }, new Date('2026-09-09T09:00:00.000Z')),
     ),
+    obtenerActual: jest.fn(),
+    listarAsistenciaVeterinariaAbiertas: jest.fn(),
   };
   const repositorioPerfil: jest.Mocked<IRepositorioPerfil> = {
     obtenerPerfilPropio: jest.fn().mockResolvedValue(crearPerfil(opciones?.rol ?? 'organizacion')),

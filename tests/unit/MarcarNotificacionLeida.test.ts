@@ -9,6 +9,7 @@ import { AccesoNoAutorizadoError } from '@dominio/errores/erroresTransversales';
 function crearFakes(marcada = true) {
   const repositorioNotificaciones: jest.Mocked<INotificacionesRepositorio> = {
     crear: jest.fn(),
+    existePorReferencia: jest.fn(),
     listarPorUsuario: jest.fn(),
     marcarComoLeida: jest.fn().mockResolvedValue(marcada),
   };

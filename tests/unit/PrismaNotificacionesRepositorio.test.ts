@@ -7,6 +7,7 @@ jest.mock('@infraestructura/adaptadores/prisma-client', () => ({
   prisma: {
     notificacion: {
       create: jest.fn(),
+      findFirst: jest.fn(),
       findMany: jest.fn(),
       count: jest.fn(),
       updateMany: jest.fn(),
@@ -16,16 +17,39 @@ jest.mock('@infraestructura/adaptadores/prisma-client', () => ({
 
 const { prisma } = jest.requireMock('@infraestructura/adaptadores/prisma-client') as {
   prisma: {
-    notificacion: { create: jest.Mock; findMany: jest.Mock; count: jest.Mock; updateMany: jest.Mock };
+    notificacion: { create: jest.Mock; findFirst: jest.Mock; findMany: jest.Mock; count: jest.Mock; updateMany: jest.Mock };
   };
 };
 
 describe('PrismaNotificacionesRepositorio', () => {
   beforeEach(() => {
     prisma.notificacion.create.mockReset();
+    prisma.notificacion.findFirst.mockReset();
     prisma.notificacion.findMany.mockReset();
     prisma.notificacion.count.mockReset();
     prisma.notificacion.updateMany.mockReset();
+  });
+
+  describe('existePorReferencia', () => {
+    it('devuelve true cuando ya existe una notificación con esa combinación exacta', async () => {
+      prisma.notificacion.findFirst.mockResolvedValue({ id: 'notif-1' });
+      const repo = new PrismaNotificacionesRepositorio();
+
+      const existe = await repo.existePorReferencia('usuario-1', 'turno_recordatorio', 'turnos', 'turno-1');
+
+      expect(prisma.notificacion.findFirst).toHaveBeenCalledWith({
+        where: { usuarioId: 'usuario-1', tipo: 'turno_recordatorio', referenciaTabla: 'turnos', referenciaId: 'turno-1' },
+        select: { id: true },
+      });
+      expect(existe).toBe(true);
+    });
+
+    it('devuelve false cuando no existe ninguna', async () => {
+      prisma.notificacion.findFirst.mockResolvedValue(null);
+      const repo = new PrismaNotificacionesRepositorio();
+
+      await expect(repo.existePorReferencia('usuario-1', 'turno_recordatorio', 'turnos', 'turno-1')).resolves.toBe(false);
+    });
   });
 
   describe('crear', () => {

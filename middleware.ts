@@ -21,6 +21,7 @@ const RUTAS_PAGINA_PROTEGIDAS = [
   '/turnos',
   '/admin',
   '/reportes/nuevo',
+  '/red-colaboracion',
 ];
 
 // Coincidencia EXACTA (no por prefijo) de páginas públicas dentro de un
@@ -60,7 +61,7 @@ const RUTAS_API_PROTEGIDAS = [
 // prefijo): subrutas como GET /api/reportes/[id]/historial
 // (dueño/municipio/administrador, ListarHistorialReporte) NO son públicas y
 // deben seguir cayendo en RUTAS_API_PROTEGIDAS.
-const RUTAS_API_LECTURA_PUBLICA = ['/api/reportes', '/api/municipio/eventos'];
+const RUTAS_API_LECTURA_PUBLICA = ['/api/reportes', '/api/municipio/eventos', '/api/veterinarios/productos'];
 
 function esLecturaPublicaExacta(pathname: string, method: string): boolean {
   return method === 'GET' && RUTAS_API_LECTURA_PUBLICA.includes(pathname);
