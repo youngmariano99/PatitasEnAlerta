@@ -14,13 +14,26 @@ export interface Comercio extends DatosComercio {
   createdAt: Date;
 }
 
+/** Proyección mínima del comercio propio — lo que necesita `productos_comercio` para autorizar (pertenencia + `estado_verificacion`), sin traer el resto de las columnas. */
+export interface ComercioPropio {
+  id: string;
+  estadoVerificacion: string;
+}
+
 /**
  * Puerto hacia `comercios` (Módulo 7, Historia "Registro de comercio en la
- * plataforma"). Acotado al alta — el resto del CRUD que describe
- * docs/ROLES.md (`comerciante CRUD(p)`) queda para el ticket que implemente
- * esa historia puntual, mismo criterio de entrega incremental que
- * `IRepositorioPedidosProducto`/`IRepositorioHistorialesCompartidos`.
+ * plataforma"). `obtenerPropio` se agregó en la actividad "CRUD de
+ * productos_comercio restringido al comercio propio": resuelve el
+ * `comercio_id` del usuario autenticado — nunca confiado desde el body del
+ * cliente — para autorizar el CRUD de `productos_comercio`. El resto del
+ * CRUD de `comercios` que describe docs/ROLES.md (`comerciante CRUD(p)`, ej.
+ * editar los propios datos del comercio) queda para el ticket que
+ * implemente esa historia puntual, mismo criterio de entrega incremental
+ * que `IRepositorioPedidosProducto`/`IRepositorioHistorialesCompartidos`.
  */
 export interface IRepositorioComercios {
   crear(usuarioId: string, datos: DatosComercio): Promise<Comercio>;
+
+  /** El comercio del usuario autenticado, exista o no. `null` si nunca registró uno (o fue soft-deleted, si se agrega esa baja en el futuro). */
+  obtenerPropio(usuarioId: string): Promise<ComercioPropio | null>;
 }

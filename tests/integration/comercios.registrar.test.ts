@@ -43,6 +43,10 @@ class RepositorioComerciosFalso implements IRepositorioComercios {
       createdAt: new Date('2026-09-14T10:00:00.000Z'),
     };
   }
+
+  async obtenerPropio(): Promise<never> {
+    throw new Error('no usado en este test');
+  }
 }
 
 class RepositorioPerfilFalso implements IRepositorioPerfil {
