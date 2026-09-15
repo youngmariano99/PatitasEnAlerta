@@ -5,14 +5,18 @@ const TOPE_POR_PAGINA = 50;
 
 /**
  * Query params de GET /comercios/cercanos (Módulo 7, Historia "Visibilidad
- * geolocalizada frente a dueños de mascotas"). `zona` es todo-o-nada (mismo
- * criterio y mensaje que `ListarSolicitudesVeterinariasDto.ts` /
- * `ListarDirectorioAliadosDto.ts`): si se declara alguno de
- * `latitud`/`longitud`/`radioKm` hay que declarar los tres. Sin zona, el
- * listado devuelve todos los comercios verificados ordenados por
- * `createdAt` (mismo fallback que `ListarProductosActivos`); con zona, el
- * Paso 1 filtra por bounding box y el Paso 3 ordena por distancia
- * aproximada, calculada en la capa de aplicación (ver `ListarComerciosCercanos.ts`).
+ * geolocalizada frente a dueños de mascotas" / "Búsqueda de comercios y
+ * servicios cercanos"). `zona` es todo-o-nada (mismo criterio y mensaje que
+ * `ListarSolicitudesVeterinariasDto.ts` / `ListarDirectorioAliadosDto.ts`):
+ * si se declara alguno de `latitud`/`longitud`/`radioKm` hay que declarar
+ * los tres. Sin zona, el listado devuelve todos los comercios verificados
+ * ordenados por `createdAt` (mismo fallback que `ListarProductosActivos`);
+ * con zona, el Paso 1 filtra por bounding box y el Paso 3 ordena por
+ * distancia aproximada, calculada en la capa de aplicación (ver
+ * `ListarComerciosCercanos.ts`). `q` (texto libre) es independiente de la
+ * zona: filtra por `nombre_comercio`/`tipo_comercio` vía Prisma
+ * parametrizado (`IRepositorioComercios.listarVerificados`), sin exigir
+ * ubicación de referencia.
  */
 export const ListarComerciosCercanosQuerySchema = z
   .object({
@@ -21,6 +25,12 @@ export const ListarComerciosCercanosQuerySchema = z
     latitud: z.coerce.number().finite().optional(),
     longitud: z.coerce.number().finite().optional(),
     radioKm: z.coerce.number().positive().optional(),
+    q: z
+      .string()
+      .trim()
+      .min(1)
+      .max(150, 'La búsqueda no puede superar los 150 caracteres.')
+      .optional(),
   })
   .superRefine((datos, ctx) => {
     const campos = [datos.latitud, datos.longitud, datos.radioKm];
@@ -79,6 +89,7 @@ registroOpenApi.registerPath({
       latitud: z.coerce.number().optional(),
       longitud: z.coerce.number().optional(),
       radioKm: z.coerce.number().optional().openapi({ description: 'Requiere latitud y longitud también.' }),
+      q: z.string().optional().openapi({ description: 'Texto libre sobre nombre_comercio/tipo_comercio.' }),
     }),
   },
   responses: {

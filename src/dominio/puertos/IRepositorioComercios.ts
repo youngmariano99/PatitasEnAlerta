@@ -42,11 +42,14 @@ export interface IRepositorioComercios {
   /**
    * Comercios con `estado_verificacion = 'verificado'` (Módulo 7, "Endpoint
    * público de comercios verificados por proximidad"), opcionalmente
-   * acotados a un bounding box (`zona`, sobre `ix_comercios_geo`). Devuelve
-   * SIEMPRE el conjunto completo que matchea (sin paginar ni ordenar acá):
-   * el Paso 3 del ticket exige que el orden por distancia se calcule en la
+   * acotados a un bounding box (`zona`, sobre `ix_comercios_geo`) y/o a un
+   * texto libre (`textoLibre`, Módulo 7 "UI de búsqueda y mapa de comercios
+   * cercanos" — filtra por `nombre_comercio`/`tipo_comercio`, siempre vía
+   * Prisma parametrizado, nunca concatenado en SQL crudo). Devuelve SIEMPRE
+   * el conjunto completo que matchea (sin paginar ni ordenar acá): el Paso 3
+   * del ticket original exige que el orden por distancia se calcule en la
    * capa de aplicación — `ListarComerciosCercanos.ts` pagina sobre el
    * resultado ya ordenado, no sobre esta consulta.
    */
-  listarVerificados(zona?: FiltroZona): Promise<Comercio[]>;
+  listarVerificados(zona?: FiltroZona, textoLibre?: string): Promise<Comercio[]>;
 }

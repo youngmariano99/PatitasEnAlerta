@@ -54,7 +54,19 @@ describe('ListarComerciosCercanos', () => {
 
     await caso.ejecutar({ pagina: 1, porPagina: 50, latitud: CERCA.latitud, longitud: CERCA.longitud, radioKm: 25 });
 
-    expect(repositorioComercios.listarVerificados).toHaveBeenCalledWith({ latitud: CERCA.latitud, longitud: CERCA.longitud, radioKm: 25 });
+    expect(repositorioComercios.listarVerificados).toHaveBeenCalledWith(
+      { latitud: CERCA.latitud, longitud: CERCA.longitud, radioKm: 25 },
+      undefined,
+    );
+  });
+
+  it('Paso 1: reenvía el texto libre "q" al repositorio, independiente de la zona', async () => {
+    const { repositorioComercios } = crearFakes([]);
+    const caso = new ListarComerciosCercanos(repositorioComercios);
+
+    await caso.ejecutar({ pagina: 1, porPagina: 50, q: 'pet shop' });
+
+    expect(repositorioComercios.listarVerificados).toHaveBeenCalledWith(undefined, 'pet shop');
   });
 
   it('sin ubicación de referencia, cae al orden por createdAt descendente y distanciaKm null', async () => {
@@ -67,7 +79,7 @@ describe('ListarComerciosCercanos', () => {
 
     expect(resultado.items.map((item) => item.id)).toEqual(['reciente', 'antiguo']);
     expect(resultado.items.every((item) => item.distanciaKm === null)).toBe(true);
-    expect(repositorioComercios.listarVerificados).toHaveBeenCalledWith(undefined);
+    expect(repositorioComercios.listarVerificados).toHaveBeenCalledWith(undefined, undefined);
   });
 
   it('pagina sobre el conjunto ya ordenado', async () => {

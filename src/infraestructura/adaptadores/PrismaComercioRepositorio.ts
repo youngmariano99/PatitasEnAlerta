@@ -51,12 +51,23 @@ export class PrismaComercioRepositorio implements IRepositorioComercios {
     });
   }
 
-  async listarVerificados(zona?: FiltroZona): Promise<Comercio[]> {
+  async listarVerificados(zona?: FiltroZona, textoLibre?: string): Promise<Comercio[]> {
     return prisma.comercio.findMany({
       where: {
         deletedAt: null,
         estadoVerificacion: ESTADO_VERIFICADO,
         ...(zona ? calcularRangoGeografico(zona) : {}),
+        // Búsqueda por texto libre (Paso 1): siempre vía el filtro `contains`
+        // de Prisma (parametrizado por el driver, nunca concatenado como
+        // texto en la sentencia SQL), jamás `$queryRaw`.
+        ...(textoLibre
+          ? {
+              OR: [
+                { nombreComercio: { contains: textoLibre, mode: 'insensitive' as const } },
+                { tipoComercio: { contains: textoLibre, mode: 'insensitive' as const } },
+              ],
+            }
+          : {}),
       },
       select: SELECT_COMERCIO,
     });
