@@ -62,12 +62,16 @@ class RepositorioTurnosFalso implements IRepositorioTurnos {
 
   // El fake reproduce el mismo filtro que PrismaTurnoRepositorio.listarReservadosEnVentana
   // (franja_inicio dentro de [desde, hasta)) sobre un dataset con un turno
-  // fuera de la ventana, para probar el recorte de punta a punta.
+  // fuera de la ventana, para probar el recorte de punta a punta. Ambas
+  // franjas se calculan relativas a `Date.now()` en el momento de la
+  // consulta (nunca una fecha absoluta hardcodeada): el job usa `ahora =
+  // new Date()` por defecto, así que una fecha fija queda en el pasado tarde
+  // o temprano y el test empieza a fallar sin que nada del código cambie.
   async listarReservadosEnVentana(desde: Date, hasta: Date): Promise<TurnoRecordatorio[]> {
     this.ultimaLlamada = { desde, hasta };
     const dataset: TurnoRecordatorio[] = [
-      { id: TURNO_DENTRO_VENTANA, reservadoPor: RESERVADO_POR_A, franjaInicio: new Date('2026-09-14T20:00:00.000Z') },
-      { id: TURNO_FUERA_VENTANA, reservadoPor: RESERVADO_POR_B, franjaInicio: new Date('2026-09-20T09:00:00.000Z') },
+      { id: TURNO_DENTRO_VENTANA, reservadoPor: RESERVADO_POR_A, franjaInicio: new Date(Date.now() + 12 * 60 * 60 * 1000) },
+      { id: TURNO_FUERA_VENTANA, reservadoPor: RESERVADO_POR_B, franjaInicio: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000) },
     ];
     return dataset.filter((turno) => turno.franjaInicio >= desde && turno.franjaInicio < hasta);
   }
