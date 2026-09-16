@@ -3,6 +3,8 @@
 import { useRef, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { CampoTexto } from '@presentacion/componentes/formularios/CampoTexto';
+import { Boton } from '@presentacion/componentes/ui/Boton';
+import { EncabezadoIlustrado } from '@presentacion/componentes/estado/EncabezadoIlustrado';
 
 interface RespuestaError {
   codigo: string;
@@ -127,11 +129,13 @@ export default function PaginaNuevaMascota() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-12 text-text-primary">
-      <h1 className="mb-1 text-xl font-semibold">Registrá a tu mascota</h1>
-      <p className="mb-6 text-sm text-text-muted">
-        Solo necesitamos lo básico: nombre, especie y una foto. Podés completar el resto más
-        adelante.
-      </p>
+      <EncabezadoIlustrado
+        imagenSrc="/animales/Registro.png"
+        alt="Mascota de Patitas en Alerta dando la bienvenida"
+        titulo="Registrá a tu mascota"
+        descripcion="Solo necesitamos lo básico: nombre, especie y una foto. Podés completar el resto más adelante."
+      />
+      <div className="mb-6" />
 
       <form onSubmit={manejarEnvio} noValidate className="flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
@@ -218,13 +222,13 @@ export default function PaginaNuevaMascota() {
           </p>
         ) : null}
 
-        <button
+        <Boton
           type="submit"
           disabled={enviando || estadoImagen === 'subiendo' || !camposDeTextoCompletos}
-          className="mt-2 h-11 min-h-[44px] rounded-md bg-accent text-[15px] font-medium text-text-primary transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
+          className="mt-2 w-full"
         >
           {enviando ? 'Registrando…' : 'Registrar mascota'}
-        </button>
+        </Boton>
       </form>
     </main>
   );
