@@ -10,6 +10,11 @@ export interface DatosNuevaFichaAdopcion {
   estadoSalud: string | null;
   requisitosAdopcion: string | null;
   fotoUrl: string;
+  /** Atributos de compatibilidad (Módulo 9, Post-MVP) — ver `DatosFichaAdopcion` en `@dominio/entidades/FichaAdopcion`. */
+  nivelEnergia: string | null;
+  compatibleNinos: boolean | null;
+  compatibleOtrosAnimales: boolean | null;
+  necesidadesMedicasDetalle: string | null;
 }
 
 /** `estado` deliberadamente ausente: se edita únicamente vía `darDeBaja` (nunca un PATCH genérico de estado). */
@@ -41,7 +46,11 @@ export interface IRepositorioFichasAdopcion {
   buscarPorId(id: string): Promise<FichaAdopcion | null>;
   actualizar(id: string, cambios: CambiosFichaAdopcion): Promise<FichaAdopcion>;
   darDeBaja(id: string): Promise<FichaAdopcion>;
-  listarPorMunicipio(filtros: FiltrosListadoFichasAdopcion, pagina: number, porPagina: number): Promise<PaginaFichasAdopcion>;
+  listarPorMunicipio(
+    filtros: FiltrosListadoFichasAdopcion,
+    pagina: number,
+    porPagina: number,
+  ): Promise<PaginaFichasAdopcion>;
   /**
    * Vitrina pública (Historia "Consulta pública de la vitrina de adopción"):
    * paginado (tope 50), filtrado exclusivamente por `estado='disponible'` —

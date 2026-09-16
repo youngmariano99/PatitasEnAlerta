@@ -3,7 +3,10 @@
  */
 import { NextRequest } from 'next/server';
 import { container } from '@aplicacion/contenedor-di';
-import type { IRepositorioFichasAdopcion, PaginaFichasAdopcion } from '@dominio/puertos/IRepositorioFichasAdopcion';
+import type {
+  IRepositorioFichasAdopcion,
+  PaginaFichasAdopcion,
+} from '@dominio/puertos/IRepositorioFichasAdopcion';
 import { FichaAdopcion } from '@dominio/entidades/FichaAdopcion';
 
 // GET /api/adopciones es público (sin sesión ni RLS que verificar acá): no
@@ -39,7 +42,12 @@ class RepositorioFichasEnMemoria implements IRepositorioFichasAdopcion {
   async listarPublico(pagina: number, porPagina: number): Promise<PaginaFichasAdopcion> {
     const disponibles = this.fichas.filter((f) => f.estado === 'disponible');
     const inicio = (pagina - 1) * porPagina;
-    return { items: disponibles.slice(inicio, inicio + porPagina), total: disponibles.length, pagina, porPagina };
+    return {
+      items: disponibles.slice(inicio, inicio + porPagina),
+      total: disponibles.length,
+      pagina,
+      porPagina,
+    };
   }
 }
 
@@ -61,6 +69,10 @@ function crearFicha(id: string, estado: string): FichaAdopcion {
       requisitosAdopcion: null,
       fotoUrl: `https://res.cloudinary.com/patitas-en-alerta/adopcion/${id}.jpg`,
       estado,
+      nivelEnergia: null,
+      compatibleNinos: null,
+      compatibleOtrosAnimales: null,
+      necesidadesMedicasDetalle: null,
     },
     new Date('2026-08-01T12:00:00.000Z'),
   );
@@ -68,7 +80,9 @@ function crearFicha(id: string, estado: string): FichaAdopcion {
 
 /** Genera N fichas 'disponible' para probar paginación (AC: volumen > 50). */
 function generarFichasDisponibles(cantidad: number): FichaAdopcion[] {
-  return Array.from({ length: cantidad }, (_, indice) => crearFicha(`ficha-${indice + 1}`, 'disponible'));
+  return Array.from({ length: cantidad }, (_, indice) =>
+    crearFicha(`ficha-${indice + 1}`, 'disponible'),
+  );
 }
 
 describe('GET /api/adopciones (Consulta pública de la vitrina de adopción — acceso anónimo)', () => {
@@ -77,7 +91,10 @@ describe('GET /api/adopciones (Consulta pública de la vitrina de adopción — 
   beforeEach(() => {
     repositorioFichas = new RepositorioFichasEnMemoria();
     container.reset();
-    container.registerInstance<IRepositorioFichasAdopcion>('IRepositorioFichasAdopcion', repositorioFichas);
+    container.registerInstance<IRepositorioFichasAdopcion>(
+      'IRepositorioFichasAdopcion',
+      repositorioFichas,
+    );
   });
 
   it('AC: dado fichas en estado disponible, adoptado y baja, un usuario no autenticado solo ve las disponibles', async () => {

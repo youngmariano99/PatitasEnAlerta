@@ -49,6 +49,9 @@ const RUTAS_API_PROTEGIDAS = [
   '/api/turnos',
   '/api/veterinarios',
   '/api/red-colaboracion',
+  '/api/comercios',
+  '/api/foros-cursos',
+  '/api/adopcion-compatibilidad',
 ];
 
 // Excepción de método sobre RUTAS_API_PROTEGIDAS: un GET a estas rutas
@@ -61,7 +64,12 @@ const RUTAS_API_PROTEGIDAS = [
 // prefijo): subrutas como GET /api/reportes/[id]/historial
 // (dueño/municipio/administrador, ListarHistorialReporte) NO son públicas y
 // deben seguir cayendo en RUTAS_API_PROTEGIDAS.
-const RUTAS_API_LECTURA_PUBLICA = ['/api/reportes', '/api/municipio/eventos', '/api/veterinarios/productos'];
+const RUTAS_API_LECTURA_PUBLICA = [
+  '/api/reportes',
+  '/api/municipio/eventos',
+  '/api/veterinarios/productos',
+  '/api/comercios/cercanos',
+];
 
 function esLecturaPublicaExacta(pathname: string, method: string): boolean {
   return method === 'GET' && RUTAS_API_LECTURA_PUBLICA.includes(pathname);
@@ -92,7 +100,9 @@ function rolesRequeridosPara(pathname: string): readonly string[] | null {
  * "usuario → rol_id → nombre del rol" acá. `SECURITY DEFINER` la hace
  * funcionar sin depender de que `usuarios` tenga (o no) RLS propia.
  */
-async function obtenerRolActual(supabase: ReturnType<typeof createServerClient>): Promise<string | null> {
+async function obtenerRolActual(
+  supabase: ReturnType<typeof createServerClient>,
+): Promise<string | null> {
   const { data, error } = await supabase.rpc('rol_actual');
   if (error || typeof data !== 'string') return null;
   return data;
@@ -118,7 +128,10 @@ async function sesionLocalExpirada(
 }
 
 function respuestaJson401(error: NoAutenticadoError | SesionExpiradaError): NextResponse {
-  return NextResponse.json({ codigo: error.codigo, mensaje: error.message }, { status: error.statusHttp });
+  return NextResponse.json(
+    { codigo: error.codigo, mensaje: error.message },
+    { status: error.statusHttp },
+  );
 }
 
 function redirigirALogin(request: NextRequest): NextResponse {
@@ -142,7 +155,8 @@ export async function middleware(request: NextRequest) {
 
   const esLecturaPublica = esLecturaPublicaExacta(pathname, request.method);
   const esApiProtegida = esRutaProtegida(pathname, RUTAS_API_PROTEGIDAS) && !esLecturaPublica;
-  const esPaginaProtegida = esRutaProtegida(pathname, RUTAS_PAGINA_PROTEGIDAS) && !esPaginaLecturaPublica(pathname);
+  const esPaginaProtegida =
+    esRutaProtegida(pathname, RUTAS_PAGINA_PROTEGIDAS) && !esPaginaLecturaPublica(pathname);
   if (!esApiProtegida && !esPaginaProtegida) return response;
 
   const supabase = createServerClient(

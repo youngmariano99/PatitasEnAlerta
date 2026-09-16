@@ -44,6 +44,9 @@
 
 /red-colaboracion                 (Módulo 5, Post-MVP — resto de las historias del módulo son API-only por ahora, ver docs/DECISIONES.md)
  └─ /red-colaboracion/metricas    (rol rescatista/veterinario: mis métricas de contribución, sin comparación con otros usuarios)
+
+/comercios                        (Módulo 7, Post-MVP — resto de las historias del módulo son API-only por ahora, ver docs/DECISIONES.md)
+ └─ /comercios                    (búsqueda + mapa de comercios verificados por proximidad — consulta pública sin login)
 ```
 
 Cada carpeta ya existe como stub dentro de `app/` en este repositorio, lista para recibir su `page.tsx` real al implementar cada módulo.

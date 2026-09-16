@@ -6,7 +6,13 @@ import type { DatosNuevaFichaAdopcion } from '@dominio/puertos/IRepositorioFicha
 
 jest.mock('@infraestructura/adaptadores/prisma-client', () => ({
   prisma: {
-    vitrinaAdopcion: { create: jest.fn(), findFirst: jest.fn(), update: jest.fn(), findMany: jest.fn(), count: jest.fn() },
+    vitrinaAdopcion: {
+      create: jest.fn(),
+      findFirst: jest.fn(),
+      update: jest.fn(),
+      findMany: jest.fn(),
+      count: jest.fn(),
+    },
   },
 }));
 
@@ -62,6 +68,10 @@ describe('PrismaFichaAdopcionRepositorio', () => {
       estadoSalud: null,
       requisitosAdopcion: null,
       fotoUrl: filaBase.fotoUrl,
+      nivelEnergia: null,
+      compatibleNinos: null,
+      compatibleOtrosAnimales: null,
+      necesidadesMedicasDetalle: null,
     };
     const adapter = new PrismaFichaAdopcionRepositorio();
 
@@ -104,7 +114,11 @@ describe('PrismaFichaAdopcionRepositorio', () => {
     prisma.vitrinaAdopcion.count.mockResolvedValue(1);
     const adapter = new PrismaFichaAdopcionRepositorio();
 
-    const resultado = await adapter.listarPorMunicipio({ municipioId, estado: 'disponible' }, 1, 50);
+    const resultado = await adapter.listarPorMunicipio(
+      { municipioId, estado: 'disponible' },
+      1,
+      50,
+    );
 
     expect(resultado.total).toBe(1);
     expect(resultado.items).toHaveLength(1);
@@ -136,9 +150,15 @@ describe('PrismaFichaAdopcionRepositorio', () => {
       expect(resultado.items).toHaveLength(1);
       expect(resultado.total).toBe(1);
       expect(prisma.vitrinaAdopcion.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { deletedAt: null, estado: 'disponible' }, skip: 0, take: 50 }),
+        expect.objectContaining({
+          where: { deletedAt: null, estado: 'disponible' },
+          skip: 0,
+          take: 50,
+        }),
       );
-      expect(prisma.vitrinaAdopcion.count).toHaveBeenCalledWith({ where: { deletedAt: null, estado: 'disponible' } });
+      expect(prisma.vitrinaAdopcion.count).toHaveBeenCalledWith({
+        where: { deletedAt: null, estado: 'disponible' },
+      });
     });
 
     it('respeta la paginación (skip/take) según pagina/porPagina', async () => {
@@ -148,7 +168,9 @@ describe('PrismaFichaAdopcionRepositorio', () => {
 
       await adapter.listarPublico(3, 20);
 
-      expect(prisma.vitrinaAdopcion.findMany).toHaveBeenCalledWith(expect.objectContaining({ skip: 40, take: 20 }));
+      expect(prisma.vitrinaAdopcion.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ skip: 40, take: 20 }),
+      );
     });
   });
 });

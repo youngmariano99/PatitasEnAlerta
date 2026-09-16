@@ -14,7 +14,10 @@ const getSessionMock = jest.fn();
 const rpcMock = jest.fn();
 
 jest.mock('@supabase/ssr', () => ({
-  createServerClient: jest.fn(() => ({ auth: { getUser: getUserMock, getSession: getSessionMock }, rpc: rpcMock })),
+  createServerClient: jest.fn(() => ({
+    auth: { getUser: getUserMock, getSession: getSessionMock },
+    rpc: rpcMock,
+  })),
 }));
 
 import { middleware } from '../../middleware';
@@ -54,6 +57,8 @@ describe('middleware — expiración automática de sesión', () => {
       '/api/admin/auditoria',
       '/api/admin/municipio',
       '/api/turnos/reservar',
+      '/api/foros-cursos/temas',
+      '/api/adopcion-compatibilidad/cuestionario',
     ])('responde 401 (PEA-AUTH-005) en %s con un JWT vencido (Paso 4)', async (ruta) => {
       getUserMock.mockResolvedValue({ data: { user: null }, error: { message: 'jwt expired' } });
       getSessionMock.mockResolvedValue(sesionExpiradaHaceUnaHora());
@@ -98,8 +103,13 @@ describe('middleware — expiración automática de sesión', () => {
       // El claim expires_at local muestra una sesión vigente, pero getUser()
       // — la única fuente de verdad — la rechaza: nunca debe otorgarse acceso
       // ni asumirse "expirada" solo por lo que dice el token sin verificar.
-      getUserMock.mockResolvedValue({ data: { user: null }, error: { message: 'invalid signature' } });
-      getSessionMock.mockResolvedValue({ data: { session: { expires_at: Math.floor(Date.now() / 1000) + 3600 } } });
+      getUserMock.mockResolvedValue({
+        data: { user: null },
+        error: { message: 'invalid signature' },
+      });
+      getSessionMock.mockResolvedValue({
+        data: { session: { expires_at: Math.floor(Date.now() / 1000) + 3600 } },
+      });
 
       const respuesta = await middleware(crearRequest('/api/perfil'));
 
@@ -249,7 +259,9 @@ describe('middleware — expiración automática de sesión', () => {
       getUserMock.mockResolvedValue({ data: { user: null }, error: { message: 'sin sesión' } });
       getSessionMock.mockResolvedValue(sinSesionLocal());
 
-      const respuesta = await middleware(crearRequest('/api/reportes/11111111-1111-1111-1111-111111111111/historial', 'GET'));
+      const respuesta = await middleware(
+        crearRequest('/api/reportes/11111111-1111-1111-1111-111111111111/historial', 'GET'),
+      );
 
       expect(respuesta.status).toBe(401);
       const cuerpo = await respuesta.json();

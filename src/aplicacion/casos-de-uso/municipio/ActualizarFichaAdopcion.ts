@@ -6,9 +6,15 @@ import {
   type ComandoActualizarFichaAdopcion,
   type FichaAdopcionDto,
 } from '@aplicacion/dtos/municipio/FichaAdopcionDto';
-import type { CambiosFichaAdopcion, IRepositorioFichasAdopcion } from '@dominio/puertos/IRepositorioFichasAdopcion';
+import type {
+  CambiosFichaAdopcion,
+  IRepositorioFichasAdopcion,
+} from '@dominio/puertos/IRepositorioFichasAdopcion';
 import type { IRepositorioPerfil } from '@dominio/puertos/IRepositorioPerfil';
-import { FichaAdopcionNoEncontradaError, SoloMunicipioAdministraEventosError } from '@dominio/errores/erroresMunicipio';
+import {
+  FichaAdopcionNoEncontradaError,
+  SoloMunicipioAdministraEventosError,
+} from '@dominio/errores/erroresMunicipio';
 import { PayloadInvalidoError } from '@dominio/errores/erroresAutenticacion';
 
 const ROLES_AUTORIZADOS = ['municipio', 'administrador'];
@@ -34,7 +40,8 @@ export class ActualizarFichaAdopcion extends CasoDeUsoBase<
   ComandoActualizarFichaAdopcion
 > {
   constructor(
-    @inject('IRepositorioFichasAdopcion') private readonly repositorioFichas: IRepositorioFichasAdopcion,
+    @inject('IRepositorioFichasAdopcion')
+    private readonly repositorioFichas: IRepositorioFichasAdopcion,
     @inject('IRepositorioPerfil') private readonly repositorioPerfil: IRepositorioPerfil,
   ) {
     super();
@@ -78,6 +85,10 @@ export class ActualizarFichaAdopcion extends CasoDeUsoBase<
       requisitosAdopcion: ficha.requisitosAdopcion,
       fotoUrl: ficha.fotoUrl,
       estado: ficha.estado,
+      nivelEnergia: ficha.nivelEnergia,
+      compatibleNinos: ficha.compatibleNinos,
+      compatibleOtrosAnimales: ficha.compatibleOtrosAnimales,
+      necesidadesMedicasDetalle: ficha.necesidadesMedicasDetalle,
       createdAt: ficha.createdAt.toISOString(),
     };
   }

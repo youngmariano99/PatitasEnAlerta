@@ -5,7 +5,10 @@ import { DarDeBajaFichaAdopcion } from '@aplicacion/casos-de-uso/municipio/DarDe
 import { FichaAdopcion } from '@dominio/entidades/FichaAdopcion';
 import type { IRepositorioFichasAdopcion } from '@dominio/puertos/IRepositorioFichasAdopcion';
 import type { IRepositorioPerfil, ResumenPerfilPropio } from '@dominio/puertos/IRepositorioPerfil';
-import { FichaAdopcionNoEncontradaError, SoloMunicipioAdministraEventosError } from '@dominio/errores/erroresMunicipio';
+import {
+  FichaAdopcionNoEncontradaError,
+  SoloMunicipioAdministraEventosError,
+} from '@dominio/errores/erroresMunicipio';
 
 const municipioId = '11111111-1111-1111-1111-111111111111';
 const fichaId = '22222222-2222-2222-2222-222222222222';
@@ -20,13 +23,27 @@ const DATOS_BASE = {
   estadoSalud: null,
   requisitosAdopcion: null,
   fotoUrl: 'https://res.cloudinary.com/patitas-en-alerta/image/upload/v1/adopciones/luna.jpg',
+  nivelEnergia: null,
+  compatibleNinos: null,
+  compatibleOtrosAnimales: null,
+  necesidadesMedicasDetalle: null,
 };
 
 function crearPerfil(rol: string): ResumenPerfilPropio {
-  return { id: municipioId, email: 'municipio@ejemplo.test', rol, estadoVerificacion: 'verificado', verificadoEn: null };
+  return {
+    id: municipioId,
+    email: 'municipio@ejemplo.test',
+    rol,
+    estadoVerificacion: 'verificado',
+    verificadoEn: null,
+  };
 }
 
-function crearFakes(opciones?: { rol?: string; existente?: FichaAdopcion | null; estadoActual?: string }) {
+function crearFakes(opciones?: {
+  rol?: string;
+  existente?: FichaAdopcion | null;
+  estadoActual?: string;
+}) {
   const fichaExistente =
     opciones && 'existente' in opciones
       ? opciones.existente
@@ -40,9 +57,15 @@ function crearFakes(opciones?: { rol?: string; existente?: FichaAdopcion | null;
     crear: jest.fn(),
     buscarPorId: jest.fn().mockResolvedValue(fichaExistente),
     actualizar: jest.fn(),
-    darDeBaja: jest.fn().mockImplementation(async (id: string) =>
-      FichaAdopcion.reconstruir(id, { ...DATOS_BASE, estado: 'baja' }, new Date('2026-09-01T09:00:00.000Z')),
-    ),
+    darDeBaja: jest
+      .fn()
+      .mockImplementation(async (id: string) =>
+        FichaAdopcion.reconstruir(
+          id,
+          { ...DATOS_BASE, estado: 'baja' },
+          new Date('2026-09-01T09:00:00.000Z'),
+        ),
+      ),
     listarPorMunicipio: jest.fn(),
     listarPublico: jest.fn(),
   };
@@ -70,23 +93,32 @@ describe('DarDeBajaFichaAdopcion', () => {
     const { repositorioFichas, repositorioPerfil } = crearFakes({ rol: 'administrador' });
     const caso = new DarDeBajaFichaAdopcion(repositorioFichas, repositorioPerfil);
 
-    await expect(caso.ejecutar({ id: fichaId, municipioId })).resolves.toMatchObject({ estado: 'baja' });
+    await expect(caso.ejecutar({ id: fichaId, municipioId })).resolves.toMatchObject({
+      estado: 'baja',
+    });
   });
 
-  it.each(['dueño', 'veterinario'])('rechaza con PEA-MUN-005 (403) para rol %s, sin tocar el repositorio', async (rol) => {
-    const { repositorioFichas, repositorioPerfil } = crearFakes({ rol });
-    const caso = new DarDeBajaFichaAdopcion(repositorioFichas, repositorioPerfil);
+  it.each(['dueño', 'veterinario'])(
+    'rechaza con PEA-MUN-005 (403) para rol %s, sin tocar el repositorio',
+    async (rol) => {
+      const { repositorioFichas, repositorioPerfil } = crearFakes({ rol });
+      const caso = new DarDeBajaFichaAdopcion(repositorioFichas, repositorioPerfil);
 
-    await expect(caso.ejecutar({ id: fichaId, municipioId })).rejects.toBeInstanceOf(SoloMunicipioAdministraEventosError);
-    expect(repositorioFichas.buscarPorId).not.toHaveBeenCalled();
-    expect(repositorioFichas.darDeBaja).not.toHaveBeenCalled();
-  });
+      await expect(caso.ejecutar({ id: fichaId, municipioId })).rejects.toBeInstanceOf(
+        SoloMunicipioAdministraEventosError,
+      );
+      expect(repositorioFichas.buscarPorId).not.toHaveBeenCalled();
+      expect(repositorioFichas.darDeBaja).not.toHaveBeenCalled();
+    },
+  );
 
   it('rechaza con PEA-MUN-008 (404) si la ficha no existe o está soft-deleted', async () => {
     const { repositorioFichas, repositorioPerfil } = crearFakes({ existente: null });
     const caso = new DarDeBajaFichaAdopcion(repositorioFichas, repositorioPerfil);
 
-    await expect(caso.ejecutar({ id: fichaId, municipioId })).rejects.toBeInstanceOf(FichaAdopcionNoEncontradaError);
+    await expect(caso.ejecutar({ id: fichaId, municipioId })).rejects.toBeInstanceOf(
+      FichaAdopcionNoEncontradaError,
+    );
     expect(repositorioFichas.darDeBaja).not.toHaveBeenCalled();
   });
 });
