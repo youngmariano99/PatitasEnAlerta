@@ -17,3 +17,12 @@
 | 13 | Solicitudes de asistencia veterinaria filtradas por zona | Backend | Endpoint de solicitudes filtradas por zona y especialidad para veterinarios (Post-MVP, Módulo 5) |
 | 14 | Recordatorios de turnos próximos con seguimiento de no-show | Backend | Job de recordatorios sobre turnos próximos con seguimiento de no-show (Post-MVP, Módulo 6) |
 | 15 | CRUD de productos_veterinario y generación de pedidos | Backend | CRUD de productos_veterinario y comando GenerarPedidoCommand (Post-MVP, Módulo 6) |
+| 16 | CRUD de historiales_compartidos con autorización explícita y revocable | Backend | CRUD de historiales_compartidos con autorización explícita y revocable (Post-MVP, Módulo 6) |
+| 17 | Alta de comercio sujeta a verificación | Backend | Alta de comercio sujeta a verificación (Post-MVP, Módulo 7) |
+| 18 | CRUD de productos_comercio restringido al comercio propio | Backend | CRUD de productos_comercio restringido al comercio propio (Post-MVP, Módulo 7) |
+| 19 | Endpoint público de comercios verificados por proximidad | Backend | Endpoint público de comercios verificados por proximidad (Post-MVP, Módulo 7) |
+| 20 | UI de búsqueda y mapa de comercios cercanos | Frontend-Backend | UI de búsqueda y mapa de comercios cercanos (Post-MVP, Módulo 7) |
+| 21 | Publicación de cursos de tenencia responsable | Backend | CRUD de cursos restringido a Organización/Municipio (Post-MVP, Módulo 8) |
+| 22 | Publicación y moderación de temas del foro | Backend | Caso de uso CrearTemaForo con moderación de Administrador (Post-MVP, Módulo 8) |
+| 23 | Listado paginado de temas del foro y respuestas por tema | Backend | Endpoint paginado de temas_foro y respuestas_foro (Post-MVP, Módulo 8) |
+| 24 | Inscripción y baja de inscripción a cursos | Backend | Caso de uso InscribirseCurso con restricción de unicidad (Post-MVP, Módulo 8) |

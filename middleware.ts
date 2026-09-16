@@ -49,6 +49,8 @@ const RUTAS_API_PROTEGIDAS = [
   '/api/turnos',
   '/api/veterinarios',
   '/api/red-colaboracion',
+  '/api/comercios',
+  '/api/foros-cursos',
 ];
 
 // Excepción de método sobre RUTAS_API_PROTEGIDAS: un GET a estas rutas
@@ -61,7 +63,7 @@ const RUTAS_API_PROTEGIDAS = [
 // prefijo): subrutas como GET /api/reportes/[id]/historial
 // (dueño/municipio/administrador, ListarHistorialReporte) NO son públicas y
 // deben seguir cayendo en RUTAS_API_PROTEGIDAS.
-const RUTAS_API_LECTURA_PUBLICA = ['/api/reportes', '/api/municipio/eventos', '/api/veterinarios/productos'];
+const RUTAS_API_LECTURA_PUBLICA = ['/api/reportes', '/api/municipio/eventos', '/api/veterinarios/productos', '/api/comercios/cercanos'];
 
 function esLecturaPublicaExacta(pathname: string, method: string): boolean {
   return method === 'GET' && RUTAS_API_LECTURA_PUBLICA.includes(pathname);

@@ -22,6 +22,12 @@ import type { IRepositorioDirectorioAliados } from '@dominio/puertos/IRepositori
 import type { IRepositorioColaboraciones } from '@dominio/puertos/IRepositorioColaboraciones';
 import type { IRepositorioProductosVeterinario } from '@dominio/puertos/IRepositorioProductosVeterinario';
 import type { IRepositorioPedidosProducto } from '@dominio/puertos/IRepositorioPedidosProducto';
+import type { IRepositorioHistorialesCompartidos } from '@dominio/puertos/IRepositorioHistorialesCompartidos';
+import type { IRepositorioComercios } from '@dominio/puertos/IRepositorioComercios';
+import type { IRepositorioProductosComercio } from '@dominio/puertos/IRepositorioProductosComercio';
+import type { IRepositorioCursos } from '@dominio/puertos/IRepositorioCursos';
+import type { IRepositorioTemasForo } from '@dominio/puertos/IRepositorioTemasForo';
+import type { IRepositorioInscripcionesCurso } from '@dominio/puertos/IRepositorioInscripcionesCurso';
 import type { FuenteDisponibilidadEvento, FuenteDisponibilidadVeterinario, ProveedorTurnera } from '@dominio/estrategias/ProveedorTurnera';
 import type { IControlDeTasa } from '@dominio/puertos/IControlDeTasa';
 import type { IControlDeTasaConReintento } from '@dominio/puertos/IControlDeTasaConReintento';
@@ -48,6 +54,12 @@ import { PrismaDirectorioAliadosRepositorio } from '@infraestructura/adaptadores
 import { PrismaColaboracionesRepositorio } from '@infraestructura/adaptadores/PrismaColaboracionesRepositorio';
 import { PrismaProductosVeterinarioRepositorio } from '@infraestructura/adaptadores/PrismaProductosVeterinarioRepositorio';
 import { PrismaPedidosProductoRepositorio } from '@infraestructura/adaptadores/PrismaPedidosProductoRepositorio';
+import { PrismaHistorialesCompartidosRepositorio } from '@infraestructura/adaptadores/PrismaHistorialesCompartidosRepositorio';
+import { PrismaComercioRepositorio } from '@infraestructura/adaptadores/PrismaComercioRepositorio';
+import { PrismaProductosComercioRepositorio } from '@infraestructura/adaptadores/PrismaProductosComercioRepositorio';
+import { PrismaCursosRepositorio } from '@infraestructura/adaptadores/PrismaCursosRepositorio';
+import { PrismaTemasForoRepositorio } from '@infraestructura/adaptadores/PrismaTemasForoRepositorio';
+import { PrismaInscripcionesCursoRepositorio } from '@infraestructura/adaptadores/PrismaInscripcionesCursoRepositorio';
 import { TurneraMunicipio, TurneraVeterinario } from '@dominio/estrategias/ProveedorTurnera';
 import { UpstashControlDeTasa } from '@infraestructura/adaptadores/UpstashControlDeTasa';
 import { UpstashControlDeTasaAntiSaturacion } from '@infraestructura/adaptadores/UpstashControlDeTasaAntiSaturacion';
@@ -95,6 +107,15 @@ container.registerSingleton<IRepositorioDirectorioAliados>(
 container.registerSingleton<IRepositorioColaboraciones>('IRepositorioColaboraciones', PrismaColaboracionesRepositorio);
 container.registerSingleton<IRepositorioProductosVeterinario>('IRepositorioProductosVeterinario', PrismaProductosVeterinarioRepositorio);
 container.registerSingleton<IRepositorioPedidosProducto>('IRepositorioPedidosProducto', PrismaPedidosProductoRepositorio);
+container.registerSingleton<IRepositorioHistorialesCompartidos>(
+  'IRepositorioHistorialesCompartidos',
+  PrismaHistorialesCompartidosRepositorio,
+);
+container.registerSingleton<IRepositorioComercios>('IRepositorioComercios', PrismaComercioRepositorio);
+container.registerSingleton<IRepositorioProductosComercio>('IRepositorioProductosComercio', PrismaProductosComercioRepositorio);
+container.registerSingleton<IRepositorioCursos>('IRepositorioCursos', PrismaCursosRepositorio);
+container.registerSingleton<IRepositorioTemasForo>('IRepositorioTemasForo', PrismaTemasForoRepositorio);
+container.registerSingleton<IRepositorioInscripcionesCurso>('IRepositorioInscripcionesCurso', PrismaInscripcionesCursoRepositorio);
 container.registerSingleton<ProveedorTurnera<FuenteDisponibilidadEvento>>('ProveedorTurneraMunicipio', TurneraMunicipio);
 container.registerSingleton<ProveedorTurnera<FuenteDisponibilidadVeterinario>>('ProveedorTurneraVeterinario', TurneraVeterinario);
 container.registerSingleton<IControlDeTasa>('IControlDeTasa', UpstashControlDeTasa);

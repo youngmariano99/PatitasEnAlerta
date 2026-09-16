@@ -80,6 +80,7 @@
 | PEA-VETADV-003 | No podés compartir el historial con vos mismo/a. | Aplicación (`CHECK veterinario_origen ≠ destino`) — 400 | Deshabilitar la opción del propio usuario en el selector de destino. |
 | PEA-VETADV-004 | Este pedido ya no se puede cancelar en su estado actual. | Dominio (máquina de estados `pedidos_producto`) — 409 | Mostrar el estado actual del pedido y las acciones realmente disponibles. |
 | PEA-VETADV-005 | Todavía no terminó ese turno — vas a poder marcar la asistencia una vez que concluya. | Dominio (`turnos.franja_fin > now()`) — 409 | Ocultar el control de "marcar asistencia" hasta que `franja_fin` haya pasado; mostrar cuánto falta. |
+| PEA-VETADV-006 | No encontramos ese historial compartido o ya no está activo. | Dominio (no encontrado / ya revocado) — 404 | Refrescar el listado de historiales compartidos de la mascota. |
 
 ## Módulo 7 (Post-MVP) — Marketplace de Comerciantes
 
@@ -88,6 +89,7 @@
 | PEA-COM-001 | Tu comercio todavía está en revisión. Podrás publicar productos una vez verificado. | Middleware (RLS, `estado_verificacion`) — 403 | Mostrar estado de verificación y tiempo estimado. |
 | PEA-COM-002 | Elegí un tipo de comercio válido de la lista. | Aplicación (Zod, `CHECK tipo_comercio`) — 400 | Selección visual, no texto libre. |
 | PEA-COM-003 | No encontramos ese comercio o ya no está disponible. | Dominio (soft delete / no encontrado) — 404 | Volver al directorio de comercios verificados. |
+| PEA-COM-004 | No encontramos ese producto o ya no está disponible. | Dominio (soft delete / no encontrado) — 404 | Volver al catálogo propio del comercio. |
 
 ## Módulo 8 (Post-MVP) — Foros y Cursos de Bienestar Animal
 
