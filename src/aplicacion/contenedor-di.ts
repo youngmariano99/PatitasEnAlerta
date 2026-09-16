@@ -27,6 +27,8 @@ import type { IControlDeTasa } from '@dominio/puertos/IControlDeTasa';
 import type { IControlDeTasaConReintento } from '@dominio/puertos/IControlDeTasaConReintento';
 import type { IGeneradorEmbeddings } from '@dominio/puertos/IGeneradorEmbeddings';
 import type { IRepositorioCuestionariosAdoptante } from '@dominio/puertos/IRepositorioCuestionariosAdoptante';
+import type { IRepositorioSugerenciasCompatibilidad } from '@dominio/puertos/IRepositorioSugerenciasCompatibilidad';
+import type { IEstrategiaCompatibilidad } from '@dominio/estrategias/EstrategiaCompatibilidad';
 import { PrismaUsuarioRepositorio } from '@infraestructura/adaptadores/PrismaUsuarioRepositorio';
 import { SupabaseAuthAdapter } from '@infraestructura/adaptadores/SupabaseAuthAdapter';
 import { PrismaMascotaRepositorio } from '@infraestructura/adaptadores/PrismaMascotaRepositorio';
@@ -54,6 +56,8 @@ import { UpstashControlDeTasa } from '@infraestructura/adaptadores/UpstashContro
 import { UpstashControlDeTasaAntiSaturacion } from '@infraestructura/adaptadores/UpstashControlDeTasaAntiSaturacion';
 import { OpenAIGeneradorEmbeddings } from '@infraestructura/adaptadores/OpenAIGeneradorEmbeddings';
 import { PrismaCuestionarioAdoptanteRepositorio } from '@infraestructura/adaptadores/PrismaCuestionarioAdoptanteRepositorio';
+import { PrismaSugerenciasCompatibilidadRepositorio } from '@infraestructura/adaptadores/PrismaSugerenciasCompatibilidadRepositorio';
+import { CompatibilidadPorReglas } from '@dominio/estrategias/EstrategiaCompatibilidad';
 
 /**
  * Punto único de registro de dependencias (patrón Singleton para el propio
@@ -106,5 +110,14 @@ container.registerSingleton<IRepositorioCuestionariosAdoptante>(
   'IRepositorioCuestionariosAdoptante',
   PrismaCuestionarioAdoptanteRepositorio,
 );
+container.registerSingleton<IRepositorioSugerenciasCompatibilidad>(
+  'IRepositorioSugerenciasCompatibilidad',
+  PrismaSugerenciasCompatibilidadRepositorio,
+);
+// Paso 3 del ticket "EstrategiaMatchAdopcion con Strategy intercambiable"
+// (Módulo 9): única línea a cambiar para migrar de 'reglas' a
+// 'semantico'/'llm' — GenerarSugerenciasCompatibilidad.ts nunca importa
+// CompatibilidadPorReglas ni ninguna otra implementación concreta.
+container.registerSingleton<IEstrategiaCompatibilidad>('IEstrategiaCompatibilidad', CompatibilidadPorReglas);
 
 export { container };

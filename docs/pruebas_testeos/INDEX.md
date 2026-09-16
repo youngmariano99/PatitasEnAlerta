@@ -19,3 +19,4 @@
 | 15 | CRUD de productos_veterinario y generación de pedidos | Backend | CRUD de productos_veterinario y comando GenerarPedidoCommand (Post-MVP, Módulo 6) |
 | 16 | Publicación de ficha de adopción con atributos de compatibilidad | Backend | Extensión de PublicarFichaAdopcion con columnas de compatibilidad (Post-MVP, Módulo 9) |
 | 17 | Cuestionario de estilo de vida del adoptante | Backend | CRUD de cuestionarios_adoptante propio del usuario (Post-MVP, Módulo 9) |
+| 18 | Generación de sugerencias de compatibilidad de adopción | Backend | EstrategiaMatchAdopcion con Strategy intercambiable (reglas → semántico → LLM) (Post-MVP, Módulo 9) |
