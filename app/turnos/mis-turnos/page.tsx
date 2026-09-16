@@ -45,8 +45,8 @@ interface ConfiguracionEstado {
   clases: string;
 }
 
-// Paleta obligatoria del Design System (PLANIFICACION.md Sección 5): solo
-// slate/blue/emerald/red. Cada estado se comunica con ícono + texto, nunca
+// Paleta obligatoria del Design System (docs/DISENO.md): tokens semánticos
+// (surface/accent/danger). Cada estado se comunica con ícono + texto, nunca
 // solo con el color del badge (Paso 3 del ticket).
 const ETIQUETAS_ESTADO: Record<string, ConfiguracionEstado> = {
   disponible: {

@@ -18,9 +18,9 @@ interface ConfiguracionEstado {
   clases: string;
 }
 
-// Paleta obligatoria del Design System (PLANIFICACION.md Sección 5): solo
-// slate/blue/emerald/red — nada de amarillo/ámbar para "pendiente", por eso
-// usa el neutro slate en vez de inventar un color de advertencia.
+// Paleta obligatoria del Design System (docs/DISENO.md): solo los tokens
+// semánticos — nada de amarillo/ámbar para "pendiente", por eso usa el
+// neutro (surface/text-muted) en vez de inventar un color de advertencia.
 const CONFIGURACION_POR_ESTADO: Record<
   Exclude<EstadoVerificacion, 'no_requerido'>,
   ConfiguracionEstado
