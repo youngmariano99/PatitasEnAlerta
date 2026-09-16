@@ -22,6 +22,10 @@ const SELECT_FICHA = {
   requisitosAdopcion: true,
   fotoUrl: true,
   estado: true,
+  nivelEnergia: true,
+  compatibleNinos: true,
+  compatibleOtrosAnimales: true,
+  necesidadesMedicasDetalle: true,
   createdAt: true,
 } as const;
 
@@ -37,6 +41,10 @@ type FilaFicha = {
   requisitosAdopcion: string | null;
   fotoUrl: string;
   estado: string;
+  nivelEnergia: string | null;
+  compatibleNinos: boolean | null;
+  compatibleOtrosAnimales: boolean | null;
+  necesidadesMedicasDetalle: string | null;
   createdAt: Date;
 };
 
@@ -52,6 +60,10 @@ function aEntidad(fila: FilaFicha): FichaAdopcion {
     requisitosAdopcion: fila.requisitosAdopcion,
     fotoUrl: fila.fotoUrl,
     estado: fila.estado,
+    nivelEnergia: fila.nivelEnergia,
+    compatibleNinos: fila.compatibleNinos,
+    compatibleOtrosAnimales: fila.compatibleOtrosAnimales,
+    necesidadesMedicasDetalle: fila.necesidadesMedicasDetalle,
   };
   return FichaAdopcion.reconstruir(fila.id, datos, fila.createdAt);
 }
@@ -72,6 +84,10 @@ export class PrismaFichaAdopcionRepositorio implements IRepositorioFichasAdopcio
         fotoUrl: datos.fotoUrl,
         // `estado` no se envía: la columna nace en 'disponible' por DEFAULT
         // (docs/SCHEMA.md) — este repositorio nunca decide el estado inicial.
+        nivelEnergia: datos.nivelEnergia,
+        compatibleNinos: datos.compatibleNinos,
+        compatibleOtrosAnimales: datos.compatibleOtrosAnimales,
+        necesidadesMedicasDetalle: datos.necesidadesMedicasDetalle,
       },
       select: SELECT_FICHA,
     });
@@ -99,6 +115,10 @@ export class PrismaFichaAdopcionRepositorio implements IRepositorioFichasAdopcio
         estadoSalud: cambios.estadoSalud,
         requisitosAdopcion: cambios.requisitosAdopcion,
         fotoUrl: cambios.fotoUrl,
+        nivelEnergia: cambios.nivelEnergia,
+        compatibleNinos: cambios.compatibleNinos,
+        compatibleOtrosAnimales: cambios.compatibleOtrosAnimales,
+        necesidadesMedicasDetalle: cambios.necesidadesMedicasDetalle,
       },
       select: SELECT_FICHA,
     });

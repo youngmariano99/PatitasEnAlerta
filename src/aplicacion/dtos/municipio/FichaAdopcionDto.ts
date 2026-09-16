@@ -7,6 +7,10 @@ import { ESTADOS_FICHA_ADOPCION_SOPORTADOS } from '@dominio/entidades/FichaAdopc
 export const TAMANOS_FICHA_ADOPCION_SOPORTADOS = ['pequeño', 'mediano', 'grande'] as const;
 export type TamanoFichaAdopcion = (typeof TAMANOS_FICHA_ADOPCION_SOPORTADOS)[number];
 
+/** Niveles de energía soportados (docs/SCHEMA.md, CHECK nivel_energia sobre `vitrina_adopcion` — Módulo 9). */
+export const NIVELES_ENERGIA_SOPORTADOS = ['bajo', 'medio', 'alto'] as const;
+export type NivelEnergiaFichaAdopcion = (typeof NIVELES_ENERGIA_SOPORTADOS)[number];
+
 const TOPE_POR_PAGINA = 50;
 
 /**
@@ -16,6 +20,16 @@ const TOPE_POR_PAGINA = 50;
  * `municipioId` NO forma parte de este esquema: siempre se deriva de la
  * sesión autenticada en el route handler, nunca del body del cliente (mismo
  * criterio que CrearEventoDto).
+ *
+ * `nivelEnergia`/`compatibleNinos`/`compatibleOtrosAnimales`/
+ * `necesidadesMedicasDetalle` son la extensión de atributos de
+ * compatibilidad (Módulo 9, Post-MVP — Paso 1 del ticket "Extensión de
+ * PublicarFichaAdopcion con columnas de compatibilidad"): opcionales, no
+ * bloquean la publicación de fichas del MVP que no los completen (AC
+ * explícito). Alimentan `sugerencias_compatibilidad` (Paso 3): cuando se
+ * implemente `EstrategiaMatchAdopcion`, estos atributos estructurados son
+ * la entrada que compara contra `cuestionarios_adoptante` para calcular
+ * `score_compatibilidad` (docs/SCHEMA.md, Módulo 9).
  */
 export const PublicarFichaAdopcionSchema = registroOpenApi.register(
   'PublicarFichaAdopcionDto',
@@ -35,7 +49,10 @@ export const PublicarFichaAdopcionSchema = registroOpenApi.register(
       fotoUrl: z
         .string({ required_error: 'Necesitamos una foto del animal para publicar la ficha.' })
         .url('La URL de la foto no es válida.')
-        .openapi({ example: 'https://res.cloudinary.com/patitas-en-alerta/image/upload/v1/adopciones/luna.jpg' }),
+        .openapi({
+          example:
+            'https://res.cloudinary.com/patitas-en-alerta/image/upload/v1/adopciones/luna.jpg',
+        }),
       edadAproximada: z
         .number({ invalid_type_error: 'La edad tiene que ser un número.' })
         .int('La edad tiene que ser un número entero.')
@@ -44,9 +61,31 @@ export const PublicarFichaAdopcionSchema = registroOpenApi.register(
       tamano: z
         .enum(TAMANOS_FICHA_ADOPCION_SOPORTADOS, { invalid_type_error: 'Elegí un tamaño válido.' })
         .optional(),
-      temperamento: opcionalDeTexto(200).openapi({ example: 'Sociable, tranquilo con otros animales.' }),
+      temperamento: opcionalDeTexto(200).openapi({
+        example: 'Sociable, tranquilo con otros animales.',
+      }),
       estadoSalud: opcionalDeTexto(200).openapi({ example: 'Castrado, vacunas al día.' }),
-      requisitosAdopcion: opcionalDeTexto(500).openapi({ example: 'Vivienda con patio, visita previa obligatoria.' }),
+      requisitosAdopcion: opcionalDeTexto(500).openapi({
+        example: 'Vivienda con patio, visita previa obligatoria.',
+      }),
+      nivelEnergia: z
+        .enum(NIVELES_ENERGIA_SOPORTADOS, {
+          invalid_type_error: 'Elegí un nivel de energía válido.',
+        })
+        .optional()
+        .openapi({ description: 'Módulo 9 — alimenta sugerencias_compatibilidad.' }),
+      compatibleNinos: z
+        .boolean()
+        .optional()
+        .openapi({ description: 'Módulo 9 — alimenta sugerencias_compatibilidad.' }),
+      compatibleOtrosAnimales: z
+        .boolean()
+        .optional()
+        .openapi({ description: 'Módulo 9 — alimenta sugerencias_compatibilidad.' }),
+      necesidadesMedicasDetalle: opcionalDeTexto(500).openapi({
+        example: 'Requiere medicación diaria para epilepsia.',
+        description: 'Módulo 9 — alimenta sugerencias_compatibilidad.',
+      }),
     })
     .openapi('PublicarFichaAdopcionDto'),
 );
@@ -96,6 +135,10 @@ export const FichaAdopcionSchema = registroOpenApi.register(
       requisitosAdopcion: z.string().nullable(),
       fotoUrl: z.string(),
       estado: z.string(),
+      nivelEnergia: z.string().nullable(),
+      compatibleNinos: z.boolean().nullable(),
+      compatibleOtrosAnimales: z.boolean().nullable(),
+      necesidadesMedicasDetalle: z.string().nullable(),
       createdAt: z.string(),
     })
     .openapi('FichaAdopcion'),
@@ -130,7 +173,9 @@ export const ListarVitrinaAdopcionPublicoQuerySchema = z.object({
   porPagina: z.coerce.number().int().min(1).max(TOPE_POR_PAGINA).catch(TOPE_POR_PAGINA),
 });
 
-export type ParametrosListarVitrinaAdopcionPublico = z.infer<typeof ListarVitrinaAdopcionPublicoQuerySchema>;
+export type ParametrosListarVitrinaAdopcionPublico = z.infer<
+  typeof ListarVitrinaAdopcionPublicoQuerySchema
+>;
 
 registroOpenApi.registerPath({
   method: 'get',
@@ -156,13 +201,26 @@ registroOpenApi.registerPath({
   method: 'post',
   path: '/municipio/adopciones',
   tags: ['Municipio'],
-  summary: 'Publica una ficha en la vitrina de adopción — exclusivo de rol municipio o administrador.',
+  summary:
+    'Publica una ficha en la vitrina de adopción, con atributos opcionales de compatibilidad (Módulo 9) — exclusivo de rol municipio u organizacion.',
   request: { body: { content: { 'application/json': { schema: PublicarFichaAdopcionSchema } } } },
   responses: {
-    201: { description: 'Ficha publicada, estado inicial "disponible".', content: { 'application/json': { schema: FichaAdopcionSchema } } },
-    400: { description: 'Falta nombre_animal, especie o foto_url (PEA-SIS-005).', content: { 'application/json': { schema: ErrorApiSchema } } },
-    401: { description: 'No hay sesión activa (PEA-SIS-001).', content: { 'application/json': { schema: ErrorApiSchema } } },
-    403: { description: 'Quien invoca no tiene rol municipio/administrador (PEA-MUN-005).', content: { 'application/json': { schema: ErrorApiSchema } } },
+    201: {
+      description: 'Ficha publicada, estado inicial "disponible".',
+      content: { 'application/json': { schema: FichaAdopcionSchema } },
+    },
+    400: {
+      description: 'Falta nombre_animal, especie o foto_url (PEA-SIS-005).',
+      content: { 'application/json': { schema: ErrorApiSchema } },
+    },
+    401: {
+      description: 'No hay sesión activa (PEA-SIS-001).',
+      content: { 'application/json': { schema: ErrorApiSchema } },
+    },
+    403: {
+      description: 'Quien invoca no tiene rol municipio/organizacion (PEA-MUN-009).',
+      content: { 'application/json': { schema: ErrorApiSchema } },
+    },
   },
 });
 
@@ -170,7 +228,8 @@ registroOpenApi.registerPath({
   method: 'get',
   path: '/municipio/adopciones',
   tags: ['Municipio'],
-  summary: 'Panel municipal: listado paginado de TODAS las fichas propias (cualquier estado) — exclusivo de rol municipio o administrador.',
+  summary:
+    'Panel municipal: listado paginado de TODAS las fichas propias (cualquier estado) — exclusivo de rol municipio o administrador.',
   request: {
     query: z.object({
       pagina: z.coerce.number().int().min(1).optional(),
@@ -179,9 +238,18 @@ registroOpenApi.registerPath({
     }),
   },
   responses: {
-    200: { description: 'Página de fichas propias.', content: { 'application/json': { schema: PaginaFichasAdopcionSchema } } },
-    401: { description: 'No hay sesión activa (PEA-SIS-001).', content: { 'application/json': { schema: ErrorApiSchema } } },
-    403: { description: 'Quien invoca no tiene rol municipio/administrador (PEA-MUN-005).', content: { 'application/json': { schema: ErrorApiSchema } } },
+    200: {
+      description: 'Página de fichas propias.',
+      content: { 'application/json': { schema: PaginaFichasAdopcionSchema } },
+    },
+    401: {
+      description: 'No hay sesión activa (PEA-SIS-001).',
+      content: { 'application/json': { schema: ErrorApiSchema } },
+    },
+    403: {
+      description: 'Quien invoca no tiene rol municipio/administrador (PEA-MUN-005).',
+      content: { 'application/json': { schema: ErrorApiSchema } },
+    },
   },
 });
 
@@ -195,11 +263,26 @@ registroOpenApi.registerPath({
     body: { content: { 'application/json': { schema: ActualizarFichaAdopcionSchema } } },
   },
   responses: {
-    200: { description: 'Ficha actualizada.', content: { 'application/json': { schema: FichaAdopcionSchema } } },
-    400: { description: 'Payload inválido (PEA-SIS-005).', content: { 'application/json': { schema: ErrorApiSchema } } },
-    401: { description: 'No hay sesión activa (PEA-SIS-001).', content: { 'application/json': { schema: ErrorApiSchema } } },
-    403: { description: 'Quien invoca no tiene rol municipio/administrador (PEA-MUN-005).', content: { 'application/json': { schema: ErrorApiSchema } } },
-    404: { description: 'No existe esa ficha (PEA-MUN-008).', content: { 'application/json': { schema: ErrorApiSchema } } },
+    200: {
+      description: 'Ficha actualizada.',
+      content: { 'application/json': { schema: FichaAdopcionSchema } },
+    },
+    400: {
+      description: 'Payload inválido (PEA-SIS-005).',
+      content: { 'application/json': { schema: ErrorApiSchema } },
+    },
+    401: {
+      description: 'No hay sesión activa (PEA-SIS-001).',
+      content: { 'application/json': { schema: ErrorApiSchema } },
+    },
+    403: {
+      description: 'Quien invoca no tiene rol municipio/administrador (PEA-MUN-005).',
+      content: { 'application/json': { schema: ErrorApiSchema } },
+    },
+    404: {
+      description: 'No existe esa ficha (PEA-MUN-008).',
+      content: { 'application/json': { schema: ErrorApiSchema } },
+    },
   },
 });
 
@@ -207,12 +290,25 @@ registroOpenApi.registerPath({
   method: 'delete',
   path: '/municipio/adopciones/{id}',
   tags: ['Municipio'],
-  summary: 'Da de baja una ficha (soft — estado="baja", nunca DELETE físico) — exclusivo de rol municipio o administrador.',
+  summary:
+    'Da de baja una ficha (soft — estado="baja", nunca DELETE físico) — exclusivo de rol municipio o administrador.',
   request: { params: z.object({ id: z.string().uuid() }) },
   responses: {
-    200: { description: 'Ficha dada de baja.', content: { 'application/json': { schema: FichaAdopcionSchema } } },
-    401: { description: 'No hay sesión activa (PEA-SIS-001).', content: { 'application/json': { schema: ErrorApiSchema } } },
-    403: { description: 'Quien invoca no tiene rol municipio/administrador (PEA-MUN-005).', content: { 'application/json': { schema: ErrorApiSchema } } },
-    404: { description: 'No existe esa ficha (PEA-MUN-008).', content: { 'application/json': { schema: ErrorApiSchema } } },
+    200: {
+      description: 'Ficha dada de baja.',
+      content: { 'application/json': { schema: FichaAdopcionSchema } },
+    },
+    401: {
+      description: 'No hay sesión activa (PEA-SIS-001).',
+      content: { 'application/json': { schema: ErrorApiSchema } },
+    },
+    403: {
+      description: 'Quien invoca no tiene rol municipio/administrador (PEA-MUN-005).',
+      content: { 'application/json': { schema: ErrorApiSchema } },
+    },
+    404: {
+      description: 'No existe esa ficha (PEA-MUN-008).',
+      content: { 'application/json': { schema: ErrorApiSchema } },
+    },
   },
 });

@@ -4,9 +4,15 @@
 import { ZodError } from 'zod';
 import { ActualizarFichaAdopcion } from '@aplicacion/casos-de-uso/municipio/ActualizarFichaAdopcion';
 import { FichaAdopcion } from '@dominio/entidades/FichaAdopcion';
-import type { CambiosFichaAdopcion, IRepositorioFichasAdopcion } from '@dominio/puertos/IRepositorioFichasAdopcion';
+import type {
+  CambiosFichaAdopcion,
+  IRepositorioFichasAdopcion,
+} from '@dominio/puertos/IRepositorioFichasAdopcion';
 import type { IRepositorioPerfil, ResumenPerfilPropio } from '@dominio/puertos/IRepositorioPerfil';
-import { FichaAdopcionNoEncontradaError, SoloMunicipioAdministraEventosError } from '@dominio/errores/erroresMunicipio';
+import {
+  FichaAdopcionNoEncontradaError,
+  SoloMunicipioAdministraEventosError,
+} from '@dominio/errores/erroresMunicipio';
 import { PayloadInvalidoError } from '@dominio/errores/erroresAutenticacion';
 
 const municipioId = '11111111-1111-1111-1111-111111111111';
@@ -25,12 +31,22 @@ const fichaExistente = FichaAdopcion.reconstruir(
     requisitosAdopcion: null,
     fotoUrl: 'https://res.cloudinary.com/patitas-en-alerta/image/upload/v1/adopciones/luna.jpg',
     estado: 'disponible',
+    nivelEnergia: null,
+    compatibleNinos: null,
+    compatibleOtrosAnimales: null,
+    necesidadesMedicasDetalle: null,
   },
   new Date('2026-09-01T09:00:00.000Z'),
 );
 
 function crearPerfil(rol: string): ResumenPerfilPropio {
-  return { id: municipioId, email: 'municipio@ejemplo.test', rol, estadoVerificacion: 'verificado', verificadoEn: null };
+  return {
+    id: municipioId,
+    email: 'municipio@ejemplo.test',
+    rol,
+    estadoVerificacion: 'verificado',
+    verificadoEn: null,
+  };
 }
 
 function crearFakes(opciones?: { rol?: string; fichaExistenteOverride?: FichaAdopcion | null }) {
@@ -38,7 +54,11 @@ function crearFakes(opciones?: { rol?: string; fichaExistenteOverride?: FichaAdo
     crear: jest.fn(),
     buscarPorId: jest
       .fn()
-      .mockResolvedValue(opciones && 'fichaExistenteOverride' in opciones ? opciones.fichaExistenteOverride : fichaExistente),
+      .mockResolvedValue(
+        opciones && 'fichaExistenteOverride' in opciones
+          ? opciones.fichaExistenteOverride
+          : fichaExistente,
+      ),
     actualizar: jest.fn().mockImplementation(async (id: string, cambios: CambiosFichaAdopcion) =>
       FichaAdopcion.reconstruir(
         id,
@@ -53,6 +73,12 @@ function crearFakes(opciones?: { rol?: string; fichaExistenteOverride?: FichaAdo
           requisitosAdopcion: cambios.requisitosAdopcion ?? fichaExistente.requisitosAdopcion,
           fotoUrl: cambios.fotoUrl ?? fichaExistente.fotoUrl,
           estado: fichaExistente.estado,
+          nivelEnergia: cambios.nivelEnergia ?? fichaExistente.nivelEnergia,
+          compatibleNinos: cambios.compatibleNinos ?? fichaExistente.compatibleNinos,
+          compatibleOtrosAnimales:
+            cambios.compatibleOtrosAnimales ?? fichaExistente.compatibleOtrosAnimales,
+          necesidadesMedicasDetalle:
+            cambios.necesidadesMedicasDetalle ?? fichaExistente.necesidadesMedicasDetalle,
         },
         fichaExistente.createdAt,
       ),
@@ -72,11 +98,17 @@ describe('ActualizarFichaAdopcion', () => {
     const { repositorioFichas, repositorioPerfil } = crearFakes();
     const caso = new ActualizarFichaAdopcion(repositorioFichas, repositorioPerfil);
 
-    const resultado = await caso.ejecutar({ id: fichaId, datosCrudos: { temperamento: 'Muy juguetón' }, municipioId });
+    const resultado = await caso.ejecutar({
+      id: fichaId,
+      datosCrudos: { temperamento: 'Muy juguetón' },
+      municipioId,
+    });
 
     expect(resultado.temperamento).toBe('Muy juguetón');
     expect(resultado.nombreAnimal).toBe('Luna');
-    expect(repositorioFichas.actualizar).toHaveBeenCalledWith(fichaId, { temperamento: 'Muy juguetón' });
+    expect(repositorioFichas.actualizar).toHaveBeenCalledWith(fichaId, {
+      temperamento: 'Muy juguetón',
+    });
   });
 
   it('nunca envía id/municipioId como parte de los "cambios" al repositorio', async () => {
@@ -99,16 +131,19 @@ describe('ActualizarFichaAdopcion', () => {
     ).resolves.toMatchObject({ especie: 'gato' });
   });
 
-  it.each(['dueño', 'veterinario'])('rechaza con PEA-MUN-005 (403) para rol %s, sin tocar el repositorio', async (rol) => {
-    const { repositorioFichas, repositorioPerfil } = crearFakes({ rol });
-    const caso = new ActualizarFichaAdopcion(repositorioFichas, repositorioPerfil);
+  it.each(['dueño', 'veterinario'])(
+    'rechaza con PEA-MUN-005 (403) para rol %s, sin tocar el repositorio',
+    async (rol) => {
+      const { repositorioFichas, repositorioPerfil } = crearFakes({ rol });
+      const caso = new ActualizarFichaAdopcion(repositorioFichas, repositorioPerfil);
 
-    await expect(
-      caso.ejecutar({ id: fichaId, datosCrudos: { nombreAnimal: 'Luna II' }, municipioId }),
-    ).rejects.toBeInstanceOf(SoloMunicipioAdministraEventosError);
-    expect(repositorioFichas.buscarPorId).not.toHaveBeenCalled();
-    expect(repositorioFichas.actualizar).not.toHaveBeenCalled();
-  });
+      await expect(
+        caso.ejecutar({ id: fichaId, datosCrudos: { nombreAnimal: 'Luna II' }, municipioId }),
+      ).rejects.toBeInstanceOf(SoloMunicipioAdministraEventosError);
+      expect(repositorioFichas.buscarPorId).not.toHaveBeenCalled();
+      expect(repositorioFichas.actualizar).not.toHaveBeenCalled();
+    },
+  );
 
   it('rechaza con PEA-MUN-008 (404) si la ficha no existe o está soft-deleted', async () => {
     const { repositorioFichas, repositorioPerfil } = crearFakes({ fichaExistenteOverride: null });
@@ -124,7 +159,9 @@ describe('ActualizarFichaAdopcion', () => {
     const { repositorioFichas, repositorioPerfil } = crearFakes();
     const caso = new ActualizarFichaAdopcion(repositorioFichas, repositorioPerfil);
 
-    await expect(caso.ejecutar({ id: fichaId, datosCrudos: {}, municipioId })).rejects.toBeInstanceOf(PayloadInvalidoError);
+    await expect(
+      caso.ejecutar({ id: fichaId, datosCrudos: {}, municipioId }),
+    ).rejects.toBeInstanceOf(PayloadInvalidoError);
     expect(repositorioFichas.actualizar).not.toHaveBeenCalled();
   });
 

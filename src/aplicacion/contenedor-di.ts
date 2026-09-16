@@ -28,10 +28,17 @@ import type { IRepositorioProductosComercio } from '@dominio/puertos/IRepositori
 import type { IRepositorioCursos } from '@dominio/puertos/IRepositorioCursos';
 import type { IRepositorioTemasForo } from '@dominio/puertos/IRepositorioTemasForo';
 import type { IRepositorioInscripcionesCurso } from '@dominio/puertos/IRepositorioInscripcionesCurso';
-import type { FuenteDisponibilidadEvento, FuenteDisponibilidadVeterinario, ProveedorTurnera } from '@dominio/estrategias/ProveedorTurnera';
+import type {
+  FuenteDisponibilidadEvento,
+  FuenteDisponibilidadVeterinario,
+  ProveedorTurnera,
+} from '@dominio/estrategias/ProveedorTurnera';
 import type { IControlDeTasa } from '@dominio/puertos/IControlDeTasa';
 import type { IControlDeTasaConReintento } from '@dominio/puertos/IControlDeTasaConReintento';
 import type { IGeneradorEmbeddings } from '@dominio/puertos/IGeneradorEmbeddings';
+import type { IRepositorioCuestionariosAdoptante } from '@dominio/puertos/IRepositorioCuestionariosAdoptante';
+import type { IRepositorioSugerenciasCompatibilidad } from '@dominio/puertos/IRepositorioSugerenciasCompatibilidad';
+import type { IEstrategiaCompatibilidad } from '@dominio/estrategias/EstrategiaCompatibilidad';
 import { PrismaUsuarioRepositorio } from '@infraestructura/adaptadores/PrismaUsuarioRepositorio';
 import { SupabaseAuthAdapter } from '@infraestructura/adaptadores/SupabaseAuthAdapter';
 import { PrismaMascotaRepositorio } from '@infraestructura/adaptadores/PrismaMascotaRepositorio';
@@ -64,6 +71,9 @@ import { TurneraMunicipio, TurneraVeterinario } from '@dominio/estrategias/Prove
 import { UpstashControlDeTasa } from '@infraestructura/adaptadores/UpstashControlDeTasa';
 import { UpstashControlDeTasaAntiSaturacion } from '@infraestructura/adaptadores/UpstashControlDeTasaAntiSaturacion';
 import { OpenAIGeneradorEmbeddings } from '@infraestructura/adaptadores/OpenAIGeneradorEmbeddings';
+import { PrismaCuestionarioAdoptanteRepositorio } from '@infraestructura/adaptadores/PrismaCuestionarioAdoptanteRepositorio';
+import { PrismaSugerenciasCompatibilidadRepositorio } from '@infraestructura/adaptadores/PrismaSugerenciasCompatibilidadRepositorio';
+import { CompatibilidadPorReglas } from '@dominio/estrategias/EstrategiaCompatibilidad';
 
 /**
  * Punto único de registro de dependencias (patrón Singleton para el propio
@@ -77,25 +87,55 @@ import { OpenAIGeneradorEmbeddings } from '@infraestructura/adaptadores/OpenAIGe
  * cambiando solo esta configuración, sin tocar el caso de uso.
  */
 container.registerSingleton<IRepositorioUsuarios>('IRepositorioUsuarios', PrismaUsuarioRepositorio);
-container.registerSingleton<IProveedorAutenticacion>('IProveedorAutenticacion', SupabaseAuthAdapter);
+container.registerSingleton<IProveedorAutenticacion>(
+  'IProveedorAutenticacion',
+  SupabaseAuthAdapter,
+);
 container.registerSingleton<IRepositorioMascotas>('IRepositorioMascotas', PrismaMascotaRepositorio);
-container.registerSingleton<IAlmacenamientoImagenes>('IAlmacenamientoImagenes', CloudinaryStorageAdapter);
-container.registerSingleton<IRepositorioVeterinarios>('IRepositorioVeterinarios', PrismaVeterinarioRepositorio);
+container.registerSingleton<IAlmacenamientoImagenes>(
+  'IAlmacenamientoImagenes',
+  CloudinaryStorageAdapter,
+);
+container.registerSingleton<IRepositorioVeterinarios>(
+  'IRepositorioVeterinarios',
+  PrismaVeterinarioRepositorio,
+);
 container.registerSingleton<IRepositorioPerfil>('IRepositorioPerfil', PrismaPerfilRepositorio);
-container.registerSingleton<IRepositorioMunicipios>('IRepositorioMunicipios', PrismaMunicipioRepositorio);
-container.registerSingleton<IRepositorioVerificaciones>('IRepositorioVerificaciones', PrismaVerificacionesRepositorio);
-container.registerSingleton<INotificacionesRepositorio>('INotificacionesRepositorio', PrismaNotificacionesRepositorio);
+container.registerSingleton<IRepositorioMunicipios>(
+  'IRepositorioMunicipios',
+  PrismaMunicipioRepositorio,
+);
+container.registerSingleton<IRepositorioVerificaciones>(
+  'IRepositorioVerificaciones',
+  PrismaVerificacionesRepositorio,
+);
+container.registerSingleton<INotificacionesRepositorio>(
+  'INotificacionesRepositorio',
+  PrismaNotificacionesRepositorio,
+);
 container.registerSingleton<IRepositorioReportes>('IRepositorioReportes', PrismaReporteRepositorio);
 container.registerSingleton<IRepositorioEventos>('IRepositorioEventos', PrismaEventoRepositorio);
 container.registerSingleton<IRepositorioTurnos>('IRepositorioTurnos', PrismaTurnoRepositorio);
-container.registerSingleton<IRepositorioFichasAdopcion>('IRepositorioFichasAdopcion', PrismaFichaAdopcionRepositorio);
-container.registerSingleton<IRepositorioDashboardMunicipal>('IRepositorioDashboardMunicipal', PrismaDashboardMunicipalRepositorio);
-container.registerSingleton<IRepositorioDisponibilidad>('IRepositorioDisponibilidad', PrismaDisponibilidadRepositorio);
+container.registerSingleton<IRepositorioFichasAdopcion>(
+  'IRepositorioFichasAdopcion',
+  PrismaFichaAdopcionRepositorio,
+);
+container.registerSingleton<IRepositorioDashboardMunicipal>(
+  'IRepositorioDashboardMunicipal',
+  PrismaDashboardMunicipalRepositorio,
+);
+container.registerSingleton<IRepositorioDisponibilidad>(
+  'IRepositorioDisponibilidad',
+  PrismaDisponibilidadRepositorio,
+);
 container.registerSingleton<IRepositorioAutorizacionesLibreta>(
   'IRepositorioAutorizacionesLibreta',
   PrismaAutorizacionesLibretaRepositorio,
 );
-container.registerSingleton<IRepositorioEntradasLibreta>('IRepositorioEntradasLibreta', PrismaEntradasLibretaRepositorio);
+container.registerSingleton<IRepositorioEntradasLibreta>(
+  'IRepositorioEntradasLibreta',
+  PrismaEntradasLibretaRepositorio,
+);
 container.registerSingleton<IRepositorioSolicitudesRecurso>(
   'IRepositorioSolicitudesRecurso',
   PrismaSolicitudesRecursoRepositorio,
@@ -104,22 +144,71 @@ container.registerSingleton<IRepositorioDirectorioAliados>(
   'IRepositorioDirectorioAliados',
   PrismaDirectorioAliadosRepositorio,
 );
-container.registerSingleton<IRepositorioColaboraciones>('IRepositorioColaboraciones', PrismaColaboracionesRepositorio);
-container.registerSingleton<IRepositorioProductosVeterinario>('IRepositorioProductosVeterinario', PrismaProductosVeterinarioRepositorio);
-container.registerSingleton<IRepositorioPedidosProducto>('IRepositorioPedidosProducto', PrismaPedidosProductoRepositorio);
+container.registerSingleton<IRepositorioColaboraciones>(
+  'IRepositorioColaboraciones',
+  PrismaColaboracionesRepositorio,
+);
+container.registerSingleton<IRepositorioProductosVeterinario>(
+  'IRepositorioProductosVeterinario',
+  PrismaProductosVeterinarioRepositorio,
+);
+container.registerSingleton<IRepositorioPedidosProducto>(
+  'IRepositorioPedidosProducto',
+  PrismaPedidosProductoRepositorio,
+);
 container.registerSingleton<IRepositorioHistorialesCompartidos>(
   'IRepositorioHistorialesCompartidos',
   PrismaHistorialesCompartidosRepositorio,
 );
-container.registerSingleton<IRepositorioComercios>('IRepositorioComercios', PrismaComercioRepositorio);
-container.registerSingleton<IRepositorioProductosComercio>('IRepositorioProductosComercio', PrismaProductosComercioRepositorio);
+container.registerSingleton<IRepositorioComercios>(
+  'IRepositorioComercios',
+  PrismaComercioRepositorio,
+);
+container.registerSingleton<IRepositorioProductosComercio>(
+  'IRepositorioProductosComercio',
+  PrismaProductosComercioRepositorio,
+);
 container.registerSingleton<IRepositorioCursos>('IRepositorioCursos', PrismaCursosRepositorio);
-container.registerSingleton<IRepositorioTemasForo>('IRepositorioTemasForo', PrismaTemasForoRepositorio);
-container.registerSingleton<IRepositorioInscripcionesCurso>('IRepositorioInscripcionesCurso', PrismaInscripcionesCursoRepositorio);
-container.registerSingleton<ProveedorTurnera<FuenteDisponibilidadEvento>>('ProveedorTurneraMunicipio', TurneraMunicipio);
-container.registerSingleton<ProveedorTurnera<FuenteDisponibilidadVeterinario>>('ProveedorTurneraVeterinario', TurneraVeterinario);
+container.registerSingleton<IRepositorioTemasForo>(
+  'IRepositorioTemasForo',
+  PrismaTemasForoRepositorio,
+);
+container.registerSingleton<IRepositorioInscripcionesCurso>(
+  'IRepositorioInscripcionesCurso',
+  PrismaInscripcionesCursoRepositorio,
+);
+container.registerSingleton<ProveedorTurnera<FuenteDisponibilidadEvento>>(
+  'ProveedorTurneraMunicipio',
+  TurneraMunicipio,
+);
+container.registerSingleton<ProveedorTurnera<FuenteDisponibilidadVeterinario>>(
+  'ProveedorTurneraVeterinario',
+  TurneraVeterinario,
+);
 container.registerSingleton<IControlDeTasa>('IControlDeTasa', UpstashControlDeTasa);
-container.registerSingleton<IControlDeTasaConReintento>('IControlDeTasaConReintento', UpstashControlDeTasaAntiSaturacion);
-container.registerSingleton<IGeneradorEmbeddings>('IGeneradorEmbeddings', OpenAIGeneradorEmbeddings);
+container.registerSingleton<IControlDeTasaConReintento>(
+  'IControlDeTasaConReintento',
+  UpstashControlDeTasaAntiSaturacion,
+);
+container.registerSingleton<IGeneradorEmbeddings>(
+  'IGeneradorEmbeddings',
+  OpenAIGeneradorEmbeddings,
+);
+container.registerSingleton<IRepositorioCuestionariosAdoptante>(
+  'IRepositorioCuestionariosAdoptante',
+  PrismaCuestionarioAdoptanteRepositorio,
+);
+container.registerSingleton<IRepositorioSugerenciasCompatibilidad>(
+  'IRepositorioSugerenciasCompatibilidad',
+  PrismaSugerenciasCompatibilidadRepositorio,
+);
+// Paso 3 del ticket "EstrategiaMatchAdopcion con Strategy intercambiable"
+// (Módulo 9): única línea a cambiar para migrar de 'reglas' a
+// 'semantico'/'llm' — GenerarSugerenciasCompatibilidad.ts nunca importa
+// CompatibilidadPorReglas ni ninguna otra implementación concreta.
+container.registerSingleton<IEstrategiaCompatibilidad>(
+  'IEstrategiaCompatibilidad',
+  CompatibilidadPorReglas,
+);
 
 export { container };

@@ -16,47 +16,47 @@
 
 ### Bloque 1.A — MVP
 
-| Entidad | Volumen | Justificación |
-|---|---|---|
-| roles | 7 (incluye `organizacion`, id 7, ver `ROLES.md`) | Catálogo fijo |
-| usuarios (dueño) | 120 | Base para mascotas, reportes y turnos con variedad real |
-| usuarios (veterinario) | 8 | Suficiente para probar agenda/turnera distribuida entre varios proveedores |
-| usuarios (municipio) | 1 | Alcance single-tenant documentado en el esquema |
-| usuarios (administrador) | 2 | Uno activo + uno de respaldo |
-| perfiles_veterinario | 8 | 1:1 con veterinarios |
-| perfiles_municipio | 1 | 1:1 con el municipio |
-| verificaciones | 10 | Mezcla `pendiente`/`aprobado`/`rechazado` para probar la cola del Admin |
-| mascotas | 180 | ~1.5 mascotas por dueño en promedio |
-| reportes | 220 | >50 para paginación; mezcla de `tipo`/`estado`/`especie`; alimenta embeddings y mapas de calor; incluye 1 par 'perdido'/'encontrado' garantizado coincidente en zona+especie para REP-U-06 |
-| reportes_historial_estado | ~380 | 1 a 3 transiciones por reporte |
-| notificaciones | ~300 | Mezcla leído/no leído por usuario |
-| eventos | 15 | Pasados y futuros, para calendario y dashboard |
-| disponibilidad_veterinario | 40 | ~5 franjas semanales por veterinario |
-| turnos | 260 | >50 para paginación; mezcla proveedor municipio/veterinario y estado |
-| vitrina_adopcion | 60 | >50 para paginación de la vitrina pública |
-| autorizaciones_libreta | 70 | Mezcla activas/revocadas |
-| entradas_libreta_sanitaria | 160 | Varias entradas por mascota autorizada |
+| Entidad                    | Volumen                                          | Justificación                                                                                                                                                                              |
+| -------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| roles                      | 7 (incluye `organizacion`, id 7, ver `ROLES.md`) | Catálogo fijo                                                                                                                                                                              |
+| usuarios (dueño)           | 120                                              | Base para mascotas, reportes y turnos con variedad real                                                                                                                                    |
+| usuarios (veterinario)     | 8                                                | Suficiente para probar agenda/turnera distribuida entre varios proveedores                                                                                                                 |
+| usuarios (municipio)       | 1                                                | Alcance single-tenant documentado en el esquema                                                                                                                                            |
+| usuarios (administrador)   | 2                                                | Uno activo + uno de respaldo                                                                                                                                                               |
+| perfiles_veterinario       | 8                                                | 1:1 con veterinarios                                                                                                                                                                       |
+| perfiles_municipio         | 1                                                | 1:1 con el municipio                                                                                                                                                                       |
+| verificaciones             | 10                                               | Mezcla `pendiente`/`aprobado`/`rechazado` para probar la cola del Admin                                                                                                                    |
+| mascotas                   | 180                                              | ~1.5 mascotas por dueño en promedio                                                                                                                                                        |
+| reportes                   | 220                                              | >50 para paginación; mezcla de `tipo`/`estado`/`especie`; alimenta embeddings y mapas de calor; incluye 1 par 'perdido'/'encontrado' garantizado coincidente en zona+especie para REP-U-06 |
+| reportes_historial_estado  | ~380                                             | 1 a 3 transiciones por reporte                                                                                                                                                             |
+| notificaciones             | ~300                                             | Mezcla leído/no leído por usuario                                                                                                                                                          |
+| eventos                    | 15                                               | Pasados y futuros, para calendario y dashboard                                                                                                                                             |
+| disponibilidad_veterinario | 40                                               | ~5 franjas semanales por veterinario                                                                                                                                                       |
+| turnos                     | 260                                              | >50 para paginación; mezcla proveedor municipio/veterinario y estado                                                                                                                       |
+| vitrina_adopcion           | 60                                               | >50 para paginación de la vitrina pública; ~50% con atributos de compatibilidad completos (Módulo 9)                                                                                       |
+| autorizaciones_libreta     | 70                                               | Mezcla activas/revocadas                                                                                                                                                                   |
+| entradas_libreta_sanitaria | 160                                              | Varias entradas por mascota autorizada                                                                                                                                                     |
 
 ### Bloque 1.B — Post-MVP (volumen mínimo de integridad, no de carga)
 
-| Entidad | Volumen | Justificación |
-|---|---|---|
-| usuarios (rescatista) | 15 | Suficiente para probar colaboraciones cruzadas |
-| usuarios (comerciante) | 12 | 1:1 con comercios |
-| usuarios (organizacion) | 10 | Requiere el rol agregado en `ROLES.md` |
-| solicitudes_recurso | 60 | >50 para paginación futura |
-| colaboraciones | 90 | 1 a 2 ofertas por solicitud |
-| productos_veterinario | 50 | Catálogo por veterinario |
-| pedidos_producto | 70 | Mezcla de estados |
-| historiales_compartidos | 15 | Volumen bajo por naturaleza sensible del caso de uso |
-| comercios | 12 | 1:1 con usuarios comerciante |
-| productos_comercio | 90 | Catálogo por comercio |
-| cursos | 20 | Publicados por municipio/organización |
-| inscripciones_curso | 150 | Varias por curso |
-| temas_foro | 70 | >50 para paginación del foro |
-| respuestas_foro | 300 | Varias respuestas por tema |
-| cuestionarios_adoptante | 40 | Uno por adoptante potencial |
-| sugerencias_compatibilidad | 150 | Varias sugerencias por cuestionario |
+| Entidad                    | Volumen | Justificación                                        |
+| -------------------------- | ------- | ---------------------------------------------------- |
+| usuarios (rescatista)      | 15      | Suficiente para probar colaboraciones cruzadas       |
+| usuarios (comerciante)     | 12      | 1:1 con comercios                                    |
+| usuarios (organizacion)    | 10      | Requiere el rol agregado en `ROLES.md`               |
+| solicitudes_recurso        | 60      | >50 para paginación futura                           |
+| colaboraciones             | 90      | 1 a 2 ofertas por solicitud                          |
+| productos_veterinario      | 50      | Catálogo por veterinario                             |
+| pedidos_producto           | 70      | Mezcla de estados                                    |
+| historiales_compartidos    | 15      | Volumen bajo por naturaleza sensible del caso de uso |
+| comercios                  | 12      | 1:1 con usuarios comerciante                         |
+| productos_comercio         | 90      | Catálogo por comercio                                |
+| cursos                     | 20      | Publicados por municipio/organización                |
+| inscripciones_curso        | 150     | Varias por curso                                     |
+| temas_foro                 | 70      | >50 para paginación del foro                         |
+| respuestas_foro            | 300     | Varias respuestas por tema                           |
+| cuestionarios_adoptante    | 40      | Uno por adoptante potencial                          |
+| sugerencias_compatibilidad | 150     | Varias sugerencias por cuestionario                  |
 
 ---
 
@@ -310,8 +310,14 @@ CROSS JOIN LATERAL (
 ) ts;
 
 -- 16. Vitrina de adopción
+-- Atributos de compatibilidad (Módulo 9, columnas nullable desde el MVP,
+-- ver docs/SCHEMA.md) completos solo en un SUBCONJUNTO de las 60 fichas
+-- (~50%, `random() < 0.5`) — el resto queda NULL a propósito, para probar
+-- que sugerencias_compatibilidad/EstrategiaMatchAdopcion conviven con fichas
+-- "estilo MVP" que nunca los completaron.
 INSERT INTO vitrina_adopcion (municipio_id, nombre_animal, especie, edad_aproximada, tamano,
-                               temperamento, estado_salud, requisitos_adopcion, foto_url, estado)
+                               temperamento, estado_salud, requisitos_adopcion, foto_url, estado,
+                               nivel_energia, compatible_ninos, compatible_otros_animales, necesidades_medicas_detalle)
 SELECT
   (SELECT id FROM tmp_municipio),
   (ARRAY['Toby','Luna','Rocky','Nina','Max','Bella','Simba','Michi','Kiara','Coco'])[1 + floor(random()*10)::int] || ' ' || gs,
@@ -322,7 +328,14 @@ SELECT
   (ARRAY['Sano, castrado y vacunado','En recuperación, vacunas al día','Sano, pendiente castración'])[1 + floor(random()*3)::int],
   'Adoptante mayor de 18 años, se realiza visita previa a la vivienda.',
   'https://res.cloudinary.com/patitas-en-alerta/adopcion/seed-' || gs || '.jpg',
-  (ARRAY['disponible','disponible','disponible','adoptado','baja'])[1 + floor(random()*5)::int]
+  (ARRAY['disponible','disponible','disponible','adoptado','baja'])[1 + floor(random()*5)::int],
+  CASE WHEN random() < 0.5 THEN (ARRAY['bajo','medio','alto'])[1 + floor(random()*3)::int] END,
+  CASE WHEN random() < 0.5 THEN random() < 0.7 END,
+  CASE WHEN random() < 0.5 THEN random() < 0.6 END,
+  CASE WHEN random() < 0.5 THEN
+    (ARRAY['Requiere medicación diaria para epilepsia','Alergia alimentaria, dieta especial',
+           'Ninguna condición médica relevante'])[1 + floor(random()*3)::int]
+  END
 FROM generate_series(1, 60) AS gs;
 
 -- 17. Autorizaciones de libreta sanitaria

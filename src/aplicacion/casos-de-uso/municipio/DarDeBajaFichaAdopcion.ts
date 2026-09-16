@@ -1,10 +1,16 @@
 import 'reflect-metadata';
 import { injectable, inject } from 'tsyringe';
 import { CasoDeUsoBase } from '@aplicacion/casos-de-uso/CasoDeUsoBase';
-import type { ComandoDarDeBajaFichaAdopcion, FichaAdopcionDto } from '@aplicacion/dtos/municipio/FichaAdopcionDto';
+import type {
+  ComandoDarDeBajaFichaAdopcion,
+  FichaAdopcionDto,
+} from '@aplicacion/dtos/municipio/FichaAdopcionDto';
 import type { IRepositorioFichasAdopcion } from '@dominio/puertos/IRepositorioFichasAdopcion';
 import type { IRepositorioPerfil } from '@dominio/puertos/IRepositorioPerfil';
-import { FichaAdopcionNoEncontradaError, SoloMunicipioAdministraEventosError } from '@dominio/errores/erroresMunicipio';
+import {
+  FichaAdopcionNoEncontradaError,
+  SoloMunicipioAdministraEventosError,
+} from '@dominio/errores/erroresMunicipio';
 
 const ROLES_AUTORIZADOS = ['municipio', 'administrador'];
 
@@ -20,9 +26,13 @@ const ROLES_AUTORIZADOS = ['municipio', 'administrador'];
  * docs/SCHEMA.md), la fila sigue existiendo para histórico/auditoría.
  */
 @injectable()
-export class DarDeBajaFichaAdopcion extends CasoDeUsoBase<ComandoDarDeBajaFichaAdopcion, FichaAdopcionDto> {
+export class DarDeBajaFichaAdopcion extends CasoDeUsoBase<
+  ComandoDarDeBajaFichaAdopcion,
+  FichaAdopcionDto
+> {
   constructor(
-    @inject('IRepositorioFichasAdopcion') private readonly repositorioFichas: IRepositorioFichasAdopcion,
+    @inject('IRepositorioFichasAdopcion')
+    private readonly repositorioFichas: IRepositorioFichasAdopcion,
     @inject('IRepositorioPerfil') private readonly repositorioPerfil: IRepositorioPerfil,
   ) {
     super();
@@ -59,6 +69,10 @@ export class DarDeBajaFichaAdopcion extends CasoDeUsoBase<ComandoDarDeBajaFichaA
       requisitosAdopcion: ficha.requisitosAdopcion,
       fotoUrl: ficha.fotoUrl,
       estado: ficha.estado,
+      nivelEnergia: ficha.nivelEnergia,
+      compatibleNinos: ficha.compatibleNinos,
+      compatibleOtrosAnimales: ficha.compatibleOtrosAnimales,
+      necesidadesMedicasDetalle: ficha.necesidadesMedicasDetalle,
       createdAt: ficha.createdAt.toISOString(),
     };
   }
