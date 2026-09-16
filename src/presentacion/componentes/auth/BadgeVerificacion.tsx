@@ -21,21 +21,24 @@ interface ConfiguracionEstado {
 // Paleta obligatoria del Design System (PLANIFICACION.md Sección 5): solo
 // slate/blue/emerald/red — nada de amarillo/ámbar para "pendiente", por eso
 // usa el neutro slate en vez de inventar un color de advertencia.
-const CONFIGURACION_POR_ESTADO: Record<Exclude<EstadoVerificacion, 'no_requerido'>, ConfiguracionEstado> = {
+const CONFIGURACION_POR_ESTADO: Record<
+  Exclude<EstadoVerificacion, 'no_requerido'>,
+  ConfiguracionEstado
+> = {
   pendiente: {
     texto: 'Verificación pendiente',
     icono: '⏳',
-    clases: 'border-slate-600 bg-slate-800 text-slate-300',
+    clases: 'border-surface2 bg-surface1 text-text-muted',
   },
   verificado: {
     texto: 'Verificado',
     icono: '✅',
-    clases: 'border-emerald-500 bg-slate-800 text-emerald-500',
+    clases: 'border-success bg-surface1 text-success',
   },
   rechazado: {
     texto: 'Verificación rechazada',
     icono: '⚠️',
-    clases: 'border-red-500 bg-slate-800 text-red-500',
+    clases: 'border-danger bg-surface1 text-danger',
   },
 };
 

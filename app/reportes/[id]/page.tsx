@@ -16,9 +16,9 @@ export default function PaginaDetalleReporte() {
   const reporteId = params.id;
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-12 text-slate-50">
+    <main className="mx-auto max-w-3xl px-6 py-12 text-text-primary">
       <h1 className="mb-1 text-xl font-semibold">Historial del reporte</h1>
-      <p className="mb-6 font-mono text-xs text-slate-500">{reporteId}</p>
+      <p className="mb-6 font-mono text-xs text-text-primary0">{reporteId}</p>
 
       <LineaTiempoEstadoReporte reporteId={reporteId} />
     </main>

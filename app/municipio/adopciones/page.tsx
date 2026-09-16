@@ -2,8 +2,14 @@
 
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { CampoTexto } from '@presentacion/componentes/formularios/CampoTexto';
-import { TAMANOS_FICHA_ADOPCION_SOPORTADOS, type TamanoFichaAdopcion } from '@aplicacion/dtos/municipio/FichaAdopcionDto';
-import { ESTADOS_FICHA_ADOPCION_SOPORTADOS, type EstadoFichaAdopcion } from '@dominio/entidades/FichaAdopcion';
+import {
+  TAMANOS_FICHA_ADOPCION_SOPORTADOS,
+  type TamanoFichaAdopcion,
+} from '@aplicacion/dtos/municipio/FichaAdopcionDto';
+import {
+  ESTADOS_FICHA_ADOPCION_SOPORTADOS,
+  type EstadoFichaAdopcion,
+} from '@dominio/entidades/FichaAdopcion';
 
 const POR_PAGINA = 50;
 
@@ -133,14 +139,16 @@ function CamposFicha({ datos, onCambiar, prefijoId }: CamposFichaProps) {
         onChange={(evento) => onCambiar({ ...datos, edadAproximada: evento.target.value })}
       />
       <div className="flex flex-col gap-1.5">
-        <label htmlFor={`${prefijoId}-tamano`} className="text-sm font-medium text-slate-50">
+        <label htmlFor={`${prefijoId}-tamano`} className="text-sm font-medium text-text-primary">
           Tamaño (opcional)
         </label>
         <select
           id={`${prefijoId}-tamano`}
           value={datos.tamano}
-          onChange={(evento) => onCambiar({ ...datos, tamano: evento.target.value as TamanoFichaAdopcion | '' })}
-          className="h-11 min-h-[44px] rounded-md border border-slate-700 bg-slate-800 px-3 text-[15px] text-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          onChange={(evento) =>
+            onCambiar({ ...datos, tamano: evento.target.value as TamanoFichaAdopcion | '' })
+          }
+          className="h-11 min-h-[44px] rounded-md border border-surface2 bg-surface1 px-3 text-[15px] text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
         >
           <option value="">Sin especificar</option>
           {TAMANOS_FICHA_ADOPCION_SOPORTADOS.map((valor) => (
@@ -196,7 +204,8 @@ export default function PaginaAdopcionesMunicipio() {
   const [errorPublicar, setErrorPublicar] = useState<string | null>(null);
 
   const [idEnEdicion, setIdEnEdicion] = useState<string | null>(null);
-  const [formularioEdicion, setFormularioEdicion] = useState<DatosFormularioFicha>(FORMULARIO_VACIO);
+  const [formularioEdicion, setFormularioEdicion] =
+    useState<DatosFormularioFicha>(FORMULARIO_VACIO);
   const [guardandoEdicion, setGuardandoEdicion] = useState(false);
   const [errorEdicion, setErrorEdicion] = useState<string | null>(null);
 
@@ -208,7 +217,10 @@ export default function PaginaAdopcionesMunicipio() {
       setCargando(true);
       setErrorCarga(null);
       try {
-        const params = new URLSearchParams({ pagina: String(paginaSolicitada), porPagina: String(POR_PAGINA) });
+        const params = new URLSearchParams({
+          pagina: String(paginaSolicitada),
+          porPagina: String(POR_PAGINA),
+        });
         if (filtroEstado) params.set('estado', filtroEstado);
 
         const respuesta = await fetch(`/api/municipio/adopciones?${params.toString()}`);
@@ -222,7 +234,9 @@ export default function PaginaAdopcionesMunicipio() {
         setTotal(datos.total);
         setPagina(datos.pagina);
       } catch {
-        setErrorCarga('No pudimos conectarnos con el servidor. Revisá tu conexión e intentá de nuevo.');
+        setErrorCarga(
+          'No pudimos conectarnos con el servidor. Revisá tu conexión e intentá de nuevo.',
+        );
       } finally {
         setCargando(false);
       }
@@ -252,7 +266,9 @@ export default function PaginaAdopcionesMunicipio() {
       setFormularioNuevo(FORMULARIO_VACIO);
       await cargarPagina(1);
     } catch {
-      setErrorPublicar('No pudimos conectarnos con el servidor. Revisá tu conexión e intentá de nuevo.');
+      setErrorPublicar(
+        'No pudimos conectarnos con el servidor. Revisá tu conexión e intentá de nuevo.',
+      );
     } finally {
       setPublicando(false);
     }
@@ -291,7 +307,9 @@ export default function PaginaAdopcionesMunicipio() {
       setItems((actuales) => actuales.map((item) => (item.id === id ? actualizada : item)));
       setIdEnEdicion(null);
     } catch {
-      setErrorEdicion('No pudimos conectarnos con el servidor. Revisá tu conexión e intentá de nuevo.');
+      setErrorEdicion(
+        'No pudimos conectarnos con el servidor. Revisá tu conexión e intentá de nuevo.',
+      );
     } finally {
       setGuardandoEdicion(false);
     }
@@ -310,7 +328,9 @@ export default function PaginaAdopcionesMunicipio() {
       const actualizada = (await respuesta.json()) as FichaApi;
       setItems((actuales) => actuales.map((item) => (item.id === id ? actualizada : item)));
     } catch {
-      setErrorBaja('No pudimos conectarnos con el servidor. Revisá tu conexión e intentá de nuevo.');
+      setErrorBaja(
+        'No pudimos conectarnos con el servidor. Revisá tu conexión e intentá de nuevo.',
+      );
     } finally {
       setIdDandoBaja(null);
     }
@@ -319,19 +339,21 @@ export default function PaginaAdopcionesMunicipio() {
   const totalPaginas = Math.max(1, Math.ceil(total / POR_PAGINA));
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-12 text-slate-50">
+    <main className="mx-auto max-w-5xl px-6 py-12 text-text-primary">
       <h1 className="mb-1 text-xl font-semibold">Vitrina de adopción</h1>
-      <p className="mb-6 text-sm text-slate-400">Publicá, editá y dá de baja fichas de animales en adopción.</p>
+      <p className="mb-6 text-sm text-text-muted">
+        Publicá, editá y dá de baja fichas de animales en adopción.
+      </p>
 
       <form
         onSubmit={manejarPublicar}
-        className="mb-10 flex flex-col gap-4 rounded-md border border-slate-700 bg-slate-800/50 p-5"
+        className="mb-10 flex flex-col gap-4 rounded-md border border-surface2 bg-surface1/50 p-5"
       >
         <h2 className="text-base font-semibold">Publicar nueva ficha</h2>
         <CamposFicha datos={formularioNuevo} onCambiar={setFormularioNuevo} prefijoId="nueva" />
 
         {errorPublicar ? (
-          <p className="flex items-center gap-1.5 text-sm text-red-500">
+          <p className="flex items-center gap-1.5 text-sm text-danger">
             <span aria-hidden="true">⚠️</span>
             {errorPublicar}
           </p>
@@ -339,8 +361,13 @@ export default function PaginaAdopcionesMunicipio() {
 
         <button
           type="submit"
-          disabled={publicando || !formularioNuevo.nombreAnimal.trim() || !formularioNuevo.especie.trim() || !formularioNuevo.fotoUrl.trim()}
-          className="h-11 min-h-[44px] self-start rounded-md bg-blue-500 px-4 text-[15px] font-medium text-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+          disabled={
+            publicando ||
+            !formularioNuevo.nombreAnimal.trim() ||
+            !formularioNuevo.especie.trim() ||
+            !formularioNuevo.fotoUrl.trim()
+          }
+          className="h-11 min-h-[44px] self-start rounded-md bg-accent px-4 text-[15px] font-medium text-text-primary disabled:cursor-not-allowed disabled:opacity-50"
         >
           {publicando ? 'Publicando…' : 'Publicar ficha'}
         </button>
@@ -348,14 +375,14 @@ export default function PaginaAdopcionesMunicipio() {
 
       <div className="mb-4 flex flex-wrap items-end gap-3">
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="filtro-estado" className="text-xs font-medium text-slate-400">
+          <label htmlFor="filtro-estado" className="text-xs font-medium text-text-muted">
             Estado
           </label>
           <select
             id="filtro-estado"
             value={filtroEstado}
             onChange={(evento) => setFiltroEstado(evento.target.value as EstadoFichaAdopcion | '')}
-            className="h-11 min-h-[44px] rounded-md border border-slate-700 bg-slate-800 px-3 text-[15px] text-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="h-11 min-h-[44px] rounded-md border border-surface2 bg-surface1 px-3 text-[15px] text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
           >
             <option value="">Todos</option>
             {ESTADOS_FICHA_ADOPCION_SOPORTADOS.map((valor) => (
@@ -368,24 +395,24 @@ export default function PaginaAdopcionesMunicipio() {
       </div>
 
       {errorCarga ? (
-        <p className="mb-4 flex items-center gap-1.5 text-sm text-red-500">
+        <p className="mb-4 flex items-center gap-1.5 text-sm text-danger">
           <span aria-hidden="true">⚠️</span>
           {errorCarga}
         </p>
       ) : null}
 
       {errorBaja ? (
-        <p className="mb-4 flex items-center gap-1.5 text-sm text-red-500">
+        <p className="mb-4 flex items-center gap-1.5 text-sm text-danger">
           <span aria-hidden="true">⚠️</span>
           {errorBaja}
         </p>
       ) : null}
 
-      {cargando ? <p className="text-sm text-slate-400">Cargando…</p> : null}
+      {cargando ? <p className="text-sm text-text-muted">Cargando…</p> : null}
 
       {!cargando && !errorCarga && items.length === 0 ? (
-        <div className="rounded-md border border-dashed border-slate-700 p-8 text-center">
-          <p className="text-sm font-medium text-slate-50">No hay fichas para estos filtros.</p>
+        <div className="rounded-md border border-dashed border-surface2 p-8 text-center">
+          <p className="text-sm font-medium text-text-primary">No hay fichas para estos filtros.</p>
         </div>
       ) : null}
 
@@ -393,11 +420,15 @@ export default function PaginaAdopcionesMunicipio() {
         <div className="flex flex-col gap-4">
           {items.map((ficha) =>
             idEnEdicion === ficha.id ? (
-              <div key={ficha.id} className="rounded-md border border-blue-500 bg-slate-800/50 p-5">
-                <p className="mb-3 font-mono text-xs text-slate-400">{ficha.id}</p>
-                <CamposFicha datos={formularioEdicion} onCambiar={setFormularioEdicion} prefijoId={`editar-${ficha.id}`} />
+              <div key={ficha.id} className="rounded-md border border-accent bg-surface1/50 p-5">
+                <p className="mb-3 font-mono text-xs text-text-muted">{ficha.id}</p>
+                <CamposFicha
+                  datos={formularioEdicion}
+                  onCambiar={setFormularioEdicion}
+                  prefijoId={`editar-${ficha.id}`}
+                />
                 {errorEdicion ? (
-                  <p className="mt-3 flex items-center gap-1.5 text-sm text-red-500">
+                  <p className="mt-3 flex items-center gap-1.5 text-sm text-danger">
                     <span aria-hidden="true">⚠️</span>
                     {errorEdicion}
                   </p>
@@ -407,7 +438,7 @@ export default function PaginaAdopcionesMunicipio() {
                     type="button"
                     onClick={() => guardarEdicion(ficha.id)}
                     disabled={guardandoEdicion}
-                    className="h-11 min-h-[44px] rounded-md bg-blue-500 px-4 text-[15px] font-medium text-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="h-11 min-h-[44px] rounded-md bg-accent px-4 text-[15px] font-medium text-text-primary disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {guardandoEdicion ? 'Guardando…' : 'Guardar cambios'}
                   </button>
@@ -415,7 +446,7 @@ export default function PaginaAdopcionesMunicipio() {
                     type="button"
                     onClick={() => setIdEnEdicion(null)}
                     disabled={guardandoEdicion}
-                    className="h-11 min-h-[44px] rounded-md border border-slate-600 px-4 text-[15px] font-medium text-slate-300"
+                    className="h-11 min-h-[44px] rounded-md border border-surface2 px-4 text-[15px] font-medium text-text-muted"
                   >
                     Cancelar
                   </button>
@@ -425,23 +456,29 @@ export default function PaginaAdopcionesMunicipio() {
               <div
                 key={ficha.id}
                 data-testid={`fila-ficha-${ficha.id}`}
-                className="flex items-center gap-4 rounded-md border border-slate-700 p-4"
+                className="flex items-center gap-4 rounded-md border border-surface2 p-4"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={ficha.fotoUrl} alt={ficha.nombreAnimal} className="h-16 w-16 rounded-md object-cover" />
+                <img
+                  src={ficha.fotoUrl}
+                  alt={ficha.nombreAnimal}
+                  className="h-16 w-16 rounded-md object-cover"
+                />
                 <div className="flex-1">
-                  <p className="font-medium text-slate-50">
-                    {ficha.nombreAnimal} <span className="text-slate-400">· {ficha.especie}</span>
+                  <p className="font-medium text-text-primary">
+                    {ficha.nombreAnimal} <span className="text-text-muted">· {ficha.especie}</span>
                   </p>
-                  <p className="text-sm text-slate-300">{badgeEstado(ficha.estado)}</p>
-                  <p className="font-mono text-xs text-slate-500">{ficha.id}</p>
-                  <p className="font-mono text-xs text-slate-500">{formatearFecha(ficha.createdAt)}</p>
+                  <p className="text-sm text-text-muted">{badgeEstado(ficha.estado)}</p>
+                  <p className="font-mono text-xs text-text-primary0">{ficha.id}</p>
+                  <p className="font-mono text-xs text-text-primary0">
+                    {formatearFecha(ficha.createdAt)}
+                  </p>
                 </div>
                 <div className="flex gap-2">
                   <button
                     type="button"
                     onClick={() => iniciarEdicion(ficha)}
-                    className="h-9 min-h-[36px] rounded-md border border-slate-600 px-3 text-xs font-medium text-slate-300"
+                    className="h-9 min-h-[36px] rounded-md border border-surface2 px-3 text-xs font-medium text-text-muted"
                   >
                     Editar
                   </button>
@@ -449,7 +486,7 @@ export default function PaginaAdopcionesMunicipio() {
                     type="button"
                     onClick={() => darDeBaja(ficha.id)}
                     disabled={ficha.estado === 'baja' || idDandoBaja === ficha.id}
-                    className="h-9 min-h-[36px] rounded-md border border-red-500 px-3 text-xs font-medium text-red-500 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="h-9 min-h-[36px] rounded-md border border-danger px-3 text-xs font-medium text-danger disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {idDandoBaja === ficha.id ? 'Dando de baja…' : 'Dar de baja'}
                   </button>
@@ -461,12 +498,12 @@ export default function PaginaAdopcionesMunicipio() {
       ) : null}
 
       {total > POR_PAGINA ? (
-        <div className="mt-6 flex items-center justify-between text-sm text-slate-400">
+        <div className="mt-6 flex items-center justify-between text-sm text-text-muted">
           <button
             type="button"
             onClick={() => cargarPagina(pagina - 1)}
             disabled={pagina <= 1 || cargando}
-            className="h-11 min-h-[44px] rounded-md border border-slate-600 px-4 disabled:cursor-not-allowed disabled:opacity-50"
+            className="h-11 min-h-[44px] rounded-md border border-surface2 px-4 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Anterior
           </button>
@@ -477,7 +514,7 @@ export default function PaginaAdopcionesMunicipio() {
             type="button"
             onClick={() => cargarPagina(pagina + 1)}
             disabled={pagina >= totalPaginas || cargando}
-            className="h-11 min-h-[44px] rounded-md border border-slate-600 px-4 disabled:cursor-not-allowed disabled:opacity-50"
+            className="h-11 min-h-[44px] rounded-md border border-surface2 px-4 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Siguiente
           </button>

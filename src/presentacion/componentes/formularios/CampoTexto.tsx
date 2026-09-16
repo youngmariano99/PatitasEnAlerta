@@ -9,7 +9,7 @@ interface CampoTextoProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'i
 }
 
 /**
- * Campo de formulario del Design System obligatorio (Dark Utility Premium).
+ * Campo de formulario del Design System obligatorio (Brandbook, docs/DISENO.md).
  * El error nunca se comunica solo por color (NFR Accesibilidad): siempre
  * acompaña ícono + texto. Reutilizable en cualquier formulario del proyecto.
  */
@@ -19,15 +19,15 @@ export function CampoTexto({ id, label, error, ayuda, className, ...inputProps }
 
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-sm font-medium text-slate-50">
+      <label htmlFor={id} className="text-sm font-medium text-text-primary">
         {label}
       </label>
       <input
         id={id}
         className={clsx(
-          'h-11 min-h-[44px] rounded-md border bg-slate-800 px-3 text-[15px] text-slate-50',
-          'placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500',
-          error ? 'border-red-500' : 'border-slate-700',
+          'h-11 min-h-[44px] rounded-md border bg-surface1 px-3 text-[15px] text-text-primary',
+          'placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-accent',
+          error ? 'border-danger' : 'border-surface2',
           className,
         )}
         aria-invalid={Boolean(error)}
@@ -35,12 +35,12 @@ export function CampoTexto({ id, label, error, ayuda, className, ...inputProps }
         {...inputProps}
       />
       {error ? (
-        <p id={idError} className="flex items-center gap-1.5 text-sm text-red-500">
+        <p id={idError} className="flex items-center gap-1.5 text-sm text-danger">
           <span aria-hidden="true">⚠️</span>
           {error}
         </p>
       ) : ayuda ? (
-        <p id={idAyuda} className="text-sm text-slate-400">
+        <p id={idAyuda} className="text-sm text-text-muted">
           {ayuda}
         </p>
       ) : null}

@@ -7,9 +7,9 @@ import { BuscadorComercios } from '@presentacion/componentes/comercios/BuscadorC
  */
 export default function PaginaComercios() {
   return (
-    <main className="mx-auto max-w-5xl px-6 py-12 text-slate-50">
+    <main className="mx-auto max-w-5xl px-6 py-12 text-text-primary">
       <h1 className="mb-1 text-xl font-semibold">Comercios cercanos</h1>
-      <p className="mb-6 text-sm text-slate-400">
+      <p className="mb-6 text-sm text-text-muted">
         Pet shops, veterinarias, forrajerías y otros comercios verificados por la plataforma.
       </p>
       <BuscadorComercios />

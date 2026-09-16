@@ -26,7 +26,11 @@ function mockearFetch(respuestas: Array<{ status: number; body: unknown }>) {
   global.fetch = jest.fn().mockImplementation(async () => {
     const respuesta = respuestas[Math.min(llamada, respuestas.length - 1)]!;
     llamada += 1;
-    return { ok: respuesta.status >= 200 && respuesta.status < 300, status: respuesta.status, json: async () => respuesta.body };
+    return {
+      ok: respuesta.status >= 200 && respuesta.status < 300,
+      status: respuesta.status,
+      json: async () => respuesta.body,
+    };
   }) as jest.Mock;
 }
 
@@ -37,7 +41,9 @@ function ultimaUrlSolicitada(): string {
 
 describe('PaginaReportes (app/reportes)', () => {
   it('renderiza la tabla con columnas ID y fecha en font-mono', async () => {
-    mockearFetch([{ status: 200, body: { items: [reporteBase], total: 1, pagina: 1, porPagina: 50 } }]);
+    mockearFetch([
+      { status: 200, body: { items: [reporteBase], total: 1, pagina: 1, porPagina: 50 } },
+    ]);
     render(<PaginaReportes />);
 
     const celdaId = await screen.findByText(reporteBase.id);
@@ -52,12 +58,14 @@ describe('PaginaReportes (app/reportes)', () => {
     mockearFetch([{ status: 200, body: { items: [], total: 0, pagina: 1, porPagina: 50 } }]);
     render(<PaginaReportes />);
 
-    const contenedor = (await screen.findByText('No encontramos reportes con estos filtros.')).closest('div')!;
+    const contenedor = (
+      await screen.findByText('No encontramos reportes con estos filtros.')
+    ).closest('div')!;
     expect(contenedor).toHaveClass('border-dashed');
 
     const cta = screen.getByRole('link', { name: 'Publicar un reporte' });
     expect(cta).toHaveAttribute('href', '/reportes/nuevo');
-    expect(cta).toHaveClass('bg-blue-500');
+    expect(cta).toHaveClass('bg-accent');
   });
 
   it('cuando el estado vacío es por filtros activos, el CTA limpia los filtros en vez de linkear a /reportes/nuevo', async () => {
@@ -71,7 +79,9 @@ describe('PaginaReportes (app/reportes)', () => {
 
     await usuario.selectOptions(screen.getByLabelText('Tipo'), 'encontrado');
 
-    expect(await screen.findByText('No encontramos reportes con estos filtros.')).toBeInTheDocument();
+    expect(
+      await screen.findByText('No encontramos reportes con estos filtros.'),
+    ).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: 'Limpiar filtros' }).length).toBeGreaterThan(0);
     expect(screen.queryByRole('link', { name: 'Publicar un reporte' })).not.toBeInTheDocument();
   });
@@ -91,7 +101,9 @@ describe('PaginaReportes (app/reportes)', () => {
   });
 
   it('alterna entre tabla y mapa sin perder el filtro de tipo activo', async () => {
-    mockearFetch([{ status: 200, body: { items: [reporteBase], total: 1, pagina: 1, porPagina: 50 } }]);
+    mockearFetch([
+      { status: 200, body: { items: [reporteBase], total: 1, pagina: 1, porPagina: 50 } },
+    ]);
     const usuario = userEvent.setup();
     render(<PaginaReportes />);
     await screen.findByText(reporteBase.id);
@@ -108,7 +120,9 @@ describe('PaginaReportes (app/reportes)', () => {
   });
 
   it('muestra un mensaje de error legible si la API falla', async () => {
-    mockearFetch([{ status: 500, body: { codigo: 'PEA-SIS-003', mensaje: 'Algo salió mal de nuestro lado.' } }]);
+    mockearFetch([
+      { status: 500, body: { codigo: 'PEA-SIS-003', mensaje: 'Algo salió mal de nuestro lado.' } },
+    ]);
     render(<PaginaReportes />);
 
     expect(await screen.findByText('Algo salió mal de nuestro lado.')).toBeInTheDocument();

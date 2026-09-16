@@ -49,7 +49,9 @@ export default function PaginaVerificacionesPendientes() {
     setCargando(true);
     setErrorCarga(null);
     try {
-      const respuesta = await fetch(`/api/admin/verificaciones?pagina=${paginaSolicitada}&porPagina=${POR_PAGINA}`);
+      const respuesta = await fetch(
+        `/api/admin/verificaciones?pagina=${paginaSolicitada}&porPagina=${POR_PAGINA}`,
+      );
       if (respuesta.status === 401 || respuesta.status === 403) {
         setErrorCarga('No tenés permiso para ver este panel.');
         return;
@@ -59,12 +61,18 @@ export default function PaginaVerificacionesPendientes() {
         setErrorCarga(cuerpo.mensaje);
         return;
       }
-      const datos = (await respuesta.json()) as { items: VerificacionPendienteApi[]; total: number; pagina: number };
+      const datos = (await respuesta.json()) as {
+        items: VerificacionPendienteApi[];
+        total: number;
+        pagina: number;
+      };
       setVerificaciones(datos.items);
       setTotal(datos.total);
       setPagina(datos.pagina);
     } catch {
-      setErrorCarga('No pudimos conectarnos con el servidor. Revisá tu conexión e intentá de nuevo.');
+      setErrorCarga(
+        'No pudimos conectarnos con el servidor. Revisá tu conexión e intentá de nuevo.',
+      );
     } finally {
       setCargando(false);
     }
@@ -95,7 +103,10 @@ export default function PaginaVerificacionesPendientes() {
       const cuerpo = (await respuesta.json()) as RespuestaError;
       setErrorPorId((prev) => ({ ...prev, [id]: cuerpo.mensaje }));
     } catch {
-      setErrorPorId((prev) => ({ ...prev, [id]: 'No pudimos conectarnos con el servidor. Intentá de nuevo.' }));
+      setErrorPorId((prev) => ({
+        ...prev,
+        [id]: 'No pudimos conectarnos con el servidor. Intentá de nuevo.',
+      }));
     } finally {
       setAccionEnCursoId(null);
     }
@@ -112,8 +123,8 @@ export default function PaginaVerificacionesPendientes() {
 
   if (errorCarga) {
     return (
-      <main className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center px-6 py-12 text-slate-50">
-        <p className="flex items-center gap-1.5 text-sm text-red-500">
+      <main className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center px-6 py-12 text-text-primary">
+        <p className="flex items-center gap-1.5 text-sm text-danger">
           <span aria-hidden="true">⚠️</span>
           {errorCarga}
         </p>
@@ -122,28 +133,28 @@ export default function PaginaVerificacionesPendientes() {
   }
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-12 text-slate-50">
+    <main className="mx-auto max-w-3xl px-6 py-12 text-text-primary">
       <h1 className="mb-1 text-xl font-semibold">Verificaciones pendientes</h1>
-      <p className="mb-6 text-sm text-slate-400">
+      <p className="mb-6 text-sm text-text-muted">
         Revisá la matrícula o los datos institucionales antes de aprobar o rechazar cada cuenta.
       </p>
 
-      {cargando ? <p className="text-sm text-slate-400">Cargando…</p> : null}
+      {cargando ? <p className="text-sm text-text-muted">Cargando…</p> : null}
 
       {!cargando && verificaciones.length === 0 ? (
-        <div className="rounded-md border border-dashed border-slate-700 p-6 text-center text-sm text-slate-400">
+        <div className="rounded-md border border-dashed border-surface2 p-6 text-center text-sm text-text-muted">
           No hay verificaciones pendientes en este momento.
         </div>
       ) : null}
 
       <ul className="flex flex-col gap-3">
         {verificaciones.map((fila) => (
-          <li key={fila.id} className="rounded-md border border-slate-700 bg-slate-800 p-4">
+          <li key={fila.id} className="rounded-md border border-surface2 bg-surface1 p-4">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <p className="font-medium text-slate-50">{fila.email}</p>
-                <p className="text-sm text-slate-400">{detalleSolicitante(fila)}</p>
-                <p className="mt-1 font-mono text-xs text-slate-400">
+                <p className="font-medium text-text-primary">{fila.email}</p>
+                <p className="text-sm text-text-muted">{detalleSolicitante(fila)}</p>
+                <p className="mt-1 font-mono text-xs text-text-muted">
                   {fila.tipo} · solicitado el {formatearFecha(fila.createdAt)}
                 </p>
               </div>
@@ -153,7 +164,7 @@ export default function PaginaVerificacionesPendientes() {
                   type="button"
                   onClick={() => resolver(fila.id, 'aprobado')}
                   disabled={accionEnCursoId === fila.id}
-                  className="h-11 min-h-[44px] rounded-md bg-emerald-500 px-4 text-[15px] font-medium text-slate-950 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="h-11 min-h-[44px] rounded-md bg-success px-4 text-[15px] font-medium text-text-primary disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Aprobar
                 </button>
@@ -161,7 +172,7 @@ export default function PaginaVerificacionesPendientes() {
                   type="button"
                   onClick={() => setRechazandoId(rechazandoId === fila.id ? null : fila.id)}
                   disabled={accionEnCursoId === fila.id}
-                  className="h-11 min-h-[44px] rounded-md border border-red-500 px-4 text-[15px] font-medium text-red-500 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="h-11 min-h-[44px] rounded-md border border-danger px-4 text-[15px] font-medium text-danger disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Rechazar
                 </button>
@@ -169,15 +180,21 @@ export default function PaginaVerificacionesPendientes() {
             </div>
 
             {rechazandoId === fila.id ? (
-              <div className="mt-3 flex flex-col gap-2 border-t border-slate-700 pt-3">
+              <div className="mt-3 flex flex-col gap-2 border-t border-surface2 pt-3">
                 <CampoTexto
                   id={`motivo-${fila.id}`}
                   label="Motivo del rechazo"
                   placeholder="Ej: la matrícula no figura en el padrón del colegio"
                   value={motivoPorId[fila.id] ?? ''}
-                  onChange={(evento) => setMotivoPorId((prev) => ({ ...prev, [fila.id]: evento.target.value }))}
+                  onChange={(evento) =>
+                    setMotivoPorId((prev) => ({ ...prev, [fila.id]: evento.target.value }))
+                  }
                   onBlur={() => setTocadoMotivoId(fila.id)}
-                  error={tocadoMotivoId === fila.id && !motivoPorId[fila.id]?.trim() ? 'Ingresá el motivo del rechazo.' : undefined}
+                  error={
+                    tocadoMotivoId === fila.id && !motivoPorId[fila.id]?.trim()
+                      ? 'Ingresá el motivo del rechazo.'
+                      : undefined
+                  }
                   required
                 />
                 <div className="flex gap-2">
@@ -185,14 +202,14 @@ export default function PaginaVerificacionesPendientes() {
                     type="button"
                     onClick={() => confirmarRechazo(fila.id)}
                     disabled={accionEnCursoId === fila.id}
-                    className="h-11 min-h-[44px] rounded-md bg-red-500 px-4 text-[15px] font-medium text-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="h-11 min-h-[44px] rounded-md bg-danger px-4 text-[15px] font-medium text-text-primary disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     Confirmar rechazo
                   </button>
                   <button
                     type="button"
                     onClick={() => setRechazandoId(null)}
-                    className="h-11 min-h-[44px] rounded-md border border-slate-600 px-4 text-[15px] font-medium text-slate-300"
+                    className="h-11 min-h-[44px] rounded-md border border-surface2 px-4 text-[15px] font-medium text-text-muted"
                   >
                     Cancelar
                   </button>
@@ -201,7 +218,7 @@ export default function PaginaVerificacionesPendientes() {
             ) : null}
 
             {errorPorId[fila.id] ? (
-              <p className="mt-2 flex items-center gap-1.5 text-sm text-red-500">
+              <p className="mt-2 flex items-center gap-1.5 text-sm text-danger">
                 <span aria-hidden="true">⚠️</span>
                 {errorPorId[fila.id]}
               </p>
@@ -211,12 +228,12 @@ export default function PaginaVerificacionesPendientes() {
       </ul>
 
       {total > POR_PAGINA ? (
-        <div className="mt-6 flex items-center justify-between text-sm text-slate-400">
+        <div className="mt-6 flex items-center justify-between text-sm text-text-muted">
           <button
             type="button"
             onClick={() => cargarPagina(pagina - 1)}
             disabled={pagina <= 1 || cargando}
-            className="h-11 min-h-[44px] rounded-md border border-slate-600 px-4 disabled:cursor-not-allowed disabled:opacity-50"
+            className="h-11 min-h-[44px] rounded-md border border-surface2 px-4 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Anterior
           </button>
@@ -227,7 +244,7 @@ export default function PaginaVerificacionesPendientes() {
             type="button"
             onClick={() => cargarPagina(pagina + 1)}
             disabled={pagina >= totalPaginas || cargando}
-            className="h-11 min-h-[44px] rounded-md border border-slate-600 px-4 disabled:cursor-not-allowed disabled:opacity-50"
+            className="h-11 min-h-[44px] rounded-md border border-surface2 px-4 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Siguiente
           </button>

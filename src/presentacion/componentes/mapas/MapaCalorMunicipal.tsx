@@ -39,7 +39,7 @@ export function MapaCalorMunicipal({ puntos, centro }: MapaCalorMunicipalProps) 
   const totalMaximo = Math.max(0, ...puntos.map((p) => p.total));
 
   return (
-    <div className="overflow-hidden rounded-md border border-slate-700">
+    <div className="overflow-hidden rounded-md border border-surface2">
       <MapContainer center={centro} zoom={12} style={{ height: 420, width: '100%' }}>
         <TileLayer
           attribution='&copy; colaboradores de <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -53,7 +53,8 @@ export function MapaCalorMunicipal({ puntos, centro }: MapaCalorMunicipalProps) 
             pathOptions={{ color: '#ef4444', fillColor: '#ef4444', fillOpacity: 0.45, weight: 1 }}
           >
             <Popup>
-              <span className="font-medium">{punto.total}</span> reporte{punto.total === 1 ? '' : 's'} en esta zona
+              <span className="font-medium">{punto.total}</span> reporte
+              {punto.total === 1 ? '' : 's'} en esta zona
             </Popup>
           </CircleMarker>
         ))}

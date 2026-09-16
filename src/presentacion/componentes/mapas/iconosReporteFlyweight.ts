@@ -17,11 +17,11 @@ const EMOJI_POR_TIPO: Record<string, string> = {
 };
 
 const COLOR_POR_ESTADO: Record<string, string> = {
-  reportado: '#3b82f6', // blue-500 — recién publicado
-  en_revision: '#f59e0b', // amber-500 — en curso
-  en_atencion: '#f59e0b',
-  resuelto: '#10b981', // emerald-500 — cerrado con final feliz
-  cerrado: '#64748b', // slate-500 — cerrado sin más detalle
+  reportado: '#0073E6', // Azul Cívico — recién publicado
+  en_revision: '#C44601', // Naranja Alerta — en curso
+  en_atencion: '#C44601',
+  resuelto: '#008080', // Verde Sanitario — cerrado con final feliz
+  cerrado: '#5B6470', // gris muted — cerrado sin más detalle
 };
 
 export function obtenerIconoReporte(tipo: string, estado: string): L.DivIcon {
@@ -30,7 +30,7 @@ export function obtenerIconoReporte(tipo: string, estado: string): L.DivIcon {
   if (cacheado) return cacheado;
 
   const emoji = EMOJI_POR_TIPO[tipo] ?? '📌';
-  const color = COLOR_POR_ESTADO[estado] ?? '#64748b';
+  const color = COLOR_POR_ESTADO[estado] ?? '#5B6470';
   const icono = L.divIcon({
     className: 'icono-reporte-flyweight',
     html: `<span style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:9999px;background:${color};font-size:14px;box-shadow:0 1px 3px rgba(0,0,0,0.4);">${emoji}</span>`,

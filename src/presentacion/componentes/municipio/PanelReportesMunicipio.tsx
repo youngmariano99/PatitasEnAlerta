@@ -1,7 +1,10 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { TIPOS_REPORTE_SOPORTADOS, type TipoReporte } from '@aplicacion/dtos/reportes/CrearReporteDto';
+import {
+  TIPOS_REPORTE_SOPORTADOS,
+  type TipoReporte,
+} from '@aplicacion/dtos/reportes/CrearReporteDto';
 import { ESTADOS_REPORTE_SOPORTADOS, type EstadoReporte } from '@dominio/entidades/Reporte';
 import { ReporteEstado } from '@dominio/estados/ReporteEstado';
 
@@ -68,13 +71,15 @@ interface ControlCambioEstadoProps {
 
 /** Selector + confirmación, acotado a las transiciones válidas desde el estado actual (PEA-REP-006, "mostrar solo las transiciones válidas"). */
 function ControlCambioEstado({ reporte, onCambiar }: ControlCambioEstadoProps) {
-  const transicionesValidas = ReporteEstado.desde(reporte.estado as EstadoReporte).transicionesValidas;
+  const transicionesValidas = ReporteEstado.desde(
+    reporte.estado as EstadoReporte,
+  ).transicionesValidas;
   const [seleccion, setSeleccion] = useState<EstadoReporte | ''>('');
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   if (transicionesValidas.length === 0) {
-    return <span className="text-xs text-slate-500">Sin transiciones disponibles</span>;
+    return <span className="text-xs text-text-primary0">Sin transiciones disponibles</span>;
   }
 
   async function confirmar() {
@@ -99,7 +104,7 @@ function ControlCambioEstado({ reporte, onCambiar }: ControlCambioEstadoProps) {
           value={seleccion}
           onChange={(evento) => setSeleccion(evento.target.value as EstadoReporte | '')}
           disabled={enviando}
-          className="h-9 min-h-[36px] rounded-md border border-slate-700 bg-slate-800 px-2 text-xs text-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="h-9 min-h-[36px] rounded-md border border-surface2 bg-surface1 px-2 text-xs text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
         >
           <option value="">Cambiar a…</option>
           {transicionesValidas.map((valor) => (
@@ -112,13 +117,13 @@ function ControlCambioEstado({ reporte, onCambiar }: ControlCambioEstadoProps) {
           type="button"
           onClick={confirmar}
           disabled={!seleccion || enviando}
-          className="h-9 min-h-[36px] rounded-md bg-blue-500 px-3 text-xs font-medium text-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+          className="h-9 min-h-[36px] rounded-md bg-accent px-3 text-xs font-medium text-text-primary disabled:cursor-not-allowed disabled:opacity-50"
         >
           {enviando ? 'Guardando…' : 'Confirmar'}
         </button>
       </div>
       {error ? (
-        <p className="flex items-center gap-1 text-xs text-red-500">
+        <p className="flex items-center gap-1 text-xs text-danger">
           <span aria-hidden="true">⚠️</span>
           {error}
         </p>
@@ -161,7 +166,10 @@ export function PanelReportesMunicipio({ rol }: PanelReportesMunicipioProps) {
       setCargando(true);
       setErrorCarga(null);
       try {
-        const params = new URLSearchParams({ pagina: String(paginaSolicitada), porPagina: String(POR_PAGINA) });
+        const params = new URLSearchParams({
+          pagina: String(paginaSolicitada),
+          porPagina: String(POR_PAGINA),
+        });
         if (tipo) params.set('tipo', tipo);
         if (estado) params.set('estado', estado);
         if (fechaDesde) params.set('fechaDesde', new Date(fechaDesde).toISOString());
@@ -178,7 +186,9 @@ export function PanelReportesMunicipio({ rol }: PanelReportesMunicipioProps) {
         setTotal(datos.total);
         setPagina(datos.pagina);
       } catch {
-        setErrorCarga('No pudimos conectarnos con el servidor. Revisá tu conexión e intentá de nuevo.');
+        setErrorCarga(
+          'No pudimos conectarnos con el servidor. Revisá tu conexión e intentá de nuevo.',
+        );
       } finally {
         setCargando(false);
       }
@@ -207,7 +217,9 @@ export function PanelReportesMunicipio({ rol }: PanelReportesMunicipioProps) {
       const cuerpo = (await respuesta.json()) as RespuestaError;
       throw new Error(cuerpo.mensaje);
     }
-    setItems((actuales) => actuales.map((item) => (item.id === id ? { ...item, estado: estadoNuevo } : item)));
+    setItems((actuales) =>
+      actuales.map((item) => (item.id === id ? { ...item, estado: estadoNuevo } : item)),
+    );
   }
 
   const hayFiltrosActivos = Boolean(tipo || estado || fechaDesde || fechaHasta);
@@ -217,14 +229,14 @@ export function PanelReportesMunicipio({ rol }: PanelReportesMunicipioProps) {
     <div>
       <div className="mb-4 flex flex-wrap items-end gap-3">
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="filtro-tipo" className="text-xs font-medium text-slate-400">
+          <label htmlFor="filtro-tipo" className="text-xs font-medium text-text-muted">
             Tipo
           </label>
           <select
             id="filtro-tipo"
             value={tipo}
             onChange={(evento) => setTipo(evento.target.value as TipoReporte | '')}
-            className="h-11 min-h-[44px] rounded-md border border-slate-700 bg-slate-800 px-3 text-[15px] text-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="h-11 min-h-[44px] rounded-md border border-surface2 bg-surface1 px-3 text-[15px] text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
           >
             <option value="">Todos</option>
             {TIPOS_REPORTE_SOPORTADOS.map((valor) => (
@@ -236,14 +248,14 @@ export function PanelReportesMunicipio({ rol }: PanelReportesMunicipioProps) {
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="filtro-estado" className="text-xs font-medium text-slate-400">
+          <label htmlFor="filtro-estado" className="text-xs font-medium text-text-muted">
             Estado
           </label>
           <select
             id="filtro-estado"
             value={estado}
             onChange={(evento) => setEstado(evento.target.value as EstadoReporte | '')}
-            className="h-11 min-h-[44px] rounded-md border border-slate-700 bg-slate-800 px-3 text-[15px] text-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="h-11 min-h-[44px] rounded-md border border-surface2 bg-surface1 px-3 text-[15px] text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
           >
             <option value="">Activos</option>
             {ESTADOS_REPORTE_SOPORTADOS.map((valor) => (
@@ -255,7 +267,7 @@ export function PanelReportesMunicipio({ rol }: PanelReportesMunicipioProps) {
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="filtro-fecha-desde" className="text-xs font-medium text-slate-400">
+          <label htmlFor="filtro-fecha-desde" className="text-xs font-medium text-text-muted">
             Desde
           </label>
           <input
@@ -263,12 +275,12 @@ export function PanelReportesMunicipio({ rol }: PanelReportesMunicipioProps) {
             type="date"
             value={fechaDesde}
             onChange={(evento) => setFechaDesde(evento.target.value)}
-            className="h-11 min-h-[44px] rounded-md border border-slate-700 bg-slate-800 px-3 text-[15px] text-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="h-11 min-h-[44px] rounded-md border border-surface2 bg-surface1 px-3 text-[15px] text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
           />
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="filtro-fecha-hasta" className="text-xs font-medium text-slate-400">
+          <label htmlFor="filtro-fecha-hasta" className="text-xs font-medium text-text-muted">
             Hasta
           </label>
           <input
@@ -276,7 +288,7 @@ export function PanelReportesMunicipio({ rol }: PanelReportesMunicipioProps) {
             type="date"
             value={fechaHasta}
             onChange={(evento) => setFechaHasta(evento.target.value)}
-            className="h-11 min-h-[44px] rounded-md border border-slate-700 bg-slate-800 px-3 text-[15px] text-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="h-11 min-h-[44px] rounded-md border border-surface2 bg-surface1 px-3 text-[15px] text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
           />
         </div>
 
@@ -284,7 +296,7 @@ export function PanelReportesMunicipio({ rol }: PanelReportesMunicipioProps) {
           <button
             type="button"
             onClick={limpiarFiltros}
-            className="h-11 min-h-[44px] rounded-md border border-slate-600 px-4 text-[15px] font-medium text-slate-300"
+            className="h-11 min-h-[44px] rounded-md border border-surface2 px-4 text-[15px] font-medium text-text-muted"
           >
             Limpiar filtros
           </button>
@@ -292,23 +304,27 @@ export function PanelReportesMunicipio({ rol }: PanelReportesMunicipioProps) {
       </div>
 
       {errorCarga ? (
-        <p className="mb-4 flex items-center gap-1.5 text-sm text-red-500">
+        <p className="mb-4 flex items-center gap-1.5 text-sm text-danger">
           <span aria-hidden="true">⚠️</span>
           {errorCarga}
         </p>
       ) : null}
 
-      {cargando ? <p className="text-sm text-slate-400">Cargando…</p> : null}
+      {cargando ? <p className="text-sm text-text-muted">Cargando…</p> : null}
 
       {!cargando && !errorCarga && items.length === 0 ? (
-        <div className="rounded-md border border-dashed border-slate-700 p-8 text-center">
-          <p className="mb-1 text-sm font-medium text-slate-50">No encontramos reportes con estos filtros.</p>
-          <p className="mb-4 text-sm text-slate-400">Probá con otra combinación de tipo, estado o rango de fechas.</p>
+        <div className="rounded-md border border-dashed border-surface2 p-8 text-center">
+          <p className="mb-1 text-sm font-medium text-text-primary">
+            No encontramos reportes con estos filtros.
+          </p>
+          <p className="mb-4 text-sm text-text-muted">
+            Probá con otra combinación de tipo, estado o rango de fechas.
+          </p>
           {hayFiltrosActivos ? (
             <button
               type="button"
               onClick={limpiarFiltros}
-              className="inline-flex h-11 min-h-[44px] items-center rounded-md bg-blue-500 px-4 text-[15px] font-medium text-slate-50"
+              className="inline-flex h-11 min-h-[44px] items-center rounded-md bg-accent px-4 text-[15px] font-medium text-text-primary"
             >
               Limpiar filtros
             </button>
@@ -317,10 +333,10 @@ export function PanelReportesMunicipio({ rol }: PanelReportesMunicipioProps) {
       ) : null}
 
       {!cargando && !errorCarga && items.length > 0 ? (
-        <div className="overflow-x-auto rounded-md border border-slate-700">
+        <div className="overflow-x-auto rounded-md border border-surface2">
           <table className="w-full min-w-[900px] border-collapse text-left text-sm">
             <thead>
-              <tr className="border-b border-slate-700 bg-slate-800 text-xs uppercase tracking-wide text-slate-400">
+              <tr className="border-b border-surface2 bg-surface1 text-xs uppercase tracking-wide text-text-muted">
                 <th scope="col" className="px-4 py-3 font-medium">
                   ID
                 </th>
@@ -345,17 +361,24 @@ export function PanelReportesMunicipio({ rol }: PanelReportesMunicipioProps) {
             </thead>
             <tbody>
               {items.map((item) => (
-                <tr key={item.id} className="border-b border-slate-800 last:border-b-0">
-                  <td className="px-4 py-3 font-mono text-xs text-slate-400">{item.id}</td>
-                  <td className="px-4 py-3 text-slate-300">
+                <tr key={item.id} className="border-b border-surface2 last:border-b-0">
+                  <td className="px-4 py-3 font-mono text-xs text-text-muted">{item.id}</td>
+                  <td className="px-4 py-3 text-text-muted">
                     {ETIQUETAS_TIPO[item.tipo as TipoReporte] ?? item.tipo}
-                    {item.especie ? <span className="text-slate-500"> · {item.especie}</span> : null}
+                    {item.especie ? (
+                      <span className="text-text-primary0"> · {item.especie}</span>
+                    ) : null}
                   </td>
-                  <td className="px-4 py-3 text-slate-300">{badgeEstado(item.estado)}</td>
-                  <td className="max-w-xs truncate px-4 py-3 text-slate-300" title={item.descripcion}>
+                  <td className="px-4 py-3 text-text-muted">{badgeEstado(item.estado)}</td>
+                  <td
+                    className="max-w-xs truncate px-4 py-3 text-text-muted"
+                    title={item.descripcion}
+                  >
                     {item.descripcion}
                   </td>
-                  <td className="px-4 py-3 font-mono text-xs text-slate-400">{formatearFecha(item.createdAt)}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-text-muted">
+                    {formatearFecha(item.createdAt)}
+                  </td>
                   {puedeCambiarEstado ? (
                     <td className="px-4 py-3">
                       <ControlCambioEstado reporte={item} onCambiar={cambiarEstado} />
@@ -369,12 +392,12 @@ export function PanelReportesMunicipio({ rol }: PanelReportesMunicipioProps) {
       ) : null}
 
       {total > POR_PAGINA ? (
-        <div className="mt-6 flex items-center justify-between text-sm text-slate-400">
+        <div className="mt-6 flex items-center justify-between text-sm text-text-muted">
           <button
             type="button"
             onClick={() => cargarPagina(pagina - 1)}
             disabled={pagina <= 1 || cargando}
-            className="h-11 min-h-[44px] rounded-md border border-slate-600 px-4 disabled:cursor-not-allowed disabled:opacity-50"
+            className="h-11 min-h-[44px] rounded-md border border-surface2 px-4 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Anterior
           </button>
@@ -385,7 +408,7 @@ export function PanelReportesMunicipio({ rol }: PanelReportesMunicipioProps) {
             type="button"
             onClick={() => cargarPagina(pagina + 1)}
             disabled={pagina >= totalPaginas || cargando}
-            className="h-11 min-h-[44px] rounded-md border border-slate-600 px-4 disabled:cursor-not-allowed disabled:opacity-50"
+            className="h-11 min-h-[44px] rounded-md border border-surface2 px-4 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Siguiente
           </button>

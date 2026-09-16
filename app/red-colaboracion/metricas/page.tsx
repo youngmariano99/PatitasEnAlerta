@@ -1,7 +1,11 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { TIPOS_SOLICITUD_RECURSO_SOPORTADOS, type TipoSolicitudRecurso } from '@aplicacion/dtos/red-colaboracion/PublicarSolicitudRecursoDto';
+import {
+  TIPOS_SOLICITUD_RECURSO_SOPORTADOS,
+  type TipoSolicitudRecurso,
+} from '@aplicacion/dtos/red-colaboracion/PublicarSolicitudRecursoDto';
+import { EncabezadoIlustrado } from '@presentacion/componentes/estado/EncabezadoIlustrado';
 
 interface MetricasApi {
   totalCompletadas: number;
@@ -51,7 +55,9 @@ export default function MetricasPropias() {
       }
       setMetricas((await respuesta.json()) as MetricasApi);
     } catch {
-      setErrorCarga('No pudimos conectarnos con el servidor. Revisá tu conexión e intentá de nuevo.');
+      setErrorCarga(
+        'No pudimos conectarnos con el servidor. Revisá tu conexión e intentá de nuevo.',
+      );
     } finally {
       setCargando(false);
     }
@@ -61,47 +67,66 @@ export default function MetricasPropias() {
     cargarMetricas();
   }, [cargarMetricas]);
 
-  const desglose = metricas ? TIPOS_SOLICITUD_RECURSO_SOPORTADOS.map((tipo) => ({ tipo, total: metricas.porTipo[tipo] ?? 0 })) : [];
+  const desglose = metricas
+    ? TIPOS_SOLICITUD_RECURSO_SOPORTADOS.map((tipo) => ({
+        tipo,
+        total: metricas.porTipo[tipo] ?? 0,
+      }))
+    : [];
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-12 text-slate-50">
-      <h1 className="mb-1 text-xl font-semibold">Mis métricas de contribución</h1>
-      <p className="mb-6 text-sm text-slate-400">
-        Tus colaboraciones completadas en la Red de Colaboración. Son datos propios, sin comparación con otros usuarios.
-      </p>
+    <main className="mx-auto max-w-3xl px-6 py-12 text-text-primary">
+      <div className="mb-6">
+        <EncabezadoIlustrado
+          imagenSrc="/animales/ONGs y rescatistas.png"
+          alt="Mascotas abrazadas representando a la red de colaboración"
+          titulo="Mis métricas de contribución"
+          descripcion="Tus colaboraciones completadas en la Red de Colaboración. Son datos propios, sin comparación con otros usuarios."
+        />
+      </div>
 
       {errorCarga ? (
-        <p className="mb-4 flex items-center gap-1.5 text-sm text-red-500">
+        <p className="mb-4 flex items-center gap-1.5 text-sm text-danger">
           <span aria-hidden="true">⚠️</span>
           {errorCarga}
         </p>
       ) : null}
 
-      {cargando ? <p className="text-sm text-slate-400">Cargando…</p> : null}
+      {cargando ? <p className="text-sm text-text-muted">Cargando…</p> : null}
 
       {!cargando && !errorCarga && metricas && metricas.totalCompletadas === 0 ? (
-        <div className="rounded-md border border-dashed border-slate-700 p-8 text-center">
-          <p className="mb-1 text-sm font-medium text-slate-50">Todavía no completaste ninguna colaboración.</p>
-          <p className="text-sm text-slate-400">
-            Ofrecete como colaborador en una solicitud abierta de la Red de Colaboración para empezar a sumar.
+        <div className="rounded-md border border-dashed border-surface2 p-8 text-center">
+          <p className="mb-1 text-sm font-medium text-text-primary">
+            Todavía no completaste ninguna colaboración.
+          </p>
+          <p className="text-sm text-text-muted">
+            Ofrecete como colaborador en una solicitud abierta de la Red de Colaboración para
+            empezar a sumar.
           </p>
         </div>
       ) : null}
 
       {!cargando && !errorCarga && metricas && metricas.totalCompletadas > 0 ? (
         <div className="flex flex-col gap-3">
-          <div className="rounded-md border border-slate-700 bg-slate-800/50 p-6">
-            <p className="text-sm text-slate-400">Colaboraciones completadas</p>
-            <p className="mt-1 font-mono text-3xl font-semibold text-slate-50">{metricas.totalCompletadas}</p>
+          <div className="rounded-md border border-surface2 bg-surface1/50 p-6">
+            <p className="text-sm text-text-muted">Colaboraciones completadas</p>
+            <p className="mt-1 font-mono text-3xl font-semibold text-text-primary">
+              {metricas.totalCompletadas}
+            </p>
           </div>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {desglose
               .filter((item) => item.total > 0)
               .map((item) => (
-                <div key={item.tipo} className="rounded-md border border-slate-700 bg-slate-800/50 p-4">
-                  <p className="text-sm text-slate-400">{ETIQUETAS_TIPO[item.tipo]}</p>
-                  <p className="mt-1 font-mono text-xl font-semibold text-slate-50">{item.total}</p>
+                <div
+                  key={item.tipo}
+                  className="rounded-md border border-surface2 bg-surface1/50 p-4"
+                >
+                  <p className="text-sm text-text-muted">{ETIQUETAS_TIPO[item.tipo]}</p>
+                  <p className="mt-1 font-mono text-xl font-semibold text-text-primary">
+                    {item.total}
+                  </p>
                 </div>
               ))}
           </div>

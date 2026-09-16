@@ -17,7 +17,8 @@ export default function PaginaRecuperarPassword() {
   const [errorGeneral, setErrorGeneral] = useState<string | null>(null);
 
   const validacion = RecuperarPasswordSchema.safeParse({ email });
-  const errorEmail = tocado && !validacion.success ? validacion.error.flatten().fieldErrors.email?.[0] : undefined;
+  const errorEmail =
+    tocado && !validacion.success ? validacion.error.flatten().fieldErrors.email?.[0] : undefined;
 
   async function manejarEnvio(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
@@ -45,17 +46,19 @@ export default function PaginaRecuperarPassword() {
       // diseño anti-enumeración) muestra la misma pantalla de éxito.
       setEstado('enviado');
     } catch {
-      setErrorGeneral('No pudimos conectarnos con el servidor. Revisá tu conexión e intentá de nuevo.');
+      setErrorGeneral(
+        'No pudimos conectarnos con el servidor. Revisá tu conexión e intentá de nuevo.',
+      );
       setEstado('inactivo');
     }
   }
 
   if (estado === 'enviado') {
     return (
-      <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-4 px-6 py-12 text-slate-50">
+      <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-4 px-6 py-12 text-text-primary">
         <h1 className="text-xl font-semibold">Revisá tu email</h1>
-        <p className="text-slate-400">{MENSAJE_EXITO}</p>
-        <Link href="/auth/login" className="text-blue-500 underline underline-offset-2">
+        <p className="text-text-muted">{MENSAJE_EXITO}</p>
+        <Link href="/auth/login" className="text-accent underline underline-offset-2">
           Volver a iniciar sesión
         </Link>
       </main>
@@ -63,10 +66,11 @@ export default function PaginaRecuperarPassword() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-12 text-slate-50">
+    <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-12 text-text-primary">
       <h1 className="mb-1 text-xl font-semibold">Recuperar contraseña</h1>
-      <p className="mb-6 text-sm text-slate-400">
-        Ingresá el email con el que te registraste y te enviamos instrucciones para elegir una nueva contraseña.
+      <p className="mb-6 text-sm text-text-muted">
+        Ingresá el email con el que te registraste y te enviamos instrucciones para elegir una nueva
+        contraseña.
       </p>
 
       <form onSubmit={manejarEnvio} noValidate className="flex flex-col gap-4">
@@ -84,7 +88,7 @@ export default function PaginaRecuperarPassword() {
         />
 
         {errorGeneral ? (
-          <p className="flex items-center gap-1.5 text-sm text-red-500">
+          <p className="flex items-center gap-1.5 text-sm text-danger">
             <span aria-hidden="true">⚠️</span>
             {errorGeneral}
           </p>
@@ -93,7 +97,7 @@ export default function PaginaRecuperarPassword() {
         <button
           type="submit"
           disabled={estado === 'enviando'}
-          className="mt-2 h-11 min-h-[44px] rounded-md bg-blue-500 text-[15px] font-medium text-slate-50 transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
+          className="mt-2 h-11 min-h-[44px] rounded-md bg-accent text-[15px] font-medium text-text-primary transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
         >
           {estado === 'enviando' ? 'Enviando…' : 'Enviar instrucciones'}
         </button>

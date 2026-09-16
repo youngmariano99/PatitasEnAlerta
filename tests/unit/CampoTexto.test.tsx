@@ -4,7 +4,15 @@ import { CampoTexto } from '@presentacion/componentes/formularios/CampoTexto';
 
 describe('CampoTexto', () => {
   it('asocia el label con el input y muestra el texto de ayuda cuando no hay error', () => {
-    render(<CampoTexto id="email" label="Email" ayuda="Usá tu email real" value="" onChange={() => {}} />);
+    render(
+      <CampoTexto
+        id="email"
+        label="Email"
+        ayuda="Usá tu email real"
+        value=""
+        onChange={() => {}}
+      />,
+    );
 
     const input = screen.getByLabelText('Email');
     expect(input).toBeInTheDocument();
@@ -25,7 +33,7 @@ describe('CampoTexto', () => {
 
     const input = screen.getByLabelText('Email');
     expect(input).toHaveAttribute('aria-invalid', 'true');
-    expect(input).toHaveClass('border-red-500');
+    expect(input).toHaveClass('border-danger');
     const mensajeError = screen.getByText('El formato del email no parece válido.');
     expect(mensajeError).toBeInTheDocument();
     expect(mensajeError.parentElement).toHaveTextContent('⚠️');

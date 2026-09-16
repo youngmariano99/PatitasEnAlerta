@@ -112,7 +112,9 @@ export default function PaginaNuevaMascota() {
       }
       setEnviando(false);
     } catch {
-      setErrorGeneral('No pudimos conectarnos con el servidor. Revisá tu conexión e intentá de nuevo.');
+      setErrorGeneral(
+        'No pudimos conectarnos con el servidor. Revisá tu conexión e intentá de nuevo.',
+      );
       setEnviando(false);
     }
   }
@@ -124,15 +126,16 @@ export default function PaginaNuevaMascota() {
   const camposDeTextoCompletos = nombre.trim().length > 0 && especie.trim().length > 0;
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-12 text-slate-50">
+    <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-12 text-text-primary">
       <h1 className="mb-1 text-xl font-semibold">Registrá a tu mascota</h1>
-      <p className="mb-6 text-sm text-slate-400">
-        Solo necesitamos lo básico: nombre, especie y una foto. Podés completar el resto más adelante.
+      <p className="mb-6 text-sm text-text-muted">
+        Solo necesitamos lo básico: nombre, especie y una foto. Podés completar el resto más
+        adelante.
       </p>
 
       <form onSubmit={manejarEnvio} noValidate className="flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="foto" className="text-sm font-medium text-slate-50">
+          <label htmlFor="foto" className="text-sm font-medium text-text-primary">
             Foto
           </label>
           <input
@@ -141,7 +144,7 @@ export default function PaginaNuevaMascota() {
             type="file"
             accept="image/*"
             onChange={manejarSeleccionDeImagen}
-            className="text-sm text-slate-400 file:mr-3 file:h-11 file:min-h-[44px] file:rounded-md file:border-0 file:bg-blue-500 file:px-4 file:text-slate-50"
+            className="text-sm text-text-muted file:mr-3 file:h-11 file:min-h-[44px] file:rounded-md file:border-0 file:bg-accent file:px-4 file:text-text-primary"
             aria-invalid={Boolean(errorImagen)}
             aria-describedby={errorImagen ? 'foto-error' : undefined}
           />
@@ -150,12 +153,14 @@ export default function PaginaNuevaMascota() {
             <img
               src={previewLocal}
               alt="Vista previa de la foto de tu mascota"
-              className="mt-1 h-32 w-32 rounded-md border border-slate-700 object-cover"
+              className="mt-1 h-32 w-32 rounded-md border border-surface2 object-cover"
             />
           ) : null}
-          {estadoImagen === 'subiendo' ? <p className="text-sm text-slate-400">Subiendo imagen…</p> : null}
+          {estadoImagen === 'subiendo' ? (
+            <p className="text-sm text-text-muted">Subiendo imagen…</p>
+          ) : null}
           {errorImagen ? (
-            <p id="foto-error" className="flex items-center gap-1.5 text-sm text-red-500">
+            <p id="foto-error" className="flex items-center gap-1.5 text-sm text-danger">
               <span aria-hidden="true">⚠️</span>
               {errorImagen}
             </p>
@@ -207,7 +212,7 @@ export default function PaginaNuevaMascota() {
         />
 
         {errorGeneral ? (
-          <p className="flex items-center gap-1.5 text-sm text-red-500">
+          <p className="flex items-center gap-1.5 text-sm text-danger">
             <span aria-hidden="true">⚠️</span>
             {errorGeneral}
           </p>
@@ -216,7 +221,7 @@ export default function PaginaNuevaMascota() {
         <button
           type="submit"
           disabled={enviando || estadoImagen === 'subiendo' || !camposDeTextoCompletos}
-          className="mt-2 h-11 min-h-[44px] rounded-md bg-blue-500 text-[15px] font-medium text-slate-50 transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
+          className="mt-2 h-11 min-h-[44px] rounded-md bg-accent text-[15px] font-medium text-text-primary transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
         >
           {enviando ? 'Registrando…' : 'Registrar mascota'}
         </button>
