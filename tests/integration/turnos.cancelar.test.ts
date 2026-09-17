@@ -13,7 +13,10 @@ import type {
   TurnoReprogramado,
   TurnoReservado,
 } from '@dominio/puertos/IRepositorioTurnos';
-import type { DatosNotificacion, INotificacionesRepositorio } from '@dominio/puertos/INotificacionesRepositorio';
+import type {
+  DatosNotificacion,
+  INotificacionesRepositorio,
+} from '@dominio/puertos/INotificacionesRepositorio';
 
 const getUserMock = jest.fn();
 
@@ -48,7 +51,13 @@ class RepositorioTurnosEnMemoria implements IRepositorioTurnos {
   async obtenerActual(id: string): Promise<TurnoActual | null> {
     const fila = this.turnos.get(id);
     if (!fila) return null;
-    return { id: fila.id, estado: fila.estado, version: fila.version, reservadoPor: fila.reservadoPor, proveedorId: fila.proveedorId };
+    return {
+      id: fila.id,
+      estado: fila.estado,
+      version: fila.version,
+      reservadoPor: fila.reservadoPor,
+      proveedorId: fila.proveedorId,
+    };
   }
 
   async reservar(): Promise<TurnoReservado | null> {
@@ -65,7 +74,13 @@ class RepositorioTurnosEnMemoria implements IRepositorioTurnos {
 
     fila.estado = 'cancelado';
     fila.version += 1;
-    return { id: fila.id, estado: fila.estado, reservadoPor: fila.reservadoPor, proveedorId: fila.proveedorId, version: fila.version };
+    return {
+      id: fila.id,
+      estado: fila.estado,
+      reservadoPor: fila.reservadoPor,
+      proveedorId: fila.proveedorId,
+      version: fila.version,
+    };
   }
 
   async reprogramar(): Promise<TurnoReprogramado | null> {
@@ -90,6 +105,10 @@ class RepositorioTurnosEnMemoria implements IRepositorioTurnos {
 
   async calcularTasaNoShow() {
     return { totalConcluidos: 0, totalNoShow: 0, tasa: 0 };
+  }
+
+  async listarPorEvento() {
+    return [];
   }
 }
 
@@ -123,7 +142,9 @@ function crearRequest(body: unknown): NextRequest {
 
 function autenticarComo(usuarioId: string | null) {
   getUserMock.mockResolvedValue(
-    usuarioId ? { data: { user: { id: usuarioId } }, error: null } : { data: { user: null }, error: { message: 'sin sesión' } },
+    usuarioId
+      ? { data: { user: { id: usuarioId } }, error: null }
+      : { data: { user: null }, error: { message: 'sin sesión' } },
   );
 }
 
@@ -142,7 +163,10 @@ describe('POST /api/turnos/cancelar (Cancelación de turno propio)', () => {
     repositorioNotificaciones = new RepositorioNotificacionesFalso();
     container.reset();
     container.registerInstance<IRepositorioTurnos>('IRepositorioTurnos', repositorioTurnos);
-    container.registerInstance<INotificacionesRepositorio>('INotificacionesRepositorio', repositorioNotificaciones);
+    container.registerInstance<INotificacionesRepositorio>(
+      'INotificacionesRepositorio',
+      repositorioNotificaciones,
+    );
   });
 
   it('rechaza sin sesión (401 / PEA-SIS-001)', async () => {
@@ -155,7 +179,13 @@ describe('POST /api/turnos/cancelar (Cancelación de turno propio)', () => {
 
   it('AC: el reservante cancela su propio turno — 200, estado=cancelado, libera el cupo (queda visible para el proveedor)', async () => {
     autenticarComo(reservante);
-    repositorioTurnos.turnos.set(turnoId, { id: turnoId, estado: 'reservado', version: 2, reservadoPor: reservante, proveedorId: proveedor });
+    repositorioTurnos.turnos.set(turnoId, {
+      id: turnoId,
+      estado: 'reservado',
+      version: 2,
+      reservadoPor: reservante,
+      proveedorId: proveedor,
+    });
 
     const respuesta = await POST(crearRequest({ turnoId }));
 
@@ -167,18 +197,35 @@ describe('POST /api/turnos/cancelar (Cancelación de turno propio)', () => {
 
   it('AC (Paso 3): notifica tipo=turno_cancelado al proveedor cuando cancela el reservante', async () => {
     autenticarComo(reservante);
-    repositorioTurnos.turnos.set(turnoId, { id: turnoId, estado: 'reservado', version: 2, reservadoPor: reservante, proveedorId: proveedor });
+    repositorioTurnos.turnos.set(turnoId, {
+      id: turnoId,
+      estado: 'reservado',
+      version: 2,
+      reservadoPor: reservante,
+      proveedorId: proveedor,
+    });
 
     await POST(crearRequest({ turnoId }));
 
     expect(repositorioNotificaciones.creadas).toEqual([
-      { usuarioId: proveedor, tipo: 'turno_cancelado', referenciaTabla: 'turnos', referenciaId: turnoId },
+      {
+        usuarioId: proveedor,
+        tipo: 'turno_cancelado',
+        referenciaTabla: 'turnos',
+        referenciaId: turnoId,
+      },
     ]);
   });
 
   it('el proveedor puede cancelar el turno de un reservante y no se notifica a sí mismo', async () => {
     autenticarComo(proveedor);
-    repositorioTurnos.turnos.set(turnoId, { id: turnoId, estado: 'reservado', version: 2, reservadoPor: reservante, proveedorId: proveedor });
+    repositorioTurnos.turnos.set(turnoId, {
+      id: turnoId,
+      estado: 'reservado',
+      version: 2,
+      reservadoPor: reservante,
+      proveedorId: proveedor,
+    });
 
     const respuesta = await POST(crearRequest({ turnoId }));
 
@@ -188,7 +235,13 @@ describe('POST /api/turnos/cancelar (Cancelación de turno propio)', () => {
 
   it('AC: un usuario que no es el reservante ni el proveedor recibe 403 / PEA-SIS-002', async () => {
     autenticarComo(otroUsuario);
-    repositorioTurnos.turnos.set(turnoId, { id: turnoId, estado: 'reservado', version: 2, reservadoPor: reservante, proveedorId: proveedor });
+    repositorioTurnos.turnos.set(turnoId, {
+      id: turnoId,
+      estado: 'reservado',
+      version: 2,
+      reservadoPor: reservante,
+      proveedorId: proveedor,
+    });
 
     const respuesta = await POST(crearRequest({ turnoId }));
 
@@ -209,7 +262,13 @@ describe('POST /api/turnos/cancelar (Cancelación de turno propio)', () => {
 
   it('AC/Paso 4: cancelar un turno ya cancelado responde 404 / PEA-MUN-003', async () => {
     autenticarComo(reservante);
-    repositorioTurnos.turnos.set(turnoId, { id: turnoId, estado: 'cancelado', version: 3, reservadoPor: reservante, proveedorId: proveedor });
+    repositorioTurnos.turnos.set(turnoId, {
+      id: turnoId,
+      estado: 'cancelado',
+      version: 3,
+      reservadoPor: reservante,
+      proveedorId: proveedor,
+    });
 
     const respuesta = await POST(crearRequest({ turnoId }));
 
@@ -220,7 +279,13 @@ describe('POST /api/turnos/cancelar (Cancelación de turno propio)', () => {
 
   it('cancelar un turno que nunca fue reservado (estado disponible) también responde 404 / PEA-MUN-003', async () => {
     autenticarComo(reservante);
-    repositorioTurnos.turnos.set(turnoId, { id: turnoId, estado: 'disponible', version: 0, reservadoPor: null, proveedorId: proveedor });
+    repositorioTurnos.turnos.set(turnoId, {
+      id: turnoId,
+      estado: 'disponible',
+      version: 0,
+      reservadoPor: null,
+      proveedorId: proveedor,
+    });
 
     const respuesta = await POST(crearRequest({ turnoId }));
 

@@ -3,7 +3,11 @@
  */
 import { GenerarTurnosEvento } from '@aplicacion/casos-de-uso/municipio/GenerarTurnosEvento';
 import { TurneraMunicipio } from '@dominio/estrategias/ProveedorTurnera';
-import type { DatosNuevoTurno, IRepositorioTurnos, TurnoGenerado } from '@dominio/puertos/IRepositorioTurnos';
+import type {
+  DatosNuevoTurno,
+  IRepositorioTurnos,
+  TurnoGenerado,
+} from '@dominio/puertos/IRepositorioTurnos';
 
 const eventoId = '11111111-1111-1111-1111-111111111111';
 const municipioId = '22222222-2222-2222-2222-222222222222';
@@ -32,6 +36,7 @@ function crearFakes(opciones?: { yaDisponibles?: number }) {
     listarPropios: jest.fn(),
     cancelar: jest.fn(),
     reprogramar: jest.fn(),
+    listarPorEvento: jest.fn(),
   };
   // Instancia REAL de TurneraMunicipio (no un mock) — verificación técnica
   // del ticket: GenerarTurnosEvento reutiliza el Motor de Turnera compartido
@@ -48,11 +53,16 @@ describe('GenerarTurnosEvento', () => {
     const resultado = await caso.ejecutar({ id: eventoId, municipioId, fecha, cuposTotales: 10 });
 
     expect(resultado).toHaveLength(10);
-    expect(resultado.every((t) => t.proveedorTipo === 'municipio' && t.eventoId === eventoId && t.estado === 'disponible')).toBe(
-      true,
-    );
+    expect(
+      resultado.every(
+        (t) =>
+          t.proveedorTipo === 'municipio' && t.eventoId === eventoId && t.estado === 'disponible',
+      ),
+    ).toBe(true);
     expect(repositorioTurnos.crearLote).toHaveBeenCalledWith(
-      expect.arrayContaining([expect.objectContaining({ proveedorTipo: 'municipio', proveedorId: municipioId, eventoId })]),
+      expect.arrayContaining([
+        expect.objectContaining({ proveedorTipo: 'municipio', proveedorId: municipioId, eventoId }),
+      ]),
     );
     expect(repositorioTurnos.crearLote.mock.calls[0]![0]).toHaveLength(10);
   });

@@ -10,7 +10,10 @@ import type {
   TurnoGenerado,
   TurnoReservado,
 } from '@dominio/puertos/IRepositorioTurnos';
-import type { DatosNotificacion, INotificacionesRepositorio } from '@dominio/puertos/INotificacionesRepositorio';
+import type {
+  DatosNotificacion,
+  INotificacionesRepositorio,
+} from '@dominio/puertos/INotificacionesRepositorio';
 
 const turnoId = '11111111-1111-4111-8111-111111111111';
 const usuarioA = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
@@ -23,18 +26,24 @@ const veterinarioId = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
 // DOS usuarios distintos al mismo tiempo, algo que un único jest.fn()
 // global no puede resolver por request.
 jest.mock('@supabase/ssr', () => ({
-  createServerClient: jest.fn((_url: string, _key: string, opciones: { cookies: { getAll: () => Array<{ name: string; value: string }> } }) => {
-    const cookies = opciones.cookies.getAll();
-    const usuarioSimulado = cookies.find((c) => c.name === 'usuario-simulado')?.value;
-    return {
-      auth: {
-        getUser: async () =>
-          usuarioSimulado
-            ? { data: { user: { id: usuarioSimulado } }, error: null }
-            : { data: { user: null }, error: { message: 'sin sesión' } },
-      },
-    };
-  }),
+  createServerClient: jest.fn(
+    (
+      _url: string,
+      _key: string,
+      opciones: { cookies: { getAll: () => Array<{ name: string; value: string }> } },
+    ) => {
+      const cookies = opciones.cookies.getAll();
+      const usuarioSimulado = cookies.find((c) => c.name === 'usuario-simulado')?.value;
+      return {
+        auth: {
+          getUser: async () =>
+            usuarioSimulado
+              ? { data: { user: { id: usuarioSimulado } }, error: null }
+              : { data: { user: null }, error: { message: 'sin sesión' } },
+        },
+      };
+    },
+  ),
 }));
 
 // Importa el route handler DESPUÉS del mock de '@supabase/ssr' (mismo
@@ -52,7 +61,13 @@ import { POST } from '@app/api/turnos/reservar/route';
  * podría (incorrectamente) dejar pasar a los dos usuarios.
  */
 class RepositorioTurnosConcurrencia implements IRepositorioTurnos {
-  private turno: { id: string; estado: string; version: number; reservadoPor: string | null; proveedorId: string };
+  private turno: {
+    id: string;
+    estado: string;
+    version: number;
+    reservadoPor: string | null;
+    proveedorId: string;
+  };
   public intentosDeReserva: Array<{ reservadoPor: string; versionEsperada: number }> = [];
 
   /**
@@ -85,7 +100,11 @@ class RepositorioTurnosConcurrencia implements IRepositorioTurnos {
     };
   }
 
-  async reservar(id: string, reservadoPor: string, versionEsperada: number): Promise<TurnoReservado | null> {
+  async reservar(
+    id: string,
+    reservadoPor: string,
+    versionEsperada: number,
+  ): Promise<TurnoReservado | null> {
     this.intentosDeReserva.push({ reservadoPor, versionEsperada });
     if (id !== this.turno.id) return null;
     if (this.turno.estado !== 'disponible' || this.turno.version !== versionEsperada) return null;
@@ -93,10 +112,20 @@ class RepositorioTurnosConcurrencia implements IRepositorioTurnos {
     this.turno.estado = 'reservado';
     this.turno.reservadoPor = reservadoPor;
     this.turno.version += 1;
-    return { id: this.turno.id, estado: this.turno.estado, reservadoPor, version: this.turno.version };
+    return {
+      id: this.turno.id,
+      estado: this.turno.estado,
+      reservadoPor,
+      version: this.turno.version,
+    };
   }
 
-  async listarPropios(): Promise<{ items: never[]; total: number; pagina: number; porPagina: number }> {
+  async listarPropios(): Promise<{
+    items: never[];
+    total: number;
+    pagina: number;
+    porPagina: number;
+  }> {
     return { items: [], total: 0, pagina: 1, porPagina: 50 };
   }
 
@@ -126,6 +155,10 @@ class RepositorioTurnosConcurrencia implements IRepositorioTurnos {
 
   async calcularTasaNoShow() {
     return { totalConcluidos: 0, totalNoShow: 0, tasa: 0 };
+  }
+
+  async listarPorEvento() {
+    return [];
   }
 }
 
@@ -169,7 +202,10 @@ describe('POST /api/turnos/reservar (Reserva de turno — control optimista de c
     repositorioNotificaciones = new RepositorioNotificacionesFalso();
     container.reset();
     container.registerInstance<IRepositorioTurnos>('IRepositorioTurnos', repositorioTurnos);
-    container.registerInstance<INotificacionesRepositorio>('INotificacionesRepositorio', repositorioNotificaciones);
+    container.registerInstance<INotificacionesRepositorio>(
+      'INotificacionesRepositorio',
+      repositorioNotificaciones,
+    );
   });
 
   it('Verificación técnica / AC: dos reservas concurrentes reales (Promise.all, no secuenciales) sobre el mismo turno — solo una tiene éxito', async () => {
@@ -203,10 +239,20 @@ describe('POST /api/turnos/reservar (Reserva de turno — control optimista de c
 
     expect(respuesta.status).toBe(200);
     const cuerpo = await respuesta.json();
-    expect(cuerpo).toEqual({ id: turnoId, estado: 'reservado', reservadoPor: usuarioA, version: 1 });
+    expect(cuerpo).toEqual({
+      id: turnoId,
+      estado: 'reservado',
+      reservadoPor: usuarioA,
+      version: 1,
+    });
 
     expect(repositorioNotificaciones.creadas).toEqual([
-      { usuarioId: usuarioA, tipo: 'turno_confirmado', referenciaTabla: 'turnos', referenciaId: turnoId },
+      {
+        usuarioId: usuarioA,
+        tipo: 'turno_confirmado',
+        referenciaTabla: 'turnos',
+        referenciaId: turnoId,
+      },
     ]);
   });
 
@@ -230,7 +276,9 @@ describe('POST /api/turnos/reservar (Reserva de turno — control optimista de c
   });
 
   it('responde 404 (PEA-MUN-003) si el turno no existe', async () => {
-    const respuesta = await POST(crearRequest(usuarioA, { turnoId: '99999999-9999-4999-8999-999999999999' }));
+    const respuesta = await POST(
+      crearRequest(usuarioA, { turnoId: '99999999-9999-4999-8999-999999999999' }),
+    );
 
     expect(respuesta.status).toBe(404);
     const cuerpo = await respuesta.json();
@@ -249,16 +297,32 @@ describe('POST /api/turnos/reservar (Reserva de turno — control optimista de c
     container.reset();
     const repositorioTurnosVeterinario = new RepositorioTurnosConcurrencia(veterinarioId);
     const repositorioNotificacionesVeterinario = new RepositorioNotificacionesFalso();
-    container.registerInstance<IRepositorioTurnos>('IRepositorioTurnos', repositorioTurnosVeterinario);
-    container.registerInstance<INotificacionesRepositorio>('INotificacionesRepositorio', repositorioNotificacionesVeterinario);
+    container.registerInstance<IRepositorioTurnos>(
+      'IRepositorioTurnos',
+      repositorioTurnosVeterinario,
+    );
+    container.registerInstance<INotificacionesRepositorio>(
+      'INotificacionesRepositorio',
+      repositorioNotificacionesVeterinario,
+    );
 
     const respuesta = await POST(crearRequest(usuarioA));
 
     expect(respuesta.status).toBe(200);
     const cuerpo = await respuesta.json();
-    expect(cuerpo).toEqual({ id: turnoId, estado: 'reservado', reservadoPor: usuarioA, version: 1 });
+    expect(cuerpo).toEqual({
+      id: turnoId,
+      estado: 'reservado',
+      reservadoPor: usuarioA,
+      version: 1,
+    });
     expect(repositorioNotificacionesVeterinario.creadas).toEqual([
-      { usuarioId: usuarioA, tipo: 'turno_confirmado', referenciaTabla: 'turnos', referenciaId: turnoId },
+      {
+        usuarioId: usuarioA,
+        tipo: 'turno_confirmado',
+        referenciaTabla: 'turnos',
+        referenciaId: turnoId,
+      },
     ]);
   });
 });

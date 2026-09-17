@@ -3,7 +3,10 @@
  */
 import { NextRequest } from 'next/server';
 import { container } from '@aplicacion/contenedor-di';
-import type { AutorizacionLibretaPersistida, IRepositorioAutorizacionesLibreta } from '@dominio/puertos/IRepositorioAutorizacionesLibreta';
+import type {
+  AutorizacionLibretaPersistida,
+  IRepositorioAutorizacionesLibreta,
+} from '@dominio/puertos/IRepositorioAutorizacionesLibreta';
 import type {
   DatosEntradaLibreta,
   EntradaLibretaPersistida,
@@ -30,9 +33,14 @@ const mascotaId = '11111111-1111-4111-8111-111111111111';
 class RepositorioAutorizacionesEnMemoria implements IRepositorioAutorizacionesLibreta {
   public autorizaciones: AutorizacionLibretaPersistida[] = [];
 
-  async obtenerActual(mascotaIdConsultado: string, veterinarioIdConsultado: string): Promise<AutorizacionLibretaPersistida | null> {
+  async obtenerActual(
+    mascotaIdConsultado: string,
+    veterinarioIdConsultado: string,
+  ): Promise<AutorizacionLibretaPersistida | null> {
     const propias = this.autorizaciones
-      .filter((a) => a.mascotaId === mascotaIdConsultado && a.veterinarioId === veterinarioIdConsultado)
+      .filter(
+        (a) => a.mascotaId === mascotaIdConsultado && a.veterinarioId === veterinarioIdConsultado,
+      )
       .sort((a, b) => b.otorgadaEn.getTime() - a.otorgadaEn.getTime());
     return propias[0] ?? null;
   }
@@ -48,12 +56,20 @@ class RepositorioAutorizacionesEnMemoria implements IRepositorioAutorizacionesLi
   async listarPorMascota(): Promise<AutorizacionLibretaPersistida[]> {
     return [];
   }
+
+  async listarVigentesPorVeterinario(): Promise<AutorizacionLibretaPersistida[]> {
+    return [];
+  }
 }
 
 class RepositorioEntradasEnMemoria implements IRepositorioEntradasLibreta {
   public entradas: EntradaLibretaPersistida[] = [];
 
-  async crear(mascotaIdCreada: string, veterinarioIdCreado: string, datos: DatosEntradaLibreta): Promise<EntradaLibretaPersistida> {
+  async crear(
+    mascotaIdCreada: string,
+    veterinarioIdCreado: string,
+    datos: DatosEntradaLibreta,
+  ): Promise<EntradaLibretaPersistida> {
     const entrada: EntradaLibretaPersistida = {
       id: `entrada-${this.entradas.length + 1}`,
       mascotaId: mascotaIdCreada,
@@ -65,7 +81,11 @@ class RepositorioEntradasEnMemoria implements IRepositorioEntradasLibreta {
     return entrada;
   }
 
-  async listarPorMascota(mascotaId: string, pagina: number, porPagina: number): Promise<PaginaEntradasLibreta> {
+  async listarPorMascota(
+    mascotaId: string,
+    pagina: number,
+    porPagina: number,
+  ): Promise<PaginaEntradasLibreta> {
     const propias = this.entradas.filter((e) => e.mascotaId === mascotaId);
     return { items: propias, total: propias.length, pagina, porPagina };
   }
@@ -113,7 +133,9 @@ function crearRequest(body: unknown): NextRequest {
 
 function autenticarComo(usuarioId: string | null) {
   getUserMock.mockResolvedValue(
-    usuarioId ? { data: { user: { id: usuarioId } }, error: null } : { data: { user: null }, error: { message: 'sin sesión' } },
+    usuarioId
+      ? { data: { user: { id: usuarioId } }, error: null }
+      : { data: { user: null }, error: { message: 'sin sesión' } },
   );
 }
 
@@ -157,8 +179,14 @@ describe('POST /api/veterinarios/libreta (Registro de entrada en la libreta sani
     });
 
     container.reset();
-    container.registerInstance<IRepositorioAutorizacionesLibreta>('IRepositorioAutorizacionesLibreta', repositorioAutorizaciones);
-    container.registerInstance<IRepositorioEntradasLibreta>('IRepositorioEntradasLibreta', repositorioEntradas);
+    container.registerInstance<IRepositorioAutorizacionesLibreta>(
+      'IRepositorioAutorizacionesLibreta',
+      repositorioAutorizaciones,
+    );
+    container.registerInstance<IRepositorioEntradasLibreta>(
+      'IRepositorioEntradasLibreta',
+      repositorioEntradas,
+    );
     container.registerInstance<IRepositorioMascotas>('IRepositorioMascotas', repositorioMascotas);
     container.registerInstance<IRepositorioPerfil>('IRepositorioPerfil', repositorioPerfil);
   });
@@ -176,7 +204,13 @@ describe('POST /api/veterinarios/libreta (Registro de entrada en la libreta sani
   it('AC (verificación de autorización activa): registra la entrada cuando hay autorización vigente del dueño', async () => {
     autenticarComo(veterinarioId);
     repositorioAutorizaciones.autorizaciones = [
-      { id: 'autorizacion-1', mascotaId, veterinarioId, otorgadaEn: new Date('2026-01-05T00:00:00.000Z'), revocadaEn: null },
+      {
+        id: 'autorizacion-1',
+        mascotaId,
+        veterinarioId,
+        otorgadaEn: new Date('2026-01-05T00:00:00.000Z'),
+        revocadaEn: null,
+      },
     ];
 
     const respuesta = await POST(crearRequest(payloadValido));
@@ -229,7 +263,13 @@ describe('POST /api/veterinarios/libreta (Registro de entrada en la libreta sani
       verificadoEn: null,
     });
     repositorioAutorizaciones.autorizaciones = [
-      { id: 'autorizacion-1', mascotaId, veterinarioId, otorgadaEn: new Date('2026-01-05T00:00:00.000Z'), revocadaEn: null },
+      {
+        id: 'autorizacion-1',
+        mascotaId,
+        veterinarioId,
+        otorgadaEn: new Date('2026-01-05T00:00:00.000Z'),
+        revocadaEn: null,
+      },
     ];
 
     const respuesta = await POST(crearRequest(payloadValido));
@@ -242,7 +282,9 @@ describe('POST /api/veterinarios/libreta (Registro de entrada en la libreta sani
   it('rechaza con 404/PEA-VET-005 si la mascota no existe', async () => {
     autenticarComo(veterinarioId);
 
-    const respuesta = await POST(crearRequest({ ...payloadValido, mascotaId: '99999999-9999-4999-8999-999999999999' }));
+    const respuesta = await POST(
+      crearRequest({ ...payloadValido, mascotaId: '99999999-9999-4999-8999-999999999999' }),
+    );
 
     expect(respuesta.status).toBe(404);
     const cuerpo = await respuesta.json();
@@ -252,7 +294,13 @@ describe('POST /api/veterinarios/libreta (Registro de entrada en la libreta sani
   it('rechaza con 400/PEA-VET-006 un tipo de entrada fuera del enum soportado', async () => {
     autenticarComo(veterinarioId);
     repositorioAutorizaciones.autorizaciones = [
-      { id: 'autorizacion-1', mascotaId, veterinarioId, otorgadaEn: new Date('2026-01-05T00:00:00.000Z'), revocadaEn: null },
+      {
+        id: 'autorizacion-1',
+        mascotaId,
+        veterinarioId,
+        otorgadaEn: new Date('2026-01-05T00:00:00.000Z'),
+        revocadaEn: null,
+      },
     ];
 
     const respuesta = await POST(crearRequest({ ...payloadValido, tipo: 'cirugia' }));
@@ -265,7 +313,9 @@ describe('POST /api/veterinarios/libreta (Registro de entrada en la libreta sani
   it('rechaza con 400 un payload sin descripción', async () => {
     autenticarComo(veterinarioId);
 
-    const respuesta = await POST(crearRequest({ mascotaId, tipo: payloadValido.tipo, fecha: payloadValido.fecha }));
+    const respuesta = await POST(
+      crearRequest({ mascotaId, tipo: payloadValido.tipo, fecha: payloadValido.fecha }),
+    );
 
     expect(respuesta.status).toBe(400);
   });

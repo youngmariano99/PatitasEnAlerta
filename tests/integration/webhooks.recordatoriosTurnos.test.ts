@@ -10,7 +10,10 @@
 import { NextRequest } from 'next/server';
 import { container } from '@aplicacion/contenedor-di';
 import type { IRepositorioTurnos, TurnoRecordatorio } from '@dominio/puertos/IRepositorioTurnos';
-import type { DatosNotificacion, INotificacionesRepositorio } from '@dominio/puertos/INotificacionesRepositorio';
+import type {
+  DatosNotificacion,
+  INotificacionesRepositorio,
+} from '@dominio/puertos/INotificacionesRepositorio';
 import { POST } from '@app/api/webhooks/recordatorios-turnos/route';
 
 const SECRETO = 'secreto-de-test-para-el-cron';
@@ -70,8 +73,16 @@ class RepositorioTurnosFalso implements IRepositorioTurnos {
   async listarReservadosEnVentana(desde: Date, hasta: Date): Promise<TurnoRecordatorio[]> {
     this.ultimaLlamada = { desde, hasta };
     const dataset: TurnoRecordatorio[] = [
-      { id: TURNO_DENTRO_VENTANA, reservadoPor: RESERVADO_POR_A, franjaInicio: new Date(Date.now() + 12 * 60 * 60 * 1000) },
-      { id: TURNO_FUERA_VENTANA, reservadoPor: RESERVADO_POR_B, franjaInicio: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000) },
+      {
+        id: TURNO_DENTRO_VENTANA,
+        reservadoPor: RESERVADO_POR_A,
+        franjaInicio: new Date(Date.now() + 12 * 60 * 60 * 1000),
+      },
+      {
+        id: TURNO_FUERA_VENTANA,
+        reservadoPor: RESERVADO_POR_B,
+        franjaInicio: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+      },
     ];
     return dataset.filter((turno) => turno.franjaInicio >= desde && turno.franjaInicio < hasta);
   }
@@ -82,6 +93,10 @@ class RepositorioTurnosFalso implements IRepositorioTurnos {
 
   async calcularTasaNoShow(): Promise<never> {
     throw new Error('no usado en este test');
+  }
+
+  async listarPorEvento() {
+    return [];
   }
 }
 
@@ -106,7 +121,10 @@ class NotificacionesRepositorioFalso implements INotificacionesRepositorio {
 }
 
 function crearRequest(headers: Record<string, string> = { 'x-cron-secret': SECRETO }): NextRequest {
-  return new NextRequest('http://localhost/api/webhooks/recordatorios-turnos', { method: 'POST', headers });
+  return new NextRequest('http://localhost/api/webhooks/recordatorios-turnos', {
+    method: 'POST',
+    headers,
+  });
 }
 
 describe('POST /api/webhooks/recordatorios-turnos (RecordatorioTurnoJob)', () => {
@@ -126,7 +144,10 @@ describe('POST /api/webhooks/recordatorios-turnos (RecordatorioTurnoJob)', () =>
     repositorioNotificaciones = new NotificacionesRepositorioFalso();
     container.reset();
     container.registerInstance<IRepositorioTurnos>('IRepositorioTurnos', repositorioTurnos);
-    container.registerInstance<INotificacionesRepositorio>('INotificacionesRepositorio', repositorioNotificaciones);
+    container.registerInstance<INotificacionesRepositorio>(
+      'INotificacionesRepositorio',
+      repositorioNotificaciones,
+    );
   });
 
   it('rechaza sin el header x-cron-secret (401 / PEA-SIS-001), sin consultar turnos', async () => {
@@ -152,9 +173,16 @@ describe('POST /api/webhooks/recordatorios-turnos (RecordatorioTurnoJob)', () =>
     const cuerpo = await respuesta.json();
     expect(cuerpo).toEqual({ turnosEnVentana: 1, notificados: 1 });
     expect(repositorioNotificaciones.creadas).toEqual([
-      { usuarioId: RESERVADO_POR_A, tipo: 'turno_recordatorio', referenciaTabla: 'turnos', referenciaId: TURNO_DENTRO_VENTANA },
+      {
+        usuarioId: RESERVADO_POR_A,
+        tipo: 'turno_recordatorio',
+        referenciaTabla: 'turnos',
+        referenciaId: TURNO_DENTRO_VENTANA,
+      },
     ]);
-    expect(repositorioNotificaciones.creadas.some((n) => n.referenciaId === TURNO_FUERA_VENTANA)).toBe(false);
+    expect(
+      repositorioNotificaciones.creadas.some((n) => n.referenciaId === TURNO_FUERA_VENTANA),
+    ).toBe(false);
   });
 
   it('la ventana consultada arranca en "ahora" y se extiende 24hs hacia adelante', async () => {

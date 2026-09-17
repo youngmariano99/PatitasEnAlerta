@@ -3,12 +3,18 @@
  */
 import { ZodError } from 'zod';
 import { AutorizarVeterinario } from '@aplicacion/casos-de-uso/veterinarios/AutorizarVeterinario';
-import type { AutorizacionLibretaPersistida, IRepositorioAutorizacionesLibreta } from '@dominio/puertos/IRepositorioAutorizacionesLibreta';
+import type {
+  AutorizacionLibretaPersistida,
+  IRepositorioAutorizacionesLibreta,
+} from '@dominio/puertos/IRepositorioAutorizacionesLibreta';
 import type { IRepositorioMascotas } from '@dominio/puertos/IRepositorioMascotas';
 import type { IRepositorioPerfil, ResumenPerfilPropio } from '@dominio/puertos/IRepositorioPerfil';
 import { Mascota } from '@dominio/entidades/Mascota';
 import { MascotaNoEncontradaError } from '@dominio/errores/erroresMascotas';
-import { AutorizacionLibretaYaActivaError, VeterinarioNoEncontradoError } from '@dominio/errores/erroresVeterinarios';
+import {
+  AutorizacionLibretaYaActivaError,
+  VeterinarioNoEncontradoError,
+} from '@dominio/errores/erroresVeterinarios';
 import { AccesoNoAutorizadoError } from '@dominio/errores/erroresTransversales';
 
 const dueñoId = 'dueno-1';
@@ -47,20 +53,31 @@ function crearFakes(opciones?: {
   autorizacionActual?: AutorizacionLibretaPersistida | null;
 }) {
   const repositorioAutorizaciones: jest.Mocked<IRepositorioAutorizacionesLibreta> = {
-    obtenerActual: jest.fn().mockResolvedValue(opciones?.autorizacionActual === undefined ? null : opciones.autorizacionActual),
+    obtenerActual: jest
+      .fn()
+      .mockResolvedValue(
+        opciones?.autorizacionActual === undefined ? null : opciones.autorizacionActual,
+      ),
     crear: jest.fn().mockResolvedValue(autorizacionCreada),
     revocar: jest.fn(),
     listarPorMascota: jest.fn(),
+    listarVigentesPorVeterinario: jest.fn(),
   };
   const repositorioMascotas: jest.Mocked<IRepositorioMascotas> = {
     crear: jest.fn(),
-    buscarPorId: jest.fn().mockResolvedValue(opciones?.mascotaEncontrada === undefined ? mascota : opciones.mascotaEncontrada),
+    buscarPorId: jest
+      .fn()
+      .mockResolvedValue(
+        opciones?.mascotaEncontrada === undefined ? mascota : opciones.mascotaEncontrada,
+      ),
     listarPorDueño: jest.fn(),
     actualizar: jest.fn(),
     darDeBaja: jest.fn(),
   };
   const repositorioPerfil: jest.Mocked<IRepositorioPerfil> = {
-    obtenerPerfilPropio: jest.fn().mockResolvedValue(opciones?.perfil === undefined ? perfilVeterinario : opciones.perfil),
+    obtenerPerfilPropio: jest
+      .fn()
+      .mockResolvedValue(opciones?.perfil === undefined ? perfilVeterinario : opciones.perfil),
   };
   return { repositorioAutorizaciones, repositorioMascotas, repositorioPerfil };
 }
@@ -70,7 +87,11 @@ const entradaValida = { datosCrudos: { veterinarioId }, mascotaId, dueñoId };
 describe('AutorizarVeterinario', () => {
   it('otorga la autorización cuando la mascota es propia y el veterinarioId es válido', async () => {
     const fakes = crearFakes();
-    const caso = new AutorizarVeterinario(fakes.repositorioAutorizaciones, fakes.repositorioMascotas, fakes.repositorioPerfil);
+    const caso = new AutorizarVeterinario(
+      fakes.repositorioAutorizaciones,
+      fakes.repositorioMascotas,
+      fakes.repositorioPerfil,
+    );
 
     const resultado = await caso.ejecutar(entradaValida);
 
@@ -86,15 +107,25 @@ describe('AutorizarVeterinario', () => {
 
   it('rechaza (Zod) un veterinarioId con formato inválido', async () => {
     const fakes = crearFakes();
-    const caso = new AutorizarVeterinario(fakes.repositorioAutorizaciones, fakes.repositorioMascotas, fakes.repositorioPerfil);
+    const caso = new AutorizarVeterinario(
+      fakes.repositorioAutorizaciones,
+      fakes.repositorioMascotas,
+      fakes.repositorioPerfil,
+    );
 
-    await expect(caso.ejecutar({ ...entradaValida, datosCrudos: { veterinarioId: 'no-es-uuid' } })).rejects.toBeInstanceOf(ZodError);
+    await expect(
+      caso.ejecutar({ ...entradaValida, datosCrudos: { veterinarioId: 'no-es-uuid' } }),
+    ).rejects.toBeInstanceOf(ZodError);
     expect(fakes.repositorioMascotas.buscarPorId).not.toHaveBeenCalled();
   });
 
   it('rechaza con 404/PEA-AUTH-009 si la mascota no existe', async () => {
     const fakes = crearFakes({ mascotaEncontrada: null });
-    const caso = new AutorizarVeterinario(fakes.repositorioAutorizaciones, fakes.repositorioMascotas, fakes.repositorioPerfil);
+    const caso = new AutorizarVeterinario(
+      fakes.repositorioAutorizaciones,
+      fakes.repositorioMascotas,
+      fakes.repositorioPerfil,
+    );
 
     await expect(caso.ejecutar(entradaValida)).rejects.toBeInstanceOf(MascotaNoEncontradaError);
     expect(fakes.repositorioPerfil.obtenerPerfilPropio).not.toHaveBeenCalled();
@@ -111,7 +142,11 @@ describe('AutorizarVeterinario', () => {
       identificacionChip: mascota.identificacionChip,
     });
     const fakes = crearFakes({ mascotaEncontrada: mascotaDeOtro });
-    const caso = new AutorizarVeterinario(fakes.repositorioAutorizaciones, fakes.repositorioMascotas, fakes.repositorioPerfil);
+    const caso = new AutorizarVeterinario(
+      fakes.repositorioAutorizaciones,
+      fakes.repositorioMascotas,
+      fakes.repositorioPerfil,
+    );
 
     await expect(caso.ejecutar(entradaValida)).rejects.toBeInstanceOf(AccesoNoAutorizadoError);
     expect(fakes.repositorioAutorizaciones.crear).not.toHaveBeenCalled();
@@ -119,7 +154,11 @@ describe('AutorizarVeterinario', () => {
 
   it('rechaza con 404/PEA-VET-011 si el veterinarioId indicado no corresponde a un usuario con rol veterinario', async () => {
     const fakes = crearFakes({ perfil: { ...perfilVeterinario, rol: 'dueño' } });
-    const caso = new AutorizarVeterinario(fakes.repositorioAutorizaciones, fakes.repositorioMascotas, fakes.repositorioPerfil);
+    const caso = new AutorizarVeterinario(
+      fakes.repositorioAutorizaciones,
+      fakes.repositorioMascotas,
+      fakes.repositorioPerfil,
+    );
 
     await expect(caso.ejecutar(entradaValida)).rejects.toBeInstanceOf(VeterinarioNoEncontradoError);
     expect(fakes.repositorioAutorizaciones.crear).not.toHaveBeenCalled();
@@ -127,18 +166,34 @@ describe('AutorizarVeterinario', () => {
 
   it('rechaza con 404/PEA-VET-011 si el usuario indicado no existe', async () => {
     const fakes = crearFakes({ perfil: null });
-    const caso = new AutorizarVeterinario(fakes.repositorioAutorizaciones, fakes.repositorioMascotas, fakes.repositorioPerfil);
+    const caso = new AutorizarVeterinario(
+      fakes.repositorioAutorizaciones,
+      fakes.repositorioMascotas,
+      fakes.repositorioPerfil,
+    );
 
     await expect(caso.ejecutar(entradaValida)).rejects.toBeInstanceOf(VeterinarioNoEncontradoError);
   });
 
   it('rechaza con 409/PEA-VET-009 si ya existe una autorización activa para ese par', async () => {
     const fakes = crearFakes({
-      autorizacionActual: { id: 'autorizacion-0', mascotaId, veterinarioId, otorgadaEn: new Date('2026-01-01T00:00:00.000Z'), revocadaEn: null },
+      autorizacionActual: {
+        id: 'autorizacion-0',
+        mascotaId,
+        veterinarioId,
+        otorgadaEn: new Date('2026-01-01T00:00:00.000Z'),
+        revocadaEn: null,
+      },
     });
-    const caso = new AutorizarVeterinario(fakes.repositorioAutorizaciones, fakes.repositorioMascotas, fakes.repositorioPerfil);
+    const caso = new AutorizarVeterinario(
+      fakes.repositorioAutorizaciones,
+      fakes.repositorioMascotas,
+      fakes.repositorioPerfil,
+    );
 
-    await expect(caso.ejecutar(entradaValida)).rejects.toBeInstanceOf(AutorizacionLibretaYaActivaError);
+    await expect(caso.ejecutar(entradaValida)).rejects.toBeInstanceOf(
+      AutorizacionLibretaYaActivaError,
+    );
     expect(fakes.repositorioAutorizaciones.crear).not.toHaveBeenCalled();
   });
 
@@ -152,7 +207,11 @@ describe('AutorizarVeterinario', () => {
         revocadaEn: new Date('2026-02-01T00:00:00.000Z'),
       },
     });
-    const caso = new AutorizarVeterinario(fakes.repositorioAutorizaciones, fakes.repositorioMascotas, fakes.repositorioPerfil);
+    const caso = new AutorizarVeterinario(
+      fakes.repositorioAutorizaciones,
+      fakes.repositorioMascotas,
+      fakes.repositorioPerfil,
+    );
 
     await caso.ejecutar(entradaValida);
 

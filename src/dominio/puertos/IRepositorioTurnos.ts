@@ -152,9 +152,17 @@ export interface IRepositorioTurnos {
    * no está 'disponible'), devuelve `null`. Nunca lanza: el caso de uso
    * decide ahí mismo que es PEA-MUN-001 (409), no un error de sistema.
    */
-  reservar(turnoId: string, reservadoPor: string, versionEsperada: number): Promise<TurnoReservado | null>;
+  reservar(
+    turnoId: string,
+    reservadoPor: string,
+    versionEsperada: number,
+  ): Promise<TurnoReservado | null>;
   /** "Mis turnos" (Historia "Monitoreo en tiempo real del turno reservado"): paginado (tope 50), filtrado exclusivamente por `reservado_por`, orden por `franja_inicio` ascendente (el próximo turno primero). */
-  listarPropios(reservadoPor: string, pagina: number, porPagina: number): Promise<PaginaTurnosPropios>;
+  listarPropios(
+    reservadoPor: string,
+    pagina: number,
+    porPagina: number,
+  ): Promise<PaginaTurnosPropios>;
   /**
    * Control optimista de concurrencia, mismo criterio que `reservar`:
    * `UPDATE turnos SET estado='cancelado', version=version+1 WHERE id=? AND
@@ -199,7 +207,11 @@ export interface IRepositorioTurnos {
    * `IRepositorioDisponibilidad.listarPropias`/`listarActivas`) ni
    * 'cancelado' (ruido para la agenda operativa del día a día).
    */
-  listarReservadosPorProveedor(proveedorId: string, pagina: number, porPagina: number): Promise<PaginaTurnosReservadosVeterinario>;
+  listarReservadosPorProveedor(
+    proveedorId: string,
+    pagina: number,
+    porPagina: number,
+  ): Promise<PaginaTurnosReservadosVeterinario>;
   /**
    * Turnos `estado='reservado'` con `franjaInicio` dentro de `[desde, hasta)`
    * — ventana de recordatorio (RecordatorioTurnoJob, Paso 1). Sin paginar:
@@ -215,7 +227,18 @@ export interface IRepositorioTurnos {
    * mismo que es PEA-VETADV-005, nunca un error de sistema) — mismo
    * criterio de "el UPDATE condicionado es la última palabra" que `cancelar`.
    */
-  actualizarAsistio(turnoId: string, proveedorId: string, asistio: boolean): Promise<TurnoAsistioActualizado | null>;
+  actualizarAsistio(
+    turnoId: string,
+    proveedorId: string,
+    asistio: boolean,
+  ): Promise<TurnoAsistioActualizado | null>;
   /** Agregado en el momento sobre `turnos.asistio` para los turnos del proveedor (Paso 3). */
   calcularTasaNoShow(proveedorId: string): Promise<TasaNoShow>;
+  /**
+   * Todos los turnos generados para un evento (cualquier `estado`), orden
+   * por `franjaInicio` ascendente — usado por la turnera municipal (ver el
+   * cupo completo) y por la reserva de turno del vecino (filtra acá mismo,
+   * en la capa de presentación, a `estado='disponible'`).
+   */
+  listarPorEvento(eventoId: string): Promise<TurnoGenerado[]>;
 }

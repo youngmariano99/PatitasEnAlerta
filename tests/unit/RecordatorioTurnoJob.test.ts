@@ -23,11 +23,20 @@ function crearFakes(opciones?: { turnos?: TurnoRecordatorio[]; yaNotificado?: bo
     reprogramar: jest.fn(),
     listarFranjasExistentes: jest.fn(),
     listarReservadosPorProveedor: jest.fn(),
-    listarReservadosEnVentana: jest.fn().mockResolvedValue(
-      opciones?.turnos ?? [{ id: 'turno-1', reservadoPor: 'dueno-1', franjaInicio: new Date('2026-09-14T20:00:00.000Z') }],
-    ),
+    listarReservadosEnVentana: jest
+      .fn()
+      .mockResolvedValue(
+        opciones?.turnos ?? [
+          {
+            id: 'turno-1',
+            reservadoPor: 'dueno-1',
+            franjaInicio: new Date('2026-09-14T20:00:00.000Z'),
+          },
+        ],
+      ),
     actualizarAsistio: jest.fn(),
     calcularTasaNoShow: jest.fn(),
+    listarPorEvento: jest.fn(),
   };
   const repositorioNotificaciones: jest.Mocked<INotificacionesRepositorio> = {
     crear: jest.fn().mockResolvedValue(undefined),
@@ -45,7 +54,10 @@ describe('RecordatorioTurnoJob', () => {
 
     const resultado = await job.ejecutar(AHORA);
 
-    expect(repositorioTurnos.listarReservadosEnVentana).toHaveBeenCalledWith(AHORA, new Date('2026-09-15T10:00:00.000Z'));
+    expect(repositorioTurnos.listarReservadosEnVentana).toHaveBeenCalledWith(
+      AHORA,
+      new Date('2026-09-15T10:00:00.000Z'),
+    );
     expect(repositorioNotificaciones.crear).toHaveBeenCalledWith({
       usuarioId: 'dueno-1',
       tipo: 'turno_recordatorio',
@@ -57,8 +69,16 @@ describe('RecordatorioTurnoJob', () => {
 
   it('notifica a cada reservado_por distinto cuando hay varios turnos en la ventana', async () => {
     const turnos: TurnoRecordatorio[] = [
-      { id: 'turno-1', reservadoPor: 'dueno-1', franjaInicio: new Date('2026-09-14T15:00:00.000Z') },
-      { id: 'turno-2', reservadoPor: 'dueno-2', franjaInicio: new Date('2026-09-14T18:00:00.000Z') },
+      {
+        id: 'turno-1',
+        reservadoPor: 'dueno-1',
+        franjaInicio: new Date('2026-09-14T15:00:00.000Z'),
+      },
+      {
+        id: 'turno-2',
+        reservadoPor: 'dueno-2',
+        franjaInicio: new Date('2026-09-14T18:00:00.000Z'),
+      },
     ];
     const { repositorioTurnos, repositorioNotificaciones } = crearFakes({ turnos });
     const job = new RecordatorioTurnoJob(repositorioTurnos, repositorioNotificaciones);
@@ -81,11 +101,21 @@ describe('RecordatorioTurnoJob', () => {
 
   it('no aborta la corrida si falla la notificación de un turno puntual — sigue con el resto y loguea el error', async () => {
     const turnos: TurnoRecordatorio[] = [
-      { id: 'turno-1', reservadoPor: 'dueno-1', franjaInicio: new Date('2026-09-14T15:00:00.000Z') },
-      { id: 'turno-2', reservadoPor: 'dueno-2', franjaInicio: new Date('2026-09-14T18:00:00.000Z') },
+      {
+        id: 'turno-1',
+        reservadoPor: 'dueno-1',
+        franjaInicio: new Date('2026-09-14T15:00:00.000Z'),
+      },
+      {
+        id: 'turno-2',
+        reservadoPor: 'dueno-2',
+        franjaInicio: new Date('2026-09-14T18:00:00.000Z'),
+      },
     ];
     const { repositorioTurnos, repositorioNotificaciones } = crearFakes({ turnos });
-    repositorioNotificaciones.crear.mockRejectedValueOnce(new Error('Supabase caído')).mockResolvedValueOnce(undefined);
+    repositorioNotificaciones.crear
+      .mockRejectedValueOnce(new Error('Supabase caído'))
+      .mockResolvedValueOnce(undefined);
     const job = new RecordatorioTurnoJob(repositorioTurnos, repositorioNotificaciones);
 
     const resultado = await job.ejecutar(AHORA);

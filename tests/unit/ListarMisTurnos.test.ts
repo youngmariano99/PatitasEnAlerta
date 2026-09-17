@@ -20,6 +20,7 @@ function crearFakes(pagina: PaginaTurnosPropios) {
     listarReservadosEnVentana: jest.fn(),
     actualizarAsistio: jest.fn(),
     calcularTasaNoShow: jest.fn(),
+    listarPorEvento: jest.fn(),
   };
   return { repositorioTurnos };
 }
@@ -84,6 +85,8 @@ describe('ListarMisTurnos', () => {
     const { repositorioTurnos } = crearFakes(paginaVacia);
     const caso = new ListarMisTurnos(repositorioTurnos);
 
-    await expect(caso.ejecutar({ solicitanteId, pagina: 1, porPagina: 50 })).resolves.toEqual(paginaVacia);
+    await expect(caso.ejecutar({ solicitanteId, pagina: 1, porPagina: 50 })).resolves.toEqual(
+      paginaVacia,
+    );
   });
 });

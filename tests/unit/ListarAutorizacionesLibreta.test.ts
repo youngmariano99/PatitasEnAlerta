@@ -2,7 +2,10 @@
  * @jest-environment node
  */
 import { ListarAutorizacionesLibreta } from '@aplicacion/casos-de-uso/veterinarios/ListarAutorizacionesLibreta';
-import type { AutorizacionLibretaPersistida, IRepositorioAutorizacionesLibreta } from '@dominio/puertos/IRepositorioAutorizacionesLibreta';
+import type {
+  AutorizacionLibretaPersistida,
+  IRepositorioAutorizacionesLibreta,
+} from '@dominio/puertos/IRepositorioAutorizacionesLibreta';
 import type { IRepositorioMascotas } from '@dominio/puertos/IRepositorioMascotas';
 import { Mascota } from '@dominio/entidades/Mascota';
 import { MascotaNoEncontradaError } from '@dominio/errores/erroresMascotas';
@@ -23,7 +26,13 @@ const mascota = Mascota.reconstruir(mascotaId, {
 });
 
 const historial: AutorizacionLibretaPersistida[] = [
-  { id: 'autorizacion-2', mascotaId, veterinarioId, otorgadaEn: new Date('2026-03-01T00:00:00.000Z'), revocadaEn: null },
+  {
+    id: 'autorizacion-2',
+    mascotaId,
+    veterinarioId,
+    otorgadaEn: new Date('2026-03-01T00:00:00.000Z'),
+    revocadaEn: null,
+  },
   {
     id: 'autorizacion-1',
     mascotaId,
@@ -39,10 +48,15 @@ function crearFakes(opciones?: { mascotaEncontrada?: Mascota | null }) {
     crear: jest.fn(),
     revocar: jest.fn(),
     listarPorMascota: jest.fn().mockResolvedValue(historial),
+    listarVigentesPorVeterinario: jest.fn(),
   };
   const repositorioMascotas: jest.Mocked<IRepositorioMascotas> = {
     crear: jest.fn(),
-    buscarPorId: jest.fn().mockResolvedValue(opciones?.mascotaEncontrada === undefined ? mascota : opciones.mascotaEncontrada),
+    buscarPorId: jest
+      .fn()
+      .mockResolvedValue(
+        opciones?.mascotaEncontrada === undefined ? mascota : opciones.mascotaEncontrada,
+      ),
     listarPorDueño: jest.fn(),
     actualizar: jest.fn(),
     darDeBaja: jest.fn(),
@@ -53,7 +67,10 @@ function crearFakes(opciones?: { mascotaEncontrada?: Mascota | null }) {
 describe('ListarAutorizacionesLibreta', () => {
   it('devuelve el historial completo (vigentes y revocadas) cuando la mascota pertenece a quien invoca', async () => {
     const fakes = crearFakes();
-    const caso = new ListarAutorizacionesLibreta(fakes.repositorioAutorizaciones, fakes.repositorioMascotas);
+    const caso = new ListarAutorizacionesLibreta(
+      fakes.repositorioAutorizaciones,
+      fakes.repositorioMascotas,
+    );
 
     const resultado = await caso.ejecutar({ mascotaId, dueñoId });
 
@@ -65,9 +82,14 @@ describe('ListarAutorizacionesLibreta', () => {
 
   it('rechaza con 404/PEA-AUTH-009 si la mascota no existe', async () => {
     const fakes = crearFakes({ mascotaEncontrada: null });
-    const caso = new ListarAutorizacionesLibreta(fakes.repositorioAutorizaciones, fakes.repositorioMascotas);
+    const caso = new ListarAutorizacionesLibreta(
+      fakes.repositorioAutorizaciones,
+      fakes.repositorioMascotas,
+    );
 
-    await expect(caso.ejecutar({ mascotaId, dueñoId })).rejects.toBeInstanceOf(MascotaNoEncontradaError);
+    await expect(caso.ejecutar({ mascotaId, dueñoId })).rejects.toBeInstanceOf(
+      MascotaNoEncontradaError,
+    );
     expect(fakes.repositorioAutorizaciones.listarPorMascota).not.toHaveBeenCalled();
   });
 
@@ -82,8 +104,13 @@ describe('ListarAutorizacionesLibreta', () => {
       identificacionChip: mascota.identificacionChip,
     });
     const fakes = crearFakes({ mascotaEncontrada: mascotaDeOtro });
-    const caso = new ListarAutorizacionesLibreta(fakes.repositorioAutorizaciones, fakes.repositorioMascotas);
+    const caso = new ListarAutorizacionesLibreta(
+      fakes.repositorioAutorizaciones,
+      fakes.repositorioMascotas,
+    );
 
-    await expect(caso.ejecutar({ mascotaId, dueñoId })).rejects.toBeInstanceOf(AccesoNoAutorizadoError);
+    await expect(caso.ejecutar({ mascotaId, dueñoId })).rejects.toBeInstanceOf(
+      AccesoNoAutorizadoError,
+    );
   });
 });

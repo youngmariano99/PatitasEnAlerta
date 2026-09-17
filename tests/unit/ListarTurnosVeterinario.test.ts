@@ -2,7 +2,10 @@
  * @jest-environment node
  */
 import { ListarTurnosVeterinario } from '@aplicacion/casos-de-uso/veterinarios/ListarTurnosVeterinario';
-import type { IRepositorioTurnos, PaginaTurnosReservadosVeterinario } from '@dominio/puertos/IRepositorioTurnos';
+import type {
+  IRepositorioTurnos,
+  PaginaTurnosReservadosVeterinario,
+} from '@dominio/puertos/IRepositorioTurnos';
 
 const veterinarioId = '22222222-2222-4222-8222-222222222222';
 
@@ -20,11 +23,17 @@ function crearFakes(pagina: PaginaTurnosReservadosVeterinario) {
     listarReservadosEnVentana: jest.fn(),
     actualizarAsistio: jest.fn(),
     calcularTasaNoShow: jest.fn(),
+    listarPorEvento: jest.fn(),
   };
   return { repositorioTurnos };
 }
 
-const paginaVacia: PaginaTurnosReservadosVeterinario = { items: [], total: 0, pagina: 1, porPagina: 50 };
+const paginaVacia: PaginaTurnosReservadosVeterinario = {
+  items: [],
+  total: 0,
+  pagina: 1,
+  porPagina: 50,
+};
 
 describe('ListarTurnosVeterinario', () => {
   it('delega en el repositorio con el veterinario, pagina y porPagina dados', async () => {
@@ -33,7 +42,11 @@ describe('ListarTurnosVeterinario', () => {
 
     await caso.ejecutar({ veterinarioId, pagina: 1, porPagina: 50 });
 
-    expect(repositorioTurnos.listarReservadosPorProveedor).toHaveBeenCalledWith(veterinarioId, 1, 50);
+    expect(repositorioTurnos.listarReservadosPorProveedor).toHaveBeenCalledWith(
+      veterinarioId,
+      1,
+      50,
+    );
   });
 
   it('aplica el tope de 50 por página aunque el llamador pida más (defensa en profundidad)', async () => {
@@ -42,7 +55,11 @@ describe('ListarTurnosVeterinario', () => {
 
     await caso.ejecutar({ veterinarioId, pagina: 1, porPagina: 500 });
 
-    expect(repositorioTurnos.listarReservadosPorProveedor).toHaveBeenCalledWith(veterinarioId, 1, 50);
+    expect(repositorioTurnos.listarReservadosPorProveedor).toHaveBeenCalledWith(
+      veterinarioId,
+      1,
+      50,
+    );
   });
 
   it('nunca pide una página menor a 1', async () => {
@@ -51,7 +68,11 @@ describe('ListarTurnosVeterinario', () => {
 
     await caso.ejecutar({ veterinarioId, pagina: -3, porPagina: 50 });
 
-    expect(repositorioTurnos.listarReservadosPorProveedor).toHaveBeenCalledWith(veterinarioId, 1, 50);
+    expect(repositorioTurnos.listarReservadosPorProveedor).toHaveBeenCalledWith(
+      veterinarioId,
+      1,
+      50,
+    );
   });
 
   it('devuelve la página tal como la entrega el repositorio', async () => {
@@ -80,6 +101,8 @@ describe('ListarTurnosVeterinario', () => {
     const { repositorioTurnos } = crearFakes(paginaVacia);
     const caso = new ListarTurnosVeterinario(repositorioTurnos);
 
-    await expect(caso.ejecutar({ veterinarioId, pagina: 1, porPagina: 50 })).resolves.toEqual(paginaVacia);
+    await expect(caso.ejecutar({ veterinarioId, pagina: 1, porPagina: 50 })).resolves.toEqual(
+      paginaVacia,
+    );
   });
 });

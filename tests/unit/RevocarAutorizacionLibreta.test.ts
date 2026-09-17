@@ -2,7 +2,10 @@
  * @jest-environment node
  */
 import { RevocarAutorizacionLibreta } from '@aplicacion/casos-de-uso/veterinarios/RevocarAutorizacionLibreta';
-import type { AutorizacionLibretaPersistida, IRepositorioAutorizacionesLibreta } from '@dominio/puertos/IRepositorioAutorizacionesLibreta';
+import type {
+  AutorizacionLibretaPersistida,
+  IRepositorioAutorizacionesLibreta,
+} from '@dominio/puertos/IRepositorioAutorizacionesLibreta';
 import type { IRepositorioMascotas } from '@dominio/puertos/IRepositorioMascotas';
 import { Mascota } from '@dominio/entidades/Mascota';
 import { MascotaNoEncontradaError } from '@dominio/errores/erroresMascotas';
@@ -31,16 +34,28 @@ const autorizacionRevocada: AutorizacionLibretaPersistida = {
   revocadaEn: new Date('2026-09-08T12:00:00.000Z'),
 };
 
-function crearFakes(opciones?: { mascotaEncontrada?: Mascota | null; revocada?: AutorizacionLibretaPersistida | null }) {
+function crearFakes(opciones?: {
+  mascotaEncontrada?: Mascota | null;
+  revocada?: AutorizacionLibretaPersistida | null;
+}) {
   const repositorioAutorizaciones: jest.Mocked<IRepositorioAutorizacionesLibreta> = {
     obtenerActual: jest.fn(),
     crear: jest.fn(),
-    revocar: jest.fn().mockResolvedValue(opciones?.revocada === undefined ? autorizacionRevocada : opciones.revocada),
+    revocar: jest
+      .fn()
+      .mockResolvedValue(
+        opciones?.revocada === undefined ? autorizacionRevocada : opciones.revocada,
+      ),
     listarPorMascota: jest.fn(),
+    listarVigentesPorVeterinario: jest.fn(),
   };
   const repositorioMascotas: jest.Mocked<IRepositorioMascotas> = {
     crear: jest.fn(),
-    buscarPorId: jest.fn().mockResolvedValue(opciones?.mascotaEncontrada === undefined ? mascota : opciones.mascotaEncontrada),
+    buscarPorId: jest
+      .fn()
+      .mockResolvedValue(
+        opciones?.mascotaEncontrada === undefined ? mascota : opciones.mascotaEncontrada,
+      ),
     listarPorDueño: jest.fn(),
     actualizar: jest.fn(),
     darDeBaja: jest.fn(),
@@ -53,7 +68,10 @@ const comando = { mascotaId, veterinarioId, dueñoId };
 describe('RevocarAutorizacionLibreta', () => {
   it('revoca la autorización activa cuando la mascota pertenece a quien invoca', async () => {
     const fakes = crearFakes();
-    const caso = new RevocarAutorizacionLibreta(fakes.repositorioAutorizaciones, fakes.repositorioMascotas);
+    const caso = new RevocarAutorizacionLibreta(
+      fakes.repositorioAutorizaciones,
+      fakes.repositorioMascotas,
+    );
 
     const resultado = await caso.ejecutar(comando);
 
@@ -63,7 +81,10 @@ describe('RevocarAutorizacionLibreta', () => {
 
   it('rechaza con 404/PEA-AUTH-009 si la mascota no existe', async () => {
     const fakes = crearFakes({ mascotaEncontrada: null });
-    const caso = new RevocarAutorizacionLibreta(fakes.repositorioAutorizaciones, fakes.repositorioMascotas);
+    const caso = new RevocarAutorizacionLibreta(
+      fakes.repositorioAutorizaciones,
+      fakes.repositorioMascotas,
+    );
 
     await expect(caso.ejecutar(comando)).rejects.toBeInstanceOf(MascotaNoEncontradaError);
     expect(fakes.repositorioAutorizaciones.revocar).not.toHaveBeenCalled();
@@ -80,7 +101,10 @@ describe('RevocarAutorizacionLibreta', () => {
       identificacionChip: mascota.identificacionChip,
     });
     const fakes = crearFakes({ mascotaEncontrada: mascotaDeOtro });
-    const caso = new RevocarAutorizacionLibreta(fakes.repositorioAutorizaciones, fakes.repositorioMascotas);
+    const caso = new RevocarAutorizacionLibreta(
+      fakes.repositorioAutorizaciones,
+      fakes.repositorioMascotas,
+    );
 
     await expect(caso.ejecutar(comando)).rejects.toBeInstanceOf(AccesoNoAutorizadoError);
     expect(fakes.repositorioAutorizaciones.revocar).not.toHaveBeenCalled();
@@ -88,8 +112,13 @@ describe('RevocarAutorizacionLibreta', () => {
 
   it('rechaza con 404/PEA-VET-010 si no hay una autorización activa para ese par', async () => {
     const fakes = crearFakes({ revocada: null });
-    const caso = new RevocarAutorizacionLibreta(fakes.repositorioAutorizaciones, fakes.repositorioMascotas);
+    const caso = new RevocarAutorizacionLibreta(
+      fakes.repositorioAutorizaciones,
+      fakes.repositorioMascotas,
+    );
 
-    await expect(caso.ejecutar(comando)).rejects.toBeInstanceOf(AutorizacionLibretaNoEncontradaError);
+    await expect(caso.ejecutar(comando)).rejects.toBeInstanceOf(
+      AutorizacionLibretaNoEncontradaError,
+    );
   });
 });

@@ -3,7 +3,10 @@
  */
 import { NextRequest } from 'next/server';
 import { container } from '@aplicacion/contenedor-di';
-import type { AutorizacionLibretaPersistida, IRepositorioAutorizacionesLibreta } from '@dominio/puertos/IRepositorioAutorizacionesLibreta';
+import type {
+  AutorizacionLibretaPersistida,
+  IRepositorioAutorizacionesLibreta,
+} from '@dominio/puertos/IRepositorioAutorizacionesLibreta';
 import type { CambiosMascota, IRepositorioMascotas } from '@dominio/puertos/IRepositorioMascotas';
 import type { IRepositorioPerfil, ResumenPerfilPropio } from '@dominio/puertos/IRepositorioPerfil';
 import { Mascota } from '@dominio/entidades/Mascota';
@@ -28,14 +31,22 @@ let contadorAutorizaciones = 0;
 class RepositorioAutorizacionesEnMemoria implements IRepositorioAutorizacionesLibreta {
   public autorizaciones: AutorizacionLibretaPersistida[] = [];
 
-  async obtenerActual(mascotaIdConsultado: string, veterinarioIdConsultado: string): Promise<AutorizacionLibretaPersistida | null> {
+  async obtenerActual(
+    mascotaIdConsultado: string,
+    veterinarioIdConsultado: string,
+  ): Promise<AutorizacionLibretaPersistida | null> {
     const propias = this.autorizaciones
-      .filter((a) => a.mascotaId === mascotaIdConsultado && a.veterinarioId === veterinarioIdConsultado)
+      .filter(
+        (a) => a.mascotaId === mascotaIdConsultado && a.veterinarioId === veterinarioIdConsultado,
+      )
       .sort((a, b) => b.otorgadaEn.getTime() - a.otorgadaEn.getTime());
     return propias[0] ?? null;
   }
 
-  async crear(mascotaIdCreada: string, veterinarioIdCreado: string): Promise<AutorizacionLibretaPersistida> {
+  async crear(
+    mascotaIdCreada: string,
+    veterinarioIdCreado: string,
+  ): Promise<AutorizacionLibretaPersistida> {
     contadorAutorizaciones += 1;
     const autorizacion: AutorizacionLibretaPersistida = {
       id: `autorizacion-${contadorAutorizaciones}`,
@@ -48,7 +59,10 @@ class RepositorioAutorizacionesEnMemoria implements IRepositorioAutorizacionesLi
     return autorizacion;
   }
 
-  async revocar(mascotaIdConsultado: string, veterinarioIdConsultado: string): Promise<AutorizacionLibretaPersistida | null> {
+  async revocar(
+    mascotaIdConsultado: string,
+    veterinarioIdConsultado: string,
+  ): Promise<AutorizacionLibretaPersistida | null> {
     const activa = await this.obtenerActual(mascotaIdConsultado, veterinarioIdConsultado);
     if (!activa || activa.revocadaEn) return null;
     activa.revocadaEn = new Date('2026-09-08T13:00:00.000Z');
@@ -58,6 +72,14 @@ class RepositorioAutorizacionesEnMemoria implements IRepositorioAutorizacionesLi
   async listarPorMascota(mascotaIdConsultado: string): Promise<AutorizacionLibretaPersistida[]> {
     return this.autorizaciones
       .filter((a) => a.mascotaId === mascotaIdConsultado)
+      .sort((a, b) => b.otorgadaEn.getTime() - a.otorgadaEn.getTime());
+  }
+
+  async listarVigentesPorVeterinario(
+    veterinarioId: string,
+  ): Promise<AutorizacionLibretaPersistida[]> {
+    return this.autorizaciones
+      .filter((a) => a.veterinarioId === veterinarioId && a.revocadaEn === null)
       .sort((a, b) => b.otorgadaEn.getTime() - a.otorgadaEn.getTime());
   }
 }
@@ -97,13 +119,17 @@ class RepositorioPerfilEnMemoria implements IRepositorioPerfil {
 function crearRequest(method: string, body?: unknown): NextRequest {
   return new NextRequest(`http://localhost/api/mascotas/${mascotaId}/autorizaciones`, {
     method,
-    ...(body !== undefined ? { body: JSON.stringify(body), headers: { 'content-type': 'application/json' } } : {}),
+    ...(body !== undefined
+      ? { body: JSON.stringify(body), headers: { 'content-type': 'application/json' } }
+      : {}),
   });
 }
 
 function autenticarComo(usuarioId: string | null) {
   getUserMock.mockResolvedValue(
-    usuarioId ? { data: { user: { id: usuarioId } }, error: null } : { data: { user: null }, error: { message: 'sin sesión' } },
+    usuarioId
+      ? { data: { user: { id: usuarioId } }, error: null }
+      : { data: { user: null }, error: { message: 'sin sesión' } },
   );
 }
 
@@ -139,7 +165,10 @@ describe('CRUD de autorizaciones_libreta controlado por el dueño', () => {
     });
 
     container.reset();
-    container.registerInstance<IRepositorioAutorizacionesLibreta>('IRepositorioAutorizacionesLibreta', repositorioAutorizaciones);
+    container.registerInstance<IRepositorioAutorizacionesLibreta>(
+      'IRepositorioAutorizacionesLibreta',
+      repositorioAutorizaciones,
+    );
     container.registerInstance<IRepositorioMascotas>('IRepositorioMascotas', repositorioMascotas);
     container.registerInstance<IRepositorioPerfil>('IRepositorioPerfil', repositorioPerfil);
   });
@@ -148,7 +177,9 @@ describe('CRUD de autorizaciones_libreta controlado por el dueño', () => {
     it('rechaza sin sesión (401 / PEA-SIS-001)', async () => {
       autenticarComo(null);
 
-      const respuesta = await POST(crearRequest('POST', { veterinarioId }), { params: { id: mascotaId } });
+      const respuesta = await POST(crearRequest('POST', { veterinarioId }), {
+        params: { id: mascotaId },
+      });
 
       expect(respuesta.status).toBe(401);
       expect((await respuesta.json()).codigo).toBe('PEA-SIS-001');
@@ -157,7 +188,9 @@ describe('CRUD de autorizaciones_libreta controlado por el dueño', () => {
     it('otorga la autorización (201) cuando el dueño autenticado es propietario de la mascota', async () => {
       autenticarComo(dueñoId);
 
-      const respuesta = await POST(crearRequest('POST', { veterinarioId }), { params: { id: mascotaId } });
+      const respuesta = await POST(crearRequest('POST', { veterinarioId }), {
+        params: { id: mascotaId },
+      });
 
       expect(respuesta.status).toBe(201);
       const cuerpo = await respuesta.json();
@@ -169,7 +202,9 @@ describe('CRUD de autorizaciones_libreta controlado por el dueño', () => {
     it('rechaza con 403/PEA-SIS-002 (anti-IDOR) si la mascota no pertenece a quien invoca', async () => {
       autenticarComo('otro-usuario');
 
-      const respuesta = await POST(crearRequest('POST', { veterinarioId }), { params: { id: mascotaId } });
+      const respuesta = await POST(crearRequest('POST', { veterinarioId }), {
+        params: { id: mascotaId },
+      });
 
       expect(respuesta.status).toBe(403);
       expect((await respuesta.json()).codigo).toBe('PEA-SIS-002');
@@ -178,9 +213,12 @@ describe('CRUD de autorizaciones_libreta controlado por el dueño', () => {
     it('rechaza con 404/PEA-VET-011 si el veterinarioId no corresponde a un usuario con rol veterinario', async () => {
       autenticarComo(dueñoId);
 
-      const respuesta = await POST(crearRequest('POST', { veterinarioId: '99999999-9999-4999-8999-999999999999' }), {
-        params: { id: mascotaId },
-      });
+      const respuesta = await POST(
+        crearRequest('POST', { veterinarioId: '99999999-9999-4999-8999-999999999999' }),
+        {
+          params: { id: mascotaId },
+        },
+      );
 
       expect(respuesta.status).toBe(404);
       expect((await respuesta.json()).codigo).toBe('PEA-VET-011');
@@ -190,7 +228,9 @@ describe('CRUD de autorizaciones_libreta controlado por el dueño', () => {
       autenticarComo(dueñoId);
       await POST(crearRequest('POST', { veterinarioId }), { params: { id: mascotaId } });
 
-      const respuesta = await POST(crearRequest('POST', { veterinarioId }), { params: { id: mascotaId } });
+      const respuesta = await POST(crearRequest('POST', { veterinarioId }), {
+        params: { id: mascotaId },
+      });
 
       expect(respuesta.status).toBe(409);
       expect((await respuesta.json()).codigo).toBe('PEA-VET-009');
@@ -225,7 +265,9 @@ describe('CRUD de autorizaciones_libreta controlado por el dueño', () => {
       autenticarComo(dueñoId);
       await POST(crearRequest('POST', { veterinarioId }), { params: { id: mascotaId } });
 
-      const respuesta = await DELETE(crearRequest('DELETE'), { params: { id: mascotaId, veterinarioId } });
+      const respuesta = await DELETE(crearRequest('DELETE'), {
+        params: { id: mascotaId, veterinarioId },
+      });
 
       expect(respuesta.status).toBe(200);
       const cuerpo = await respuesta.json();
@@ -235,7 +277,9 @@ describe('CRUD de autorizaciones_libreta controlado por el dueño', () => {
     it('rechaza con 404/PEA-VET-010 si no hay autorización activa para revocar', async () => {
       autenticarComo(dueñoId);
 
-      const respuesta = await DELETE(crearRequest('DELETE'), { params: { id: mascotaId, veterinarioId } });
+      const respuesta = await DELETE(crearRequest('DELETE'), {
+        params: { id: mascotaId, veterinarioId },
+      });
 
       expect(respuesta.status).toBe(404);
       expect((await respuesta.json()).codigo).toBe('PEA-VET-010');
@@ -246,7 +290,9 @@ describe('CRUD de autorizaciones_libreta controlado por el dueño', () => {
       await POST(crearRequest('POST', { veterinarioId }), { params: { id: mascotaId } });
       autenticarComo('otro-usuario');
 
-      const respuesta = await DELETE(crearRequest('DELETE'), { params: { id: mascotaId, veterinarioId } });
+      const respuesta = await DELETE(crearRequest('DELETE'), {
+        params: { id: mascotaId, veterinarioId },
+      });
 
       expect(respuesta.status).toBe(403);
       expect((await respuesta.json()).codigo).toBe('PEA-SIS-002');

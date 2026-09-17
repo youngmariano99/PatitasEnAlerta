@@ -32,16 +32,20 @@ const ENLACES_POR_ROL: Record<string, EnlaceRapido[]> = {
   dueño: [
     { href: '/mascotas', etiqueta: 'Mis mascotas' },
     { href: '/reportes/nuevo', etiqueta: 'Reportar una mascota' },
+    { href: '/turnos/reservar', etiqueta: 'Reservar un turno' },
     { href: '/turnos/mis-turnos', etiqueta: 'Mis turnos' },
     { href: '/adopciones', etiqueta: 'Vitrina de adopción' },
   ],
   veterinario: [
-    { href: '/turnos/mis-turnos', etiqueta: 'Mis turnos' },
+    { href: '/veterinario/agenda', etiqueta: 'Mi agenda' },
+    { href: '/veterinario/turnos', etiqueta: 'Mis turnos' },
+    { href: '/veterinario/pacientes', etiqueta: 'Mis pacientes' },
     { href: '/reportes', etiqueta: 'Reportes de la comunidad' },
   ],
   municipio: [
     { href: '/municipio/dashboard', etiqueta: 'Panel de reportes' },
     { href: '/municipio/eventos', etiqueta: 'Calendario de operativos' },
+    { href: '/municipio/turnera', etiqueta: 'Turnera municipal' },
     { href: '/municipio/adopciones', etiqueta: 'Vitrina de adopción' },
   ],
   administrador: [
