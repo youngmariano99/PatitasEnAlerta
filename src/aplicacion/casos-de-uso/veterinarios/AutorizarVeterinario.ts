@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 import { injectable, inject } from 'tsyringe';
+import { Prisma } from '@prisma/client';
 import { CasoDeUsoBase } from '@aplicacion/casos-de-uso/CasoDeUsoBase';
 import {
   AutorizarVeterinarioSchema,
@@ -10,7 +11,10 @@ import type { IRepositorioAutorizacionesLibreta } from '@dominio/puertos/IReposi
 import type { IRepositorioMascotas } from '@dominio/puertos/IRepositorioMascotas';
 import type { IRepositorioPerfil } from '@dominio/puertos/IRepositorioPerfil';
 import { MascotaNoEncontradaError } from '@dominio/errores/erroresMascotas';
-import { AutorizacionLibretaYaActivaError, VeterinarioNoEncontradoError } from '@dominio/errores/erroresVeterinarios';
+import {
+  AutorizacionLibretaYaActivaError,
+  VeterinarioNoEncontradoError,
+} from '@dominio/errores/erroresVeterinarios';
 import { AccesoNoAutorizadoError } from '@dominio/errores/erroresTransversales';
 import { logger } from '@infraestructura/logging/logger';
 
@@ -33,8 +37,10 @@ export interface EntradaAutorizarVeterinario {
  * después que el `veterinarioId` indicado corresponda a un usuario con rol
  * veterinario (PEA-VET-011 — mismo mensaje genérico anti-enumeración), y
  * recién al final que no exista ya una autorización activa para ese par
- * (PEA-VET-009, evita reventar la constraint `ux_autorizacion_activa` de
- * docs/SCHEMA.md contra un INSERT).
+ * (PEA-VET-009) — chequeo de aplicación que evita el 409 en el camino
+ * feliz; `persistir()` además captura la violación de `ux_autorizacion_activa`
+ * (P2002 de Prisma, docs/SCHEMA.md) como defensa final ante la carrera entre
+ * dos autorizaciones concurrentes, mismo criterio que `InscribirseCurso`.
  *
  * Deliberadamente NO exige que el veterinario ya esté con matrícula
  * verificada: el dueño puede autorizar de antemano: `RegistrarEntradaLibreta`
@@ -75,14 +81,25 @@ export class AutorizarVeterinario extends CasoDeUsoBase<
       throw new VeterinarioNoEncontradoError();
     }
 
-    const autorizacionActual = await this.repositorioAutorizaciones.obtenerActual(dato.mascotaId, dato.veterinarioId);
+    const autorizacionActual = await this.repositorioAutorizaciones.obtenerActual(
+      dato.mascotaId,
+      dato.veterinarioId,
+    );
     if (autorizacionActual && !autorizacionActual.revocadaEn) {
       throw new AutorizacionLibretaYaActivaError();
     }
   }
 
   protected async persistir(dato: ComandoAutorizarVeterinario): Promise<AutorizacionLibretaDto> {
-    const autorizacion = await this.repositorioAutorizaciones.crear(dato.mascotaId, dato.veterinarioId);
+    let autorizacion;
+    try {
+      autorizacion = await this.repositorioAutorizaciones.crear(dato.mascotaId, dato.veterinarioId);
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        throw new AutorizacionLibretaYaActivaError();
+      }
+      throw error;
+    }
 
     return {
       id: autorizacion.id,

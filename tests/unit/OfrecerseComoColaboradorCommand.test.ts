@@ -1,6 +1,7 @@
 /**
  * @jest-environment node
  */
+import { Prisma } from '@prisma/client';
 import { OfrecerseComoColaboradorCommand } from '@aplicacion/casos-de-uso/red-colaboracion/OfrecerseComoColaboradorCommand';
 import type {
   ColaboracionPropuesta,
@@ -192,6 +193,26 @@ describe('OfrecerseComoColaboradorCommand', () => {
       ColaboracionYaPropuestaError,
     );
     expect(fakes.repositorioColaboraciones.crear).not.toHaveBeenCalled();
+  });
+
+  it('rechaza con 409 / PEA-RED-002 si el INSERT viola ux_colaboraciones_solicitud_stakeholder (carrera concurrente)', async () => {
+    const fakes = crearFakes();
+    fakes.repositorioColaboraciones.crear.mockRejectedValue(
+      new Prisma.PrismaClientKnownRequestError('Error simulado P2002', {
+        code: 'P2002',
+        clientVersion: '5.22.0',
+      }),
+    );
+    const comando = new OfrecerseComoColaboradorCommand(
+      fakes.repositorioColaboraciones,
+      fakes.repositorioSolicitudes,
+      fakes.repositorioPerfil,
+      fakes.repositorioNotificaciones,
+    );
+
+    await expect(comando.ejecutar({ solicitudId, stakeholderId })).rejects.toBeInstanceOf(
+      ColaboracionYaPropuestaError,
+    );
   });
 
   it('no hace fallar el ofrecimiento ya confirmado si la notificación falla', async () => {

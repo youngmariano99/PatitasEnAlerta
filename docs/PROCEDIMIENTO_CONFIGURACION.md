@@ -151,9 +151,9 @@ Probar sin esperar al cron: `supabase functions invoke refresh-metricas-dashboar
    curl -X POST http://localhost:3000/api/webhooks/recordatorios-turnos -H "x-cron-secret: $CRON_JOBS_SECRET"
    ```
 
-## Paso 8 — OpenTelemetry (pendiente de implementación, no solo de configuración)
+## Paso 8 — OpenTelemetry (implementado 2026-09-17, Fase 5 — solo falta configurar el colector)
 
-`docs/AUDITORIA_SISTEMA.md` Sección 3 marca que OpenTelemetry está en `package.json` pero nunca se instrumentó. Antes de este paso hace falta código nuevo (crear `instrumentation.ts` en la raíz del proyecto y las llamadas a `startSpan` en los 3 flujos críticos exigidos), no solo configuración. Una vez que ese código exista:
+`instrumentation.ts` (raíz del proyecto) y `src/infraestructura/observabilidad/trazas.ts` (`conTraza()`) ya instrumentan los 3 flujos críticos exigidos (creación de reporte, reserva de turno, escritura en libreta sanitaria). Sin `OTEL_EXPORTER_OTLP_ENDPOINT` configurado, el SDK nunca se registra — cero overhead, cero intentos de conexión fallidos. Para activarlo en un ambiente real:
 
 1. Levantar un colector (ej. Grafana Tempo, Honeycomb, o el colector OTLP del proveedor de hosting elegido).
 2. Completar `OTEL_EXPORTER_OTLP_ENDPOINT` en `.env.local`/producción con la URL de ese colector.

@@ -2,6 +2,7 @@
  * @jest-environment node
  */
 import { ZodError } from 'zod';
+import { Prisma } from '@prisma/client';
 import { AutorizarVeterinario } from '@aplicacion/casos-de-uso/veterinarios/AutorizarVeterinario';
 import type {
   AutorizacionLibretaPersistida,
@@ -216,5 +217,24 @@ describe('AutorizarVeterinario', () => {
     await caso.ejecutar(entradaValida);
 
     expect(fakes.repositorioAutorizaciones.crear).toHaveBeenCalledWith(mascotaId, veterinarioId);
+  });
+
+  it('rechaza con 409/PEA-VET-009 si el INSERT viola ux_autorizacion_activa (carrera concurrente)', async () => {
+    const fakes = crearFakes();
+    fakes.repositorioAutorizaciones.crear.mockRejectedValue(
+      new Prisma.PrismaClientKnownRequestError('Error simulado P2002', {
+        code: 'P2002',
+        clientVersion: '5.22.0',
+      }),
+    );
+    const caso = new AutorizarVeterinario(
+      fakes.repositorioAutorizaciones,
+      fakes.repositorioMascotas,
+      fakes.repositorioPerfil,
+    );
+
+    await expect(caso.ejecutar(entradaValida)).rejects.toBeInstanceOf(
+      AutorizacionLibretaYaActivaError,
+    );
   });
 });

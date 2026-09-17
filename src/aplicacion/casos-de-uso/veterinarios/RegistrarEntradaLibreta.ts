@@ -19,6 +19,7 @@ import {
   TipoEntradaInvalidoError,
 } from '@dominio/errores/erroresVeterinarios';
 import { AccesoNoAutorizadoError } from '@dominio/errores/erroresTransversales';
+import { conTraza } from '@infraestructura/observabilidad/trazas';
 import { logger } from '@infraestructura/logging/logger';
 
 /** Payload crudo del formulario + quién registra, resuelto por el route handler desde la sesión. */
@@ -56,7 +57,8 @@ export class RegistrarEntradaLibreta extends CasoDeUsoBase<
   constructor(
     @inject('IRepositorioAutorizacionesLibreta')
     private readonly repositorioAutorizaciones: IRepositorioAutorizacionesLibreta,
-    @inject('IRepositorioEntradasLibreta') private readonly repositorioEntradas: IRepositorioEntradasLibreta,
+    @inject('IRepositorioEntradasLibreta')
+    private readonly repositorioEntradas: IRepositorioEntradasLibreta,
     @inject('IRepositorioMascotas') private readonly repositorioMascotas: IRepositorioMascotas,
     @inject('IRepositorioPerfil') private readonly repositorioPerfil: IRepositorioPerfil,
   ) {
@@ -99,7 +101,10 @@ export class RegistrarEntradaLibreta extends CasoDeUsoBase<
       throw new MascotaSinAccesoLibretaError();
     }
 
-    const autorizacion = await this.repositorioAutorizaciones.obtenerActual(dato.mascotaId, dato.veterinarioId);
+    const autorizacion = await this.repositorioAutorizaciones.obtenerActual(
+      dato.mascotaId,
+      dato.veterinarioId,
+    );
     if (!autorizacion) {
       throw new SinAutorizacionLibretaError();
     }
@@ -108,22 +113,33 @@ export class RegistrarEntradaLibreta extends CasoDeUsoBase<
     }
   }
 
-  protected async persistir(dato: ComandoRegistrarEntradaLibreta): Promise<EntradaLibretaRegistrada> {
-    const entrada = await this.repositorioEntradas.crear(dato.mascotaId, dato.veterinarioId, {
-      tipo: dato.tipo,
-      descripcion: dato.descripcion,
-      fecha: dato.fecha,
-    });
+  protected async persistir(
+    dato: ComandoRegistrarEntradaLibreta,
+  ): Promise<EntradaLibretaRegistrada> {
+    // Flujo crítico instrumentado (docs/REQUISITOS.md, NFR de
+    // Trazabilidad): "escritura en libreta sanitaria" — ver
+    // src/infraestructura/observabilidad/trazas.ts.
+    return conTraza(
+      'libreta.registrar-entrada',
+      { mascotaId: dato.mascotaId, tipo: dato.tipo },
+      async () => {
+        const entrada = await this.repositorioEntradas.crear(dato.mascotaId, dato.veterinarioId, {
+          tipo: dato.tipo,
+          descripcion: dato.descripcion,
+          fecha: dato.fecha,
+        });
 
-    return {
-      id: entrada.id,
-      mascotaId: entrada.mascotaId,
-      veterinarioId: entrada.veterinarioId,
-      tipo: entrada.tipo,
-      descripcion: entrada.descripcion,
-      fecha: entrada.fecha,
-      createdAt: entrada.createdAt.toISOString(),
-    };
+        return {
+          id: entrada.id,
+          mascotaId: entrada.mascotaId,
+          veterinarioId: entrada.veterinarioId,
+          tipo: entrada.tipo,
+          descripcion: entrada.descripcion,
+          fecha: entrada.fecha,
+          createdAt: entrada.createdAt.toISOString(),
+        };
+      },
+    );
   }
 
   protected override async publicarEvento(resultado: EntradaLibretaRegistrada): Promise<void> {

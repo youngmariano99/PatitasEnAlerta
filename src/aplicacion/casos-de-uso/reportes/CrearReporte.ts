@@ -7,6 +7,7 @@ import type { IRepositorioReportes } from '@dominio/puertos/IRepositorioReportes
 import type { IAlmacenamientoImagenes } from '@dominio/puertos/IAlmacenamientoImagenes';
 import type { IControlDeTasa } from '@dominio/puertos/IControlDeTasa';
 import { DetectarCoincidenciaReporteJob } from '@infraestructura/jobs/DetectarCoincidenciaReporteJob';
+import { conTraza } from '@infraestructura/observabilidad/trazas';
 import { logger } from '@infraestructura/logging/logger';
 
 /** Payload crudo del formulario + quién reporta, resuelto por el route handler desde la sesión. */
@@ -34,10 +35,15 @@ export interface EntradaCrearReporte {
  * dispara cada tipo) — todo lo demás (validar, autorizar) es idéntico.
  */
 @injectable()
-export class CrearReporte extends CasoDeUsoBase<EntradaCrearReporte, ReporteCreado, ComandoCrearReporte> {
+export class CrearReporte extends CasoDeUsoBase<
+  EntradaCrearReporte,
+  ReporteCreado,
+  ComandoCrearReporte
+> {
   constructor(
     @inject('IRepositorioReportes') private readonly repositorioReportes: IRepositorioReportes,
-    @inject('IAlmacenamientoImagenes') private readonly almacenamientoImagenes: IAlmacenamientoImagenes,
+    @inject('IAlmacenamientoImagenes')
+    private readonly almacenamientoImagenes: IAlmacenamientoImagenes,
     @inject('IControlDeTasa') private readonly controlDeTasa: IControlDeTasa,
     private readonly detectarCoincidenciaJob: DetectarCoincidenciaReporteJob,
   ) {
@@ -49,7 +55,10 @@ export class CrearReporte extends CasoDeUsoBase<EntradaCrearReporte, ReporteCrea
       controlDeTasa: this.controlDeTasa,
       almacenamientoImagenes: this.almacenamientoImagenes,
     });
-    return pipeline.manejar({ datosCrudos: input.datosCrudos, reportadoPor: input.reportadoPor }, input.datosCrudos);
+    return pipeline.manejar(
+      { datosCrudos: input.datosCrudos, reportadoPor: input.reportadoPor },
+      input.datosCrudos,
+    );
   }
 
   protected async autorizar(): Promise<void> {
@@ -61,44 +70,52 @@ export class CrearReporte extends CasoDeUsoBase<EntradaCrearReporte, ReporteCrea
   }
 
   protected async persistir(dato: ComandoCrearReporte): Promise<ReporteCreado> {
-    const esProblematica = dato.tipo === 'problematica';
+    // Flujo crítico instrumentado (docs/REQUISITOS.md, NFR de
+    // Trazabilidad): "creación de reporte" — ver
+    // src/infraestructura/observabilidad/trazas.ts.
+    return conTraza('reportes.crear', { tipo: dato.tipo }, async () => {
+      const esProblematica = dato.tipo === 'problematica';
 
-    const reporte = await this.repositorioReportes.crear({
-      tipo: dato.tipo,
-      // `subtipo` solo tiene sentido para 'problematica' (ValidadorEsquemaZod
-      // ya lo exigió ahí vía superRefine); para 'perdido'/'encontrado' se
-      // ignora aunque el cliente lo haya enviado.
-      subtipo: esProblematica ? (dato.subtipo ?? null) : null,
-      reportadoPor: dato.reportadoPor,
-      // Una problemática urbana nunca está vinculada a una mascota
-      // registrada — se fuerza null acá aunque el cliente declare
-      // mascotaId, defensa en profundidad más allá de lo que ya impide la UI.
-      mascotaId: esProblematica ? null : dato.mascotaId ?? null,
-      descripcion: dato.descripcion,
-      fotoUrl: dato.fotoUrl,
-      latitud: dato.latitud,
-      longitud: dato.longitud,
-      especie: dato.especie ?? null,
+      const reporte = await this.repositorioReportes.crear({
+        tipo: dato.tipo,
+        // `subtipo` solo tiene sentido para 'problematica' (ValidadorEsquemaZod
+        // ya lo exigió ahí vía superRefine); para 'perdido'/'encontrado' se
+        // ignora aunque el cliente lo haya enviado.
+        subtipo: esProblematica ? (dato.subtipo ?? null) : null,
+        reportadoPor: dato.reportadoPor,
+        // Una problemática urbana nunca está vinculada a una mascota
+        // registrada — se fuerza null acá aunque el cliente declare
+        // mascotaId, defensa en profundidad más allá de lo que ya impide la UI.
+        mascotaId: esProblematica ? null : (dato.mascotaId ?? null),
+        descripcion: dato.descripcion,
+        fotoUrl: dato.fotoUrl,
+        latitud: dato.latitud,
+        longitud: dato.longitud,
+        especie: dato.especie ?? null,
+      });
+
+      return {
+        id: reporte.id,
+        tipo: reporte.tipo,
+        subtipo: reporte.subtipo,
+        reportadoPor: reporte.reportadoPor,
+        mascotaId: reporte.mascotaId,
+        descripcion: reporte.descripcion,
+        fotoUrl: reporte.fotoUrl,
+        latitud: reporte.latitud,
+        longitud: reporte.longitud,
+        especie: reporte.especie,
+        estado: reporte.estado,
+        createdAt: reporte.createdAt.toISOString(),
+      };
     });
-
-    return {
-      id: reporte.id,
-      tipo: reporte.tipo,
-      subtipo: reporte.subtipo,
-      reportadoPor: reporte.reportadoPor,
-      mascotaId: reporte.mascotaId,
-      descripcion: reporte.descripcion,
-      fotoUrl: reporte.fotoUrl,
-      latitud: reporte.latitud,
-      longitud: reporte.longitud,
-      especie: reporte.especie,
-      estado: reporte.estado,
-      createdAt: reporte.createdAt.toISOString(),
-    };
   }
 
   protected override async publicarEvento(resultado: ReporteCreado): Promise<void> {
-    logger.info({ evento: 'ReporteCreado', reporteId: resultado.id, tipo: resultado.tipo }, 'Evento de dominio publicado');
+    logger.info(
+      { evento: 'ReporteCreado', reporteId: resultado.id, tipo: resultado.tipo },
+      'Evento de dominio publicado',
+    );
 
     if (resultado.tipo !== 'encontrado') return;
 
