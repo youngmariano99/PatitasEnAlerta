@@ -63,5 +63,11 @@ export interface IRepositorioSolicitudesRecurso {
    * columnas `usuarios.latitud`/`longitud`, `solicitudes_recurso` no tiene
    * columna de ubicación propia).
    */
-  listarAsistenciaVeterinariaAbiertas(zona: FiltroZona | undefined, pagina: number, porPagina: number): Promise<PaginaSolicitudesVeterinarias>;
+  listarAsistenciaVeterinariaAbiertas(
+    zona: FiltroZona | undefined,
+    pagina: number,
+    porPagina: number,
+  ): Promise<PaginaSolicitudesVeterinarias>;
+  /** Todas las solicitudes `estado='abierta'` (cualquier tipo), paginadas — para que rescatistas/veterinarios naveguen el listado completo y se ofrezcan como colaboradores. */
+  listarAbiertas(pagina: number, porPagina: number): Promise<PaginaSolicitudesVeterinarias>;
 }

@@ -42,6 +42,7 @@ const ENLACES_POR_ROL: Record<string, EnlaceRapido[]> = {
     { href: '/veterinario/turnos', etiqueta: 'Mis turnos' },
     { href: '/veterinario/pacientes', etiqueta: 'Mis pacientes' },
     { href: '/reportes', etiqueta: 'Reportes de la comunidad' },
+    { href: '/red-colaboracion/solicitudes', etiqueta: 'Solicitudes de la Red de Colaboración' },
   ],
   municipio: [
     { href: '/municipio/dashboard', etiqueta: 'Panel de reportes' },
@@ -54,6 +55,17 @@ const ENLACES_POR_ROL: Record<string, EnlaceRapido[]> = {
     { href: '/admin/auditoria', etiqueta: 'Historial de auditoría' },
   ],
   comerciante: [{ href: '/comercios/panel', etiqueta: 'Mi comercio' }],
+  organizacion: [
+    { href: '/red-colaboracion/solicitudes', etiqueta: 'Solicitudes de recurso' },
+    { href: '/red-colaboracion/directorio', etiqueta: 'Directorio de aliados' },
+    { href: '/red-colaboracion/buscar', etiqueta: 'Buscar reportes similares' },
+    { href: '/red-colaboracion/metricas', etiqueta: 'Mis métricas' },
+  ],
+  rescatista: [
+    { href: '/red-colaboracion/solicitudes', etiqueta: 'Solicitudes de recurso' },
+    { href: '/red-colaboracion/directorio', etiqueta: 'Directorio de aliados' },
+    { href: '/red-colaboracion/metricas', etiqueta: 'Mis métricas' },
+  ],
 };
 
 const ETIQUETA_ROL: Record<string, string> = {
@@ -62,6 +74,8 @@ const ETIQUETA_ROL: Record<string, string> = {
   municipio: 'Cuenta municipal',
   administrador: 'Administrador de plataforma',
   comerciante: 'Comerciante',
+  organizacion: 'Organización/ONG',
+  rescatista: 'Rescatista',
 };
 
 export default function PaginaPanel() {

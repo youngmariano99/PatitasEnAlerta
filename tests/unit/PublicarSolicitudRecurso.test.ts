@@ -4,7 +4,10 @@
 import { ZodError } from 'zod';
 import { PublicarSolicitudRecurso } from '@aplicacion/casos-de-uso/red-colaboracion/PublicarSolicitudRecurso';
 import { SolicitudRecurso } from '@dominio/entidades/SolicitudRecurso';
-import type { DatosNuevaSolicitudRecurso, IRepositorioSolicitudesRecurso } from '@dominio/puertos/IRepositorioSolicitudesRecurso';
+import type {
+  DatosNuevaSolicitudRecurso,
+  IRepositorioSolicitudesRecurso,
+} from '@dominio/puertos/IRepositorioSolicitudesRecurso';
 import type { IRepositorioPerfil, ResumenPerfilPropio } from '@dominio/puertos/IRepositorioPerfil';
 import { AccesoNoAutorizadoError } from '@dominio/errores/erroresTransversales';
 
@@ -16,16 +19,29 @@ const datosCrudosValidos = {
 };
 
 function crearPerfil(rol: string): ResumenPerfilPropio {
-  return { id: organizacionId, email: 'ong@ejemplo.test', rol, estadoVerificacion: 'verificado', verificadoEn: null };
+  return {
+    id: organizacionId,
+    email: 'ong@ejemplo.test',
+    rol,
+    estadoVerificacion: 'verificado',
+    verificadoEn: null,
+  };
 }
 
 function crearFakes(opciones?: { rol?: string }) {
   const repositorioSolicitudes: jest.Mocked<IRepositorioSolicitudesRecurso> = {
-    crear: jest.fn().mockImplementation(async (datos: DatosNuevaSolicitudRecurso) =>
-      SolicitudRecurso.reconstruir('solicitud-1', { ...datos, estado: 'abierta' }, new Date('2026-09-09T09:00:00.000Z')),
-    ),
+    crear: jest
+      .fn()
+      .mockImplementation(async (datos: DatosNuevaSolicitudRecurso) =>
+        SolicitudRecurso.reconstruir(
+          'solicitud-1',
+          { ...datos, estado: 'abierta' },
+          new Date('2026-09-09T09:00:00.000Z'),
+        ),
+      ),
     obtenerActual: jest.fn(),
     listarAsistenciaVeterinariaAbiertas: jest.fn(),
+    listarAbiertas: jest.fn(),
   };
   const repositorioPerfil: jest.Mocked<IRepositorioPerfil> = {
     obtenerPerfilPropio: jest.fn().mockResolvedValue(crearPerfil(opciones?.rol ?? 'organizacion')),
@@ -59,7 +75,9 @@ describe('PublicarSolicitudRecurso', () => {
 
     await caso.ejecutar({ datosCrudos: { ...datosCrudosValidos, reporteId }, organizacionId });
 
-    expect(repositorioSolicitudes.crear).toHaveBeenCalledWith(expect.objectContaining({ reporteId }));
+    expect(repositorioSolicitudes.crear).toHaveBeenCalledWith(
+      expect.objectContaining({ reporteId }),
+    );
   });
 
   it.each(['dueño', 'veterinario', 'municipio', 'administrador', 'rescatista'])(
@@ -68,9 +86,9 @@ describe('PublicarSolicitudRecurso', () => {
       const { repositorioSolicitudes, repositorioPerfil } = crearFakes({ rol });
       const caso = new PublicarSolicitudRecurso(repositorioSolicitudes, repositorioPerfil);
 
-      await expect(caso.ejecutar({ datosCrudos: datosCrudosValidos, organizacionId })).rejects.toBeInstanceOf(
-        AccesoNoAutorizadoError,
-      );
+      await expect(
+        caso.ejecutar({ datosCrudos: datosCrudosValidos, organizacionId }),
+      ).rejects.toBeInstanceOf(AccesoNoAutorizadoError);
       expect(repositorioSolicitudes.crear).not.toHaveBeenCalled();
     },
   );
@@ -80,9 +98,9 @@ describe('PublicarSolicitudRecurso', () => {
     repositorioPerfil.obtenerPerfilPropio.mockResolvedValue(null);
     const caso = new PublicarSolicitudRecurso(repositorioSolicitudes, repositorioPerfil);
 
-    await expect(caso.ejecutar({ datosCrudos: datosCrudosValidos, organizacionId })).rejects.toBeInstanceOf(
-      AccesoNoAutorizadoError,
-    );
+    await expect(
+      caso.ejecutar({ datosCrudos: datosCrudosValidos, organizacionId }),
+    ).rejects.toBeInstanceOf(AccesoNoAutorizadoError);
     expect(repositorioSolicitudes.crear).not.toHaveBeenCalled();
   });
 
@@ -92,7 +110,9 @@ describe('PublicarSolicitudRecurso', () => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { tipo: _tipo, ...sinTipo } = datosCrudosValidos;
 
-    await expect(caso.ejecutar({ datosCrudos: sinTipo, organizacionId })).rejects.toBeInstanceOf(ZodError);
+    await expect(caso.ejecutar({ datosCrudos: sinTipo, organizacionId })).rejects.toBeInstanceOf(
+      ZodError,
+    );
     expect(repositorioSolicitudes.crear).not.toHaveBeenCalled();
   });
 
@@ -112,7 +132,9 @@ describe('PublicarSolicitudRecurso', () => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { descripcion: _descripcion, ...sinDescripcion } = datosCrudosValidos;
 
-    await expect(caso.ejecutar({ datosCrudos: sinDescripcion, organizacionId })).rejects.toBeInstanceOf(ZodError);
+    await expect(
+      caso.ejecutar({ datosCrudos: sinDescripcion, organizacionId }),
+    ).rejects.toBeInstanceOf(ZodError);
     expect(repositorioSolicitudes.crear).not.toHaveBeenCalled();
   });
 
@@ -121,7 +143,10 @@ describe('PublicarSolicitudRecurso', () => {
     const caso = new PublicarSolicitudRecurso(repositorioSolicitudes, repositorioPerfil);
 
     await expect(
-      caso.ejecutar({ datosCrudos: { ...datosCrudosValidos, reporteId: 'no-es-un-uuid' }, organizacionId }),
+      caso.ejecutar({
+        datosCrudos: { ...datosCrudosValidos, reporteId: 'no-es-un-uuid' },
+        organizacionId,
+      }),
     ).rejects.toBeInstanceOf(ZodError);
   });
 });

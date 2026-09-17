@@ -3,16 +3,30 @@
  */
 import { ZodError } from 'zod';
 import { ListarSolicitudesVeterinarias } from '@aplicacion/casos-de-uso/red-colaboracion/ListarSolicitudesVeterinarias';
-import type { IRepositorioSolicitudesRecurso, PaginaSolicitudesVeterinarias } from '@dominio/puertos/IRepositorioSolicitudesRecurso';
+import type {
+  IRepositorioSolicitudesRecurso,
+  PaginaSolicitudesVeterinarias,
+} from '@dominio/puertos/IRepositorioSolicitudesRecurso';
 import type { IRepositorioPerfil, ResumenPerfilPropio } from '@dominio/puertos/IRepositorioPerfil';
 import { AccesoNoAutorizadoError } from '@dominio/errores/erroresTransversales';
 
 const veterinarioId = '11111111-1111-1111-1111-111111111111';
 
-const PAGINA_VACIA: PaginaSolicitudesVeterinarias = { items: [], total: 0, pagina: 1, porPagina: 50 };
+const PAGINA_VACIA: PaginaSolicitudesVeterinarias = {
+  items: [],
+  total: 0,
+  pagina: 1,
+  porPagina: 50,
+};
 
 function crearPerfil(rol: string): ResumenPerfilPropio {
-  return { id: veterinarioId, email: 'vet@ejemplo.test', rol, estadoVerificacion: 'verificado', verificadoEn: new Date() };
+  return {
+    id: veterinarioId,
+    email: 'vet@ejemplo.test',
+    rol,
+    estadoVerificacion: 'verificado',
+    verificadoEn: new Date(),
+  };
 }
 
 function crearFakes(opciones?: { rol?: string }) {
@@ -20,6 +34,7 @@ function crearFakes(opciones?: { rol?: string }) {
     crear: jest.fn(),
     obtenerActual: jest.fn(),
     listarAsistenciaVeterinariaAbiertas: jest.fn().mockResolvedValue(PAGINA_VACIA),
+    listarAbiertas: jest.fn(),
   };
   const repositorioPerfil: jest.Mocked<IRepositorioPerfil> = {
     obtenerPerfilPropio: jest.fn().mockResolvedValue(crearPerfil(opciones?.rol ?? 'veterinario')),
@@ -34,7 +49,11 @@ describe('ListarSolicitudesVeterinarias', () => {
 
     await caso.ejecutar({ datosCrudos: {}, veterinarioId });
 
-    expect(repositorioSolicitudes.listarAsistenciaVeterinariaAbiertas).toHaveBeenCalledWith(undefined, 1, 50);
+    expect(repositorioSolicitudes.listarAsistenciaVeterinariaAbiertas).toHaveBeenCalledWith(
+      undefined,
+      1,
+      50,
+    );
   });
 
   it('propaga el filtro de zona completo (latitud + longitud + radioKm) al repositorio', async () => {
@@ -42,7 +61,13 @@ describe('ListarSolicitudesVeterinarias', () => {
     const caso = new ListarSolicitudesVeterinarias(repositorioSolicitudes, repositorioPerfil);
 
     await caso.ejecutar({
-      datosCrudos: { latitud: '-37.9989', longitud: '-61.3565', radioKm: '10', pagina: '2', porPagina: '20' },
+      datosCrudos: {
+        latitud: '-37.9989',
+        longitud: '-61.3565',
+        radioKm: '10',
+        pagina: '2',
+        porPagina: '20',
+      },
       veterinarioId,
     });
 
@@ -57,7 +82,9 @@ describe('ListarSolicitudesVeterinarias', () => {
     const { repositorioSolicitudes, repositorioPerfil } = crearFakes();
     const caso = new ListarSolicitudesVeterinarias(repositorioSolicitudes, repositorioPerfil);
 
-    await expect(caso.ejecutar({ datosCrudos: { latitud: '-37.9989' }, veterinarioId })).rejects.toBeInstanceOf(ZodError);
+    await expect(
+      caso.ejecutar({ datosCrudos: { latitud: '-37.9989' }, veterinarioId }),
+    ).rejects.toBeInstanceOf(ZodError);
     expect(repositorioSolicitudes.listarAsistenciaVeterinariaAbiertas).not.toHaveBeenCalled();
   });
 
@@ -74,7 +101,9 @@ describe('ListarSolicitudesVeterinarias', () => {
       const { repositorioSolicitudes, repositorioPerfil } = crearFakes({ rol });
       const caso = new ListarSolicitudesVeterinarias(repositorioSolicitudes, repositorioPerfil);
 
-      await expect(caso.ejecutar({ datosCrudos: {}, veterinarioId })).rejects.toBeInstanceOf(AccesoNoAutorizadoError);
+      await expect(caso.ejecutar({ datosCrudos: {}, veterinarioId })).rejects.toBeInstanceOf(
+        AccesoNoAutorizadoError,
+      );
       expect(repositorioSolicitudes.listarAsistenciaVeterinariaAbiertas).not.toHaveBeenCalled();
     },
   );
@@ -84,10 +113,15 @@ describe('ListarSolicitudesVeterinarias', () => {
       crear: jest.fn(),
       obtenerActual: jest.fn(),
       listarAsistenciaVeterinariaAbiertas: jest.fn(),
+      listarAbiertas: jest.fn(),
     };
-    const repositorioPerfil: jest.Mocked<IRepositorioPerfil> = { obtenerPerfilPropio: jest.fn().mockResolvedValue(null) };
+    const repositorioPerfil: jest.Mocked<IRepositorioPerfil> = {
+      obtenerPerfilPropio: jest.fn().mockResolvedValue(null),
+    };
     const caso = new ListarSolicitudesVeterinarias(repositorioSolicitudes, repositorioPerfil);
 
-    await expect(caso.ejecutar({ datosCrudos: {}, veterinarioId })).rejects.toBeInstanceOf(AccesoNoAutorizadoError);
+    await expect(caso.ejecutar({ datosCrudos: {}, veterinarioId })).rejects.toBeInstanceOf(
+      AccesoNoAutorizadoError,
+    );
   });
 });

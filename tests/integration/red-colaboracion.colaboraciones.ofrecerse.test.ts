@@ -7,10 +7,20 @@
  */
 import { NextRequest } from 'next/server';
 import { container } from '@aplicacion/contenedor-di';
-import type { DatosNuevaColaboracion, ColaboracionPropuesta, IRepositorioColaboraciones } from '@dominio/puertos/IRepositorioColaboraciones';
-import type { IRepositorioSolicitudesRecurso, SolicitudActual } from '@dominio/puertos/IRepositorioSolicitudesRecurso';
+import type {
+  DatosNuevaColaboracion,
+  ColaboracionPropuesta,
+  IRepositorioColaboraciones,
+} from '@dominio/puertos/IRepositorioColaboraciones';
+import type {
+  IRepositorioSolicitudesRecurso,
+  SolicitudActual,
+} from '@dominio/puertos/IRepositorioSolicitudesRecurso';
 import type { IRepositorioPerfil, ResumenPerfilPropio } from '@dominio/puertos/IRepositorioPerfil';
-import type { DatosNotificacion, INotificacionesRepositorio } from '@dominio/puertos/INotificacionesRepositorio';
+import type {
+  DatosNotificacion,
+  INotificacionesRepositorio,
+} from '@dominio/puertos/INotificacionesRepositorio';
 
 const getUserMock = jest.fn();
 
@@ -40,6 +50,10 @@ class RepositorioSolicitudesFalso implements IRepositorioSolicitudesRecurso {
   async listarAsistenciaVeterinariaAbiertas(): Promise<never> {
     throw new Error('no usado en este test');
   }
+
+  async listarAbiertas(): Promise<never> {
+    throw new Error('no usado en este test');
+  }
 }
 
 class RepositorioColaboracionesFalso implements IRepositorioColaboraciones {
@@ -58,7 +72,9 @@ class RepositorioColaboracionesFalso implements IRepositorioColaboraciones {
   }
 
   async existePropuestaDe(solicitudId: string, stakeholderId: string): Promise<boolean> {
-    return this.creadas.some((c) => c.solicitudId === solicitudId && c.stakeholderId === stakeholderId);
+    return this.creadas.some(
+      (c) => c.solicitudId === solicitudId && c.stakeholderId === stakeholderId,
+    );
   }
 
   async crear(datos: DatosNuevaColaboracion): Promise<ColaboracionPropuesta> {
@@ -82,7 +98,13 @@ class RepositorioPerfilFalso implements IRepositorioPerfil {
   public rol = 'rescatista';
 
   async obtenerPerfilPropio(usuarioId: string): Promise<ResumenPerfilPropio | null> {
-    return { id: usuarioId, email: 'rescatista@ejemplo.test', rol: this.rol, estadoVerificacion: 'no_requerido', verificadoEn: null };
+    return {
+      id: usuarioId,
+      email: 'rescatista@ejemplo.test',
+      rol: this.rol,
+      estadoVerificacion: 'no_requerido',
+      verificadoEn: null,
+    };
   }
 }
 
@@ -108,12 +130,17 @@ class NotificacionesRepositorioFalso implements INotificacionesRepositorio {
 
 function autenticarComo(usuarioId: string | null) {
   getUserMock.mockResolvedValue(
-    usuarioId ? { data: { user: { id: usuarioId } }, error: null } : { data: { user: null }, error: { message: 'sin sesión' } },
+    usuarioId
+      ? { data: { user: { id: usuarioId } }, error: null }
+      : { data: { user: null }, error: { message: 'sin sesión' } },
   );
 }
 
 function crearRequest(): NextRequest {
-  return new NextRequest(`http://localhost/api/red-colaboracion/solicitudes/${SOLICITUD_ID}/colaboraciones`, { method: 'POST' });
+  return new NextRequest(
+    `http://localhost/api/red-colaboracion/solicitudes/${SOLICITUD_ID}/colaboraciones`,
+    { method: 'POST' },
+  );
 }
 
 describe('POST /api/red-colaboracion/solicitudes/[id]/colaboraciones (Ofrecimiento como colaborador)', () => {
@@ -129,10 +156,19 @@ describe('POST /api/red-colaboracion/solicitudes/[id]/colaboraciones (Ofrecimien
     repositorioPerfil = new RepositorioPerfilFalso();
     repositorioNotificaciones = new NotificacionesRepositorioFalso();
     container.reset();
-    container.registerInstance<IRepositorioSolicitudesRecurso>('IRepositorioSolicitudesRecurso', repositorioSolicitudes);
-    container.registerInstance<IRepositorioColaboraciones>('IRepositorioColaboraciones', repositorioColaboraciones);
+    container.registerInstance<IRepositorioSolicitudesRecurso>(
+      'IRepositorioSolicitudesRecurso',
+      repositorioSolicitudes,
+    );
+    container.registerInstance<IRepositorioColaboraciones>(
+      'IRepositorioColaboraciones',
+      repositorioColaboraciones,
+    );
     container.registerInstance<IRepositorioPerfil>('IRepositorioPerfil', repositorioPerfil);
-    container.registerInstance<INotificacionesRepositorio>('INotificacionesRepositorio', repositorioNotificaciones);
+    container.registerInstance<INotificacionesRepositorio>(
+      'INotificacionesRepositorio',
+      repositorioNotificaciones,
+    );
   });
 
   it('rechaza sin sesión activa (401 / PEA-SIS-001), sin persistir nada', async () => {
@@ -190,10 +226,21 @@ describe('POST /api/red-colaboracion/solicitudes/[id]/colaboraciones (Ofrecimien
 
     expect(respuesta.status).toBe(201);
     const cuerpo = await respuesta.json();
-    expect(cuerpo).toMatchObject({ solicitudId: SOLICITUD_ID, stakeholderId: STAKEHOLDER_ID, estado: 'propuesta' });
-    expect(repositorioColaboraciones.creadas).toEqual([{ solicitudId: SOLICITUD_ID, stakeholderId: STAKEHOLDER_ID }]);
+    expect(cuerpo).toMatchObject({
+      solicitudId: SOLICITUD_ID,
+      stakeholderId: STAKEHOLDER_ID,
+      estado: 'propuesta',
+    });
+    expect(repositorioColaboraciones.creadas).toEqual([
+      { solicitudId: SOLICITUD_ID, stakeholderId: STAKEHOLDER_ID },
+    ]);
     expect(repositorioNotificaciones.creadas).toEqual([
-      { usuarioId: ORGANIZACION_ID, tipo: 'colaboracion_propuesta', referenciaTabla: 'colaboraciones', referenciaId: cuerpo.id },
+      {
+        usuarioId: ORGANIZACION_ID,
+        tipo: 'colaboracion_propuesta',
+        referenciaTabla: 'colaboraciones',
+        referenciaId: cuerpo.id,
+      },
     ]);
   });
 

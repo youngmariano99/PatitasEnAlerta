@@ -12,7 +12,11 @@
 import { NextRequest } from 'next/server';
 import { container } from '@aplicacion/contenedor-di';
 import type { IRepositorioUsuarios } from '@dominio/puertos/IRepositorioUsuarios';
-import type { IProveedorAutenticacion, CredencialesRegistro, UsuarioAutenticado } from '@dominio/puertos/IProveedorAutenticacion';
+import type {
+  IProveedorAutenticacion,
+  CredencialesRegistro,
+  UsuarioAutenticado,
+} from '@dominio/puertos/IProveedorAutenticacion';
 import type { IRepositorioPerfil, ResumenPerfilPropio } from '@dominio/puertos/IRepositorioPerfil';
 import type {
   AliadoDirectorio,
@@ -20,7 +24,10 @@ import type {
   IRepositorioDirectorioAliados,
   PaginaDirectorioAliados,
 } from '@dominio/puertos/IRepositorioDirectorioAliados';
-import type { DatosNuevaSolicitudRecurso, IRepositorioSolicitudesRecurso } from '@dominio/puertos/IRepositorioSolicitudesRecurso';
+import type {
+  DatosNuevaSolicitudRecurso,
+  IRepositorioSolicitudesRecurso,
+} from '@dominio/puertos/IRepositorioSolicitudesRecurso';
 import { SolicitudRecurso } from '@dominio/entidades/SolicitudRecurso';
 import { Usuario, ROL_RESCATISTA_ID } from '@dominio/entidades/Usuario';
 
@@ -70,7 +77,13 @@ class RepositorioPerfilFalso implements IRepositorioPerfil {
   public rol = 'rescatista';
 
   async obtenerPerfilPropio(usuarioId: string): Promise<ResumenPerfilPropio | null> {
-    return { id: usuarioId, email: 'rescatista@ejemplo.test', rol: this.rol, estadoVerificacion: 'no_requerido', verificadoEn: null };
+    return {
+      id: usuarioId,
+      email: 'rescatista@ejemplo.test',
+      rol: this.rol,
+      estadoVerificacion: 'no_requerido',
+      verificadoEn: null,
+    };
   }
 }
 
@@ -87,7 +100,11 @@ const aliadoDeEjemplo: AliadoDirectorio = {
 };
 
 class RepositorioDirectorioFalso implements IRepositorioDirectorioAliados {
-  async listar(_filtros: FiltrosDirectorioAliados, pagina: number, porPagina: number): Promise<PaginaDirectorioAliados> {
+  async listar(
+    _filtros: FiltrosDirectorioAliados,
+    pagina: number,
+    porPagina: number,
+  ): Promise<PaginaDirectorioAliados> {
     return { items: [aliadoDeEjemplo], total: 1, pagina, porPagina };
   }
 }
@@ -97,7 +114,11 @@ class RepositorioSolicitudesFalso implements IRepositorioSolicitudesRecurso {
 
   async crear(datos: DatosNuevaSolicitudRecurso): Promise<SolicitudRecurso> {
     this.creadas.push(datos);
-    return SolicitudRecurso.reconstruir(`solicitud-${this.creadas.length}`, { ...datos, estado: 'abierta' }, new Date());
+    return SolicitudRecurso.reconstruir(
+      `solicitud-${this.creadas.length}`,
+      { ...datos, estado: 'abierta' },
+      new Date(),
+    );
   }
 
   async obtenerActual(): Promise<never> {
@@ -107,11 +128,17 @@ class RepositorioSolicitudesFalso implements IRepositorioSolicitudesRecurso {
   async listarAsistenciaVeterinariaAbiertas(): Promise<never> {
     throw new Error('no usado en este test');
   }
+
+  async listarAbiertas(): Promise<never> {
+    throw new Error('no usado en este test');
+  }
 }
 
 function autenticarComo(usuarioId: string | null) {
   getUserMock.mockResolvedValue(
-    usuarioId ? { data: { user: { id: usuarioId } }, error: null } : { data: { user: null }, error: { message: 'sin sesión' } },
+    usuarioId
+      ? { data: { user: { id: usuarioId } }, error: null }
+      : { data: { user: null }, error: { message: 'sin sesión' } },
   );
 }
 
@@ -144,26 +171,50 @@ describe('Registro de rescatista y su alcance de acceso (Módulo 5)', () => {
     repositorioPerfil = new RepositorioPerfilFalso();
     repositorioSolicitudes = new RepositorioSolicitudesFalso();
     container.reset();
-    container.registerSingleton<IRepositorioUsuarios>('IRepositorioUsuarios', RepositorioUsuariosFalso);
-    container.registerSingleton<IProveedorAutenticacion>('IProveedorAutenticacion', ProveedorAutenticacionFalso);
+    container.registerSingleton<IRepositorioUsuarios>(
+      'IRepositorioUsuarios',
+      RepositorioUsuariosFalso,
+    );
+    container.registerSingleton<IProveedorAutenticacion>(
+      'IProveedorAutenticacion',
+      ProveedorAutenticacionFalso,
+    );
     container.registerInstance<IRepositorioPerfil>('IRepositorioPerfil', repositorioPerfil);
-    container.registerSingleton<IRepositorioDirectorioAliados>('IRepositorioDirectorioAliados', RepositorioDirectorioFalso);
-    container.registerInstance<IRepositorioSolicitudesRecurso>('IRepositorioSolicitudesRecurso', repositorioSolicitudes);
+    container.registerSingleton<IRepositorioDirectorioAliados>(
+      'IRepositorioDirectorioAliados',
+      RepositorioDirectorioFalso,
+    );
+    container.registerInstance<IRepositorioSolicitudesRecurso>(
+      'IRepositorioSolicitudesRecurso',
+      repositorioSolicitudes,
+    );
   });
 
   it('registra un rescatista (201, rol_id=5) sin exigir ningún dato de verificación profesional', async () => {
     const respuesta = await postRegistro(
-      crearRequestRegistro({ email: 'rescatista1@ejemplo.test', password: 'contraseñaSegura123', rol: 'rescatista' }),
+      crearRequestRegistro({
+        email: 'rescatista1@ejemplo.test',
+        password: 'contraseñaSegura123',
+        rol: 'rescatista',
+      }),
     );
 
     expect(respuesta.status).toBe(201);
     const cuerpo = await respuesta.json();
-    expect(cuerpo).toEqual({ id: 'rescatista-auth-1', email: 'rescatista1@ejemplo.test', rolId: ROL_RESCATISTA_ID });
+    expect(cuerpo).toEqual({
+      id: 'rescatista-auth-1',
+      email: 'rescatista1@ejemplo.test',
+      rolId: ROL_RESCATISTA_ID,
+    });
   });
 
   it('el rescatista registrado tiene acceso de solo lectura al directorio de aliados (200)', async () => {
     const respuestaRegistro = await postRegistro(
-      crearRequestRegistro({ email: 'rescatista2@ejemplo.test', password: 'contraseñaSegura123', rol: 'rescatista' }),
+      crearRequestRegistro({
+        email: 'rescatista2@ejemplo.test',
+        password: 'contraseñaSegura123',
+        rol: 'rescatista',
+      }),
     );
     const { id: usuarioId } = await respuestaRegistro.json();
 
@@ -175,13 +226,20 @@ describe('Registro de rescatista y su alcance de acceso (Módulo 5)', () => {
 
   it('el rescatista registrado NO puede publicar solicitudes de recurso — función exclusiva de organizacion (403 / PEA-SIS-002)', async () => {
     const respuestaRegistro = await postRegistro(
-      crearRequestRegistro({ email: 'rescatista3@ejemplo.test', password: 'contraseñaSegura123', rol: 'rescatista' }),
+      crearRequestRegistro({
+        email: 'rescatista3@ejemplo.test',
+        password: 'contraseñaSegura123',
+        rol: 'rescatista',
+      }),
     );
     const { id: usuarioId } = await respuestaRegistro.json();
 
     autenticarComo(usuarioId);
     const respuestaSolicitud = await postSolicitudes(
-      crearRequestSolicitudes({ tipo: 'insumos', descripcion: 'Necesitamos alimento balanceado para animales en tránsito.' }),
+      crearRequestSolicitudes({
+        tipo: 'insumos',
+        descripcion: 'Necesitamos alimento balanceado para animales en tránsito.',
+      }),
     );
 
     expect(respuestaSolicitud.status).toBe(403);
@@ -191,10 +249,16 @@ describe('Registro de rescatista y su alcance de acceso (Módulo 5)', () => {
   });
 
   it('rechaza un segundo registro con el mismo email (409 / PEA-AUTH-001), sin importar si el primero fue dueño', async () => {
-    await postRegistro(crearRequestRegistro({ email: 'compartido@ejemplo.test', password: 'contraseñaSegura123' }));
+    await postRegistro(
+      crearRequestRegistro({ email: 'compartido@ejemplo.test', password: 'contraseñaSegura123' }),
+    );
 
     const segundaRespuesta = await postRegistro(
-      crearRequestRegistro({ email: 'compartido@ejemplo.test', password: 'otraContraseñaSegura123', rol: 'rescatista' }),
+      crearRequestRegistro({
+        email: 'compartido@ejemplo.test',
+        password: 'otraContraseñaSegura123',
+        rol: 'rescatista',
+      }),
     );
 
     expect(segundaRespuesta.status).toBe(409);

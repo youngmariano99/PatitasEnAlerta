@@ -2,8 +2,14 @@
  * @jest-environment node
  */
 import { OfrecerseComoColaboradorCommand } from '@aplicacion/casos-de-uso/red-colaboracion/OfrecerseComoColaboradorCommand';
-import type { ColaboracionPropuesta, IRepositorioColaboraciones } from '@dominio/puertos/IRepositorioColaboraciones';
-import type { IRepositorioSolicitudesRecurso, SolicitudActual } from '@dominio/puertos/IRepositorioSolicitudesRecurso';
+import type {
+  ColaboracionPropuesta,
+  IRepositorioColaboraciones,
+} from '@dominio/puertos/IRepositorioColaboraciones';
+import type {
+  IRepositorioSolicitudesRecurso,
+  SolicitudActual,
+} from '@dominio/puertos/IRepositorioSolicitudesRecurso';
 import type { IRepositorioPerfil, ResumenPerfilPropio } from '@dominio/puertos/IRepositorioPerfil';
 import type { INotificacionesRepositorio } from '@dominio/puertos/INotificacionesRepositorio';
 import {
@@ -23,7 +29,13 @@ const organizacionId = '22222222-2222-2222-2222-222222222222';
 const stakeholderId = '33333333-3333-3333-3333-333333333333';
 
 function crearPerfil(rol: string): ResumenPerfilPropio {
-  return { id: stakeholderId, email: 'rescatista@ejemplo.test', rol, estadoVerificacion: 'no_requerido', verificadoEn: null };
+  return {
+    id: stakeholderId,
+    email: 'rescatista@ejemplo.test',
+    rol,
+    estadoVerificacion: 'no_requerido',
+    verificadoEn: null,
+  };
 }
 
 function crearFakes(opciones?: {
@@ -32,7 +44,9 @@ function crearFakes(opciones?: {
   yaPropuso?: boolean;
 }) {
   const solicitud: SolicitudActual | null =
-    opciones && 'solicitud' in opciones ? opciones.solicitud! : { estado: 'abierta', organizacionId };
+    opciones && 'solicitud' in opciones
+      ? opciones.solicitud!
+      : { estado: 'abierta', organizacionId };
 
   const repositorioColaboraciones: jest.Mocked<IRepositorioColaboraciones> = {
     obtenerActual: jest.fn(),
@@ -53,6 +67,7 @@ function crearFakes(opciones?: {
     crear: jest.fn(),
     obtenerActual: jest.fn().mockResolvedValue(solicitud),
     listarAsistenciaVeterinariaAbiertas: jest.fn(),
+    listarAbiertas: jest.fn(),
   };
   const repositorioPerfil: jest.Mocked<IRepositorioPerfil> = {
     obtenerPerfilPropio: jest.fn().mockResolvedValue(crearPerfil(opciones?.rol ?? 'rescatista')),
@@ -63,7 +78,12 @@ function crearFakes(opciones?: {
     listarPorUsuario: jest.fn(),
     marcarComoLeida: jest.fn(),
   };
-  return { repositorioColaboraciones, repositorioSolicitudes, repositorioPerfil, repositorioNotificaciones };
+  return {
+    repositorioColaboraciones,
+    repositorioSolicitudes,
+    repositorioPerfil,
+    repositorioNotificaciones,
+  };
 }
 
 describe('OfrecerseComoColaboradorCommand', () => {
@@ -78,8 +98,16 @@ describe('OfrecerseComoColaboradorCommand', () => {
 
     const resultado: ColaboracionPropuesta = await comando.ejecutar({ solicitudId, stakeholderId });
 
-    expect(resultado).toMatchObject({ solicitudId, stakeholderId, organizacionId, estado: 'propuesta' });
-    expect(fakes.repositorioColaboraciones.crear).toHaveBeenCalledWith({ solicitudId, stakeholderId });
+    expect(resultado).toMatchObject({
+      solicitudId,
+      stakeholderId,
+      organizacionId,
+      estado: 'propuesta',
+    });
+    expect(fakes.repositorioColaboraciones.crear).toHaveBeenCalledWith({
+      solicitudId,
+      stakeholderId,
+    });
     expect(fakes.repositorioNotificaciones.crear).toHaveBeenCalledWith({
       usuarioId: organizacionId,
       tipo: 'colaboracion_propuesta',
@@ -111,7 +139,9 @@ describe('OfrecerseComoColaboradorCommand', () => {
         fakes.repositorioNotificaciones,
       );
 
-      await expect(comando.ejecutar({ solicitudId, stakeholderId })).rejects.toBeInstanceOf(AccesoNoAutorizadoError);
+      await expect(comando.ejecutar({ solicitudId, stakeholderId })).rejects.toBeInstanceOf(
+        AccesoNoAutorizadoError,
+      );
       expect(fakes.repositorioColaboraciones.crear).not.toHaveBeenCalled();
     },
   );
@@ -125,22 +155,29 @@ describe('OfrecerseComoColaboradorCommand', () => {
       fakes.repositorioNotificaciones,
     );
 
-    await expect(comando.ejecutar({ solicitudId, stakeholderId })).rejects.toBeInstanceOf(SolicitudNoEncontradaError);
-    expect(fakes.repositorioColaboraciones.crear).not.toHaveBeenCalled();
-  });
-
-  it.each(['cubierta', 'cancelada'])('rechaza con 409 / PEA-RED-001 si la solicitud ya no está abierta (%s)', async (estado) => {
-    const fakes = crearFakes({ solicitud: { estado, organizacionId } });
-    const comando = new OfrecerseComoColaboradorCommand(
-      fakes.repositorioColaboraciones,
-      fakes.repositorioSolicitudes,
-      fakes.repositorioPerfil,
-      fakes.repositorioNotificaciones,
+    await expect(comando.ejecutar({ solicitudId, stakeholderId })).rejects.toBeInstanceOf(
+      SolicitudNoEncontradaError,
     );
-
-    await expect(comando.ejecutar({ solicitudId, stakeholderId })).rejects.toBeInstanceOf(SolicitudYaCubiertaError);
     expect(fakes.repositorioColaboraciones.crear).not.toHaveBeenCalled();
   });
+
+  it.each(['cubierta', 'cancelada'])(
+    'rechaza con 409 / PEA-RED-001 si la solicitud ya no está abierta (%s)',
+    async (estado) => {
+      const fakes = crearFakes({ solicitud: { estado, organizacionId } });
+      const comando = new OfrecerseComoColaboradorCommand(
+        fakes.repositorioColaboraciones,
+        fakes.repositorioSolicitudes,
+        fakes.repositorioPerfil,
+        fakes.repositorioNotificaciones,
+      );
+
+      await expect(comando.ejecutar({ solicitudId, stakeholderId })).rejects.toBeInstanceOf(
+        SolicitudYaCubiertaError,
+      );
+      expect(fakes.repositorioColaboraciones.crear).not.toHaveBeenCalled();
+    },
+  );
 
   it('rechaza con 409 / PEA-RED-002 si el mismo stakeholder ya se había ofrecido antes sobre esta solicitud', async () => {
     const fakes = crearFakes({ yaPropuso: true });
@@ -151,7 +188,9 @@ describe('OfrecerseComoColaboradorCommand', () => {
       fakes.repositorioNotificaciones,
     );
 
-    await expect(comando.ejecutar({ solicitudId, stakeholderId })).rejects.toBeInstanceOf(ColaboracionYaPropuestaError);
+    await expect(comando.ejecutar({ solicitudId, stakeholderId })).rejects.toBeInstanceOf(
+      ColaboracionYaPropuestaError,
+    );
     expect(fakes.repositorioColaboraciones.crear).not.toHaveBeenCalled();
   });
 
@@ -165,7 +204,9 @@ describe('OfrecerseComoColaboradorCommand', () => {
       fakes.repositorioNotificaciones,
     );
 
-    await expect(comando.ejecutar({ solicitudId, stakeholderId })).resolves.toMatchObject({ estado: 'propuesta' });
+    await expect(comando.ejecutar({ solicitudId, stakeholderId })).resolves.toMatchObject({
+      estado: 'propuesta',
+    });
     expect(logger.error).toHaveBeenCalled();
   });
 });
