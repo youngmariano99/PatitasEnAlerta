@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import Link from 'next/link';
 
 const POR_PAGINA = 50;
 
@@ -78,9 +79,15 @@ export default function PaginaAdopciones() {
   return (
     <main className="mx-auto max-w-5xl px-6 py-12 text-text-primary">
       <h1 className="mb-1 text-xl font-semibold">Vitrina de adopción</h1>
-      <p className="mb-6 text-sm text-text-muted">
+      <p className="mb-2 text-sm text-text-muted">
         Animales rescatados por el municipio, listos para encontrar un nuevo hogar.
       </p>
+      <Link
+        href="/adopciones/compatibilidad"
+        className="mb-6 inline-block text-sm text-accent underline underline-offset-2"
+      >
+        ¿No sabés cuál elegir? Completá el cuestionario de compatibilidad
+      </Link>
 
       {errorCarga ? (
         <p className="mb-4 flex items-center gap-1.5 text-sm text-danger">

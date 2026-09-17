@@ -35,6 +35,7 @@ const ENLACES_POR_ROL: Record<string, EnlaceRapido[]> = {
     { href: '/turnos/reservar', etiqueta: 'Reservar un turno' },
     { href: '/turnos/mis-turnos', etiqueta: 'Mis turnos' },
     { href: '/adopciones', etiqueta: 'Vitrina de adopción' },
+    { href: '/adopciones/compatibilidad', etiqueta: 'Compatibilidad de adopción' },
   ],
   veterinario: [
     { href: '/veterinario/agenda', etiqueta: 'Mi agenda' },
@@ -52,6 +53,7 @@ const ENLACES_POR_ROL: Record<string, EnlaceRapido[]> = {
     { href: '/admin/verificaciones', etiqueta: 'Cola de verificaciones' },
     { href: '/admin/auditoria', etiqueta: 'Historial de auditoría' },
   ],
+  comerciante: [{ href: '/comercios/panel', etiqueta: 'Mi comercio' }],
 };
 
 const ETIQUETA_ROL: Record<string, string> = {
@@ -59,6 +61,7 @@ const ETIQUETA_ROL: Record<string, string> = {
   veterinario: 'Veterinario/a',
   municipio: 'Cuenta municipal',
   administrador: 'Administrador de plataforma',
+  comerciante: 'Comerciante',
 };
 
 export default function PaginaPanel() {

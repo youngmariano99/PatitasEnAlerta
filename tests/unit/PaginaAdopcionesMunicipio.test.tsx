@@ -26,13 +26,19 @@ function mockearFetch(porMetodo: {
   global.fetch = jest.fn().mockImplementation(async (_url: string, init?: RequestInit) => {
     const metodo = (init?.method ?? 'GET') as keyof typeof porMetodo;
     const respuesta = porMetodo[metodo]!;
-    return { ok: respuesta.status >= 200 && respuesta.status < 300, status: respuesta.status, json: async () => respuesta.body };
+    return {
+      ok: respuesta.status >= 200 && respuesta.status < 300,
+      status: respuesta.status,
+      json: async () => respuesta.body,
+    };
   }) as jest.Mock;
 }
 
 describe('PaginaAdopcionesMunicipio (app/municipio/adopciones)', () => {
   it('lista las fichas existentes con su estado', async () => {
-    mockearFetch({ GET: { status: 200, body: { items: [fichaBase], total: 1, pagina: 1, porPagina: 50 } } });
+    mockearFetch({
+      GET: { status: 200, body: { items: [fichaBase], total: 1, pagina: 1, porPagina: 50 } },
+    });
     render(<PaginaAdopcionesMunicipio />);
 
     await screen.findByText('Luna');
@@ -78,10 +84,55 @@ describe('PaginaAdopcionesMunicipio (app/municipio/adopciones)', () => {
     );
   });
 
+  it('AC: incluye los atributos de compatibilidad de adopción (Módulo 9) en el body al publicar', async () => {
+    mockearFetch({
+      GET: { status: 200, body: { items: [], total: 0, pagina: 1, porPagina: 50 } },
+      POST: { status: 201, body: fichaBase },
+    });
+    const usuario = userEvent.setup();
+    render(<PaginaAdopcionesMunicipio />);
+    await screen.findByText('No hay fichas para estos filtros.');
+
+    await usuario.type(screen.getByLabelText('Nombre del animal'), 'Luna');
+    await usuario.type(screen.getByLabelText('Especie'), 'perro');
+    await usuario.type(screen.getByLabelText('URL de la foto'), fichaBase.fotoUrl);
+    await usuario.selectOptions(screen.getByLabelText('Nivel de energía (opcional)'), 'alto');
+    await usuario.selectOptions(screen.getByLabelText('¿Compatible con niños? (opcional)'), 'true');
+    await usuario.selectOptions(
+      screen.getByLabelText('¿Compatible con otros animales? (opcional)'),
+      'false',
+    );
+    await usuario.type(
+      screen.getByLabelText('Necesidades médicas (opcional)'),
+      'Requiere medicación diaria.',
+    );
+    await usuario.click(screen.getByRole('button', { name: 'Publicar ficha' }));
+
+    await waitFor(() => {
+      const llamada = (global.fetch as jest.Mock).mock.calls.find(
+        ([, init]: [string, RequestInit?]) => init?.method === 'POST',
+      );
+      const cuerpo = JSON.parse(llamada[1].body as string);
+      expect(cuerpo).toMatchObject({
+        nivelEnergia: 'alto',
+        compatibleNinos: true,
+        compatibleOtrosAnimales: false,
+        necesidadesMedicasDetalle: 'Requiere medicación diaria.',
+      });
+    });
+  });
+
   it('un rechazo al publicar (ej. PEA-MUN-005) muestra el mensaje de error sin alert nativo', async () => {
     mockearFetch({
       GET: { status: 200, body: { items: [], total: 0, pagina: 1, porPagina: 50 } },
-      POST: { status: 403, body: { codigo: 'PEA-MUN-005', mensaje: 'Solo cuentas municipales pueden administrar eventos, la vitrina de adopción y el dashboard analítico.' } },
+      POST: {
+        status: 403,
+        body: {
+          codigo: 'PEA-MUN-005',
+          mensaje:
+            'Solo cuentas municipales pueden administrar eventos, la vitrina de adopción y el dashboard analítico.',
+        },
+      },
     });
     const usuario = userEvent.setup();
     render(<PaginaAdopcionesMunicipio />);
@@ -93,7 +144,9 @@ describe('PaginaAdopcionesMunicipio (app/municipio/adopciones)', () => {
     await usuario.click(screen.getByRole('button', { name: 'Publicar ficha' }));
 
     expect(
-      await screen.findByText('Solo cuentas municipales pueden administrar eventos, la vitrina de adopción y el dashboard analítico.'),
+      await screen.findByText(
+        'Solo cuentas municipales pueden administrar eventos, la vitrina de adopción y el dashboard analítico.',
+      ),
     ).toBeInTheDocument();
   });
 

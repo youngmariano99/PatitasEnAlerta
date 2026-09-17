@@ -2,10 +2,16 @@
  * @jest-environment node
  */
 import { PublicarProductoComercio } from '@aplicacion/casos-de-uso/comercios/PublicarProductoComercio';
-import type { IRepositorioProductosComercio, ProductoComercio } from '@dominio/puertos/IRepositorioProductosComercio';
+import type {
+  IRepositorioProductosComercio,
+  ProductoComercio,
+} from '@dominio/puertos/IRepositorioProductosComercio';
 import type { ComercioPropio, IRepositorioComercios } from '@dominio/puertos/IRepositorioComercios';
 import type { IRepositorioPerfil, ResumenPerfilPropio } from '@dominio/puertos/IRepositorioPerfil';
-import { ComercioNoVerificadoError, ComercioPropioNoEncontradoError } from '@dominio/errores/erroresComercios';
+import {
+  ComercioNoVerificadoError,
+  ComercioPropioNoEncontradoError,
+} from '@dominio/errores/erroresComercios';
 import { AccesoNoAutorizadoError } from '@dominio/errores/erroresTransversales';
 
 const usuarioId = '11111111-1111-1111-1111-111111111111';
@@ -19,7 +25,13 @@ const datosValidos = {
 };
 
 function crearPerfil(rol: string): ResumenPerfilPropio {
-  return { id: usuarioId, email: 'comercio@ejemplo.test', rol, estadoVerificacion: 'verificado', verificadoEn: new Date() };
+  return {
+    id: usuarioId,
+    email: 'comercio@ejemplo.test',
+    rol,
+    estadoVerificacion: 'verificado',
+    verificadoEn: new Date(),
+  };
 }
 
 function crearComercioPropio(estadoVerificacion = 'verificado'): ComercioPropio {
@@ -41,10 +53,15 @@ function crearFakes(opciones?: { rol?: string; comercio?: ComercioPropio | null 
     obtenerActual: jest.fn(),
     actualizar: jest.fn(),
     darDeBaja: jest.fn(),
+    listarPorComercio: jest.fn(),
   };
   const repositorioComercios: jest.Mocked<IRepositorioComercios> = {
     crear: jest.fn(),
-    obtenerPropio: jest.fn().mockResolvedValue(opciones?.comercio === undefined ? crearComercioPropio() : opciones.comercio),
+    obtenerPropio: jest
+      .fn()
+      .mockResolvedValue(
+        opciones?.comercio === undefined ? crearComercioPropio() : opciones.comercio,
+      ),
     listarVerificados: jest.fn(),
   };
   const repositorioPerfil: jest.Mocked<IRepositorioPerfil> = {
@@ -56,7 +73,11 @@ function crearFakes(opciones?: { rol?: string; comercio?: ComercioPropio | null 
 describe('PublicarProductoComercio', () => {
   it('Paso 1: publica el producto en el comercio propio del usuario autenticado', async () => {
     const { repositorioProductos, repositorioComercios, repositorioPerfil } = crearFakes();
-    const caso = new PublicarProductoComercio(repositorioProductos, repositorioComercios, repositorioPerfil);
+    const caso = new PublicarProductoComercio(
+      repositorioProductos,
+      repositorioComercios,
+      repositorioPerfil,
+    );
 
     const resultado = await caso.ejecutar({ datosCrudos: datosValidos, usuarioId });
 
@@ -71,7 +92,11 @@ describe('PublicarProductoComercio', () => {
 
   it('Paso 3: sanitiza la descripción con DOMPurify antes de persistir, despojando cualquier etiqueta HTML', async () => {
     const { repositorioProductos, repositorioComercios, repositorioPerfil } = crearFakes();
-    const caso = new PublicarProductoComercio(repositorioProductos, repositorioComercios, repositorioPerfil);
+    const caso = new PublicarProductoComercio(
+      repositorioProductos,
+      repositorioComercios,
+      repositorioPerfil,
+    );
 
     await caso.ejecutar({ datosCrudos: datosValidos, usuarioId });
 
@@ -84,35 +109,65 @@ describe('PublicarProductoComercio', () => {
     'rechaza con 403 / PEA-SIS-002 a un usuario con rol %s',
     async (rol) => {
       const { repositorioProductos, repositorioComercios, repositorioPerfil } = crearFakes({ rol });
-      const caso = new PublicarProductoComercio(repositorioProductos, repositorioComercios, repositorioPerfil);
+      const caso = new PublicarProductoComercio(
+        repositorioProductos,
+        repositorioComercios,
+        repositorioPerfil,
+      );
 
-      await expect(caso.ejecutar({ datosCrudos: datosValidos, usuarioId })).rejects.toBeInstanceOf(AccesoNoAutorizadoError);
+      await expect(caso.ejecutar({ datosCrudos: datosValidos, usuarioId })).rejects.toBeInstanceOf(
+        AccesoNoAutorizadoError,
+      );
       expect(repositorioProductos.crear).not.toHaveBeenCalled();
     },
   );
 
   it('responde 404 / PEA-COM-003 si el comerciante no tiene ningún comercio registrado', async () => {
-    const { repositorioProductos, repositorioComercios, repositorioPerfil } = crearFakes({ comercio: null });
-    const caso = new PublicarProductoComercio(repositorioProductos, repositorioComercios, repositorioPerfil);
+    const { repositorioProductos, repositorioComercios, repositorioPerfil } = crearFakes({
+      comercio: null,
+    });
+    const caso = new PublicarProductoComercio(
+      repositorioProductos,
+      repositorioComercios,
+      repositorioPerfil,
+    );
 
-    await expect(caso.ejecutar({ datosCrudos: datosValidos, usuarioId })).rejects.toBeInstanceOf(ComercioPropioNoEncontradoError);
+    await expect(caso.ejecutar({ datosCrudos: datosValidos, usuarioId })).rejects.toBeInstanceOf(
+      ComercioPropioNoEncontradoError,
+    );
     expect(repositorioProductos.crear).not.toHaveBeenCalled();
   });
 
   it('AC: rechaza con 403 / PEA-COM-001 cuando el comercio todavía no está verificado', async () => {
-    const { repositorioProductos, repositorioComercios, repositorioPerfil } = crearFakes({ comercio: crearComercioPropio('pendiente') });
-    const caso = new PublicarProductoComercio(repositorioProductos, repositorioComercios, repositorioPerfil);
+    const { repositorioProductos, repositorioComercios, repositorioPerfil } = crearFakes({
+      comercio: crearComercioPropio('pendiente'),
+    });
+    const caso = new PublicarProductoComercio(
+      repositorioProductos,
+      repositorioComercios,
+      repositorioPerfil,
+    );
 
-    await expect(caso.ejecutar({ datosCrudos: datosValidos, usuarioId })).rejects.toBeInstanceOf(ComercioNoVerificadoError);
+    await expect(caso.ejecutar({ datosCrudos: datosValidos, usuarioId })).rejects.toBeInstanceOf(
+      ComercioNoVerificadoError,
+    );
     expect(repositorioProductos.crear).not.toHaveBeenCalled();
   });
 
   it('responde 404 / PEA-COM-003 si el comercio propio desaparece entre autorizar() y persistir() (carrera)', async () => {
     const { repositorioProductos, repositorioComercios, repositorioPerfil } = crearFakes();
-    repositorioComercios.obtenerPropio.mockResolvedValueOnce(crearComercioPropio()).mockResolvedValueOnce(null);
-    const caso = new PublicarProductoComercio(repositorioProductos, repositorioComercios, repositorioPerfil);
+    repositorioComercios.obtenerPropio
+      .mockResolvedValueOnce(crearComercioPropio())
+      .mockResolvedValueOnce(null);
+    const caso = new PublicarProductoComercio(
+      repositorioProductos,
+      repositorioComercios,
+      repositorioPerfil,
+    );
 
-    await expect(caso.ejecutar({ datosCrudos: datosValidos, usuarioId })).rejects.toBeInstanceOf(ComercioPropioNoEncontradoError);
+    await expect(caso.ejecutar({ datosCrudos: datosValidos, usuarioId })).rejects.toBeInstanceOf(
+      ComercioPropioNoEncontradoError,
+    );
     expect(repositorioProductos.crear).not.toHaveBeenCalled();
   });
 });

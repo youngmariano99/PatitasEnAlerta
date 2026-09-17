@@ -37,8 +37,14 @@ export interface IRepositorioProductosComercio {
    * ninguna fila matchea (no existe, es de otro comercio, o ya estaba
    * soft-deleted), nunca confiado en una lectura previa de `obtenerActual`.
    */
-  actualizar(id: string, comercioId: string, datos: DatosProductoComercio): Promise<ProductoComercio | null>;
+  actualizar(
+    id: string,
+    comercioId: string,
+    datos: DatosProductoComercio,
+  ): Promise<ProductoComercio | null>;
 
   /** Soft delete (`deleted_at = now()`) condicionado a `id + comercioId`. `false` si ninguna fila matchea. */
   darDeBaja(id: string, comercioId: string): Promise<boolean>;
+  /** Catálogo completo (activo) del comercio propio — "Mis productos" del comerciante. */
+  listarPorComercio(comercioId: string): Promise<ProductoComercio[]>;
 }

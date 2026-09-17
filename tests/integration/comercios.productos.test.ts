@@ -25,7 +25,10 @@ jest.mock('@supabase/ssr', () => ({
 // Importa los route handlers DESPUÉS del mock de '@supabase/ssr' — Jest
 // hoistea jest.mock, mismo criterio que el resto de tests/integration/*.
 import { POST as publicarProducto } from '@app/api/comercios/productos/route';
-import { PATCH as actualizarProducto, DELETE as darDeBajaProducto } from '@app/api/comercios/productos/[id]/route';
+import {
+  PATCH as actualizarProducto,
+  DELETE as darDeBajaProducto,
+} from '@app/api/comercios/productos/[id]/route';
 
 const productoId = '33333333-3333-3333-3333-333333333333';
 const usuarioId = '11111111-1111-1111-1111-111111111111';
@@ -65,6 +68,10 @@ class RepositorioProductosFalso implements IRepositorioProductosComercio {
   async darDeBaja(): Promise<boolean> {
     return this.darDeBajaDevuelve;
   }
+
+  async listarPorComercio(): Promise<ProductoComercio[]> {
+    return [];
+  }
 }
 
 class RepositorioComerciosFalso implements IRepositorioComercios {
@@ -90,7 +97,13 @@ class RepositorioPerfilFalso implements IRepositorioPerfil {
   public rol = 'comerciante';
 
   async obtenerPerfilPropio(usuarioIdConsultado: string): Promise<ResumenPerfilPropio | null> {
-    return { id: usuarioIdConsultado, email: 'comercio@ejemplo.test', rol: this.rol, estadoVerificacion: 'verificado', verificadoEn: new Date() };
+    return {
+      id: usuarioIdConsultado,
+      email: 'comercio@ejemplo.test',
+      rol: this.rol,
+      estadoVerificacion: 'verificado',
+      verificadoEn: new Date(),
+    };
   }
 }
 
@@ -102,7 +115,12 @@ function autenticarComo(usuarioIdSesion: string | null) {
   );
 }
 
-const datosValidos = { nombre: 'Balanceado premium 15kg', descripcion: 'Alta calidad', categoria: 'alimento', precio: 15000 };
+const datosValidos = {
+  nombre: 'Balanceado premium 15kg',
+  descripcion: 'Alta calidad',
+  categoria: 'alimento',
+  precio: 15000,
+};
 
 function crearRequestJson(url: string, method: string, body?: unknown): NextRequest {
   return new NextRequest(`http://localhost${url}`, {
@@ -123,8 +141,14 @@ describe('Endpoints de productos_comercio (Módulo 7, Paso 1: CRUD restringido a
     repositorioComercios = new RepositorioComerciosFalso();
     repositorioPerfil = new RepositorioPerfilFalso();
     container.reset();
-    container.registerInstance<IRepositorioProductosComercio>('IRepositorioProductosComercio', repositorioProductos);
-    container.registerInstance<IRepositorioComercios>('IRepositorioComercios', repositorioComercios);
+    container.registerInstance<IRepositorioProductosComercio>(
+      'IRepositorioProductosComercio',
+      repositorioProductos,
+    );
+    container.registerInstance<IRepositorioComercios>(
+      'IRepositorioComercios',
+      repositorioComercios,
+    );
     container.registerInstance<IRepositorioPerfil>('IRepositorioPerfil', repositorioPerfil);
   });
 
@@ -132,7 +156,9 @@ describe('Endpoints de productos_comercio (Módulo 7, Paso 1: CRUD restringido a
     it('publica el producto en el comercio propio (201)', async () => {
       autenticarComo(usuarioId);
 
-      const respuesta = await publicarProducto(crearRequestJson('/api/comercios/productos', 'POST', datosValidos));
+      const respuesta = await publicarProducto(
+        crearRequestJson('/api/comercios/productos', 'POST', datosValidos),
+      );
 
       expect(respuesta.status).toBe(201);
       expect(repositorioProductos.creados).toEqual([{ comercioId, datos: datosValidos }]);
@@ -140,9 +166,14 @@ describe('Endpoints de productos_comercio (Módulo 7, Paso 1: CRUD restringido a
 
     it('AC / Paso 4: rechaza con 403 / PEA-COM-001 cuando el comercio no está verificado', async () => {
       autenticarComo(usuarioId);
-      repositorioComercios.porUsuario[usuarioId] = { id: comercioId, estadoVerificacion: 'pendiente' };
+      repositorioComercios.porUsuario[usuarioId] = {
+        id: comercioId,
+        estadoVerificacion: 'pendiente',
+      };
 
-      const respuesta = await publicarProducto(crearRequestJson('/api/comercios/productos', 'POST', datosValidos));
+      const respuesta = await publicarProducto(
+        crearRequestJson('/api/comercios/productos', 'POST', datosValidos),
+      );
 
       expect(respuesta.status).toBe(403);
       const cuerpo = await respuesta.json();
@@ -154,7 +185,9 @@ describe('Endpoints de productos_comercio (Módulo 7, Paso 1: CRUD restringido a
       autenticarComo(usuarioId);
       repositorioPerfil.rol = 'dueño';
 
-      const respuesta = await publicarProducto(crearRequestJson('/api/comercios/productos', 'POST', datosValidos));
+      const respuesta = await publicarProducto(
+        crearRequestJson('/api/comercios/productos', 'POST', datosValidos),
+      );
 
       expect(respuesta.status).toBe(403);
       const cuerpo = await respuesta.json();
@@ -165,7 +198,9 @@ describe('Endpoints de productos_comercio (Módulo 7, Paso 1: CRUD restringido a
       autenticarComo(usuarioId);
       repositorioComercios.porUsuario[usuarioId] = null;
 
-      const respuesta = await publicarProducto(crearRequestJson('/api/comercios/productos', 'POST', datosValidos));
+      const respuesta = await publicarProducto(
+        crearRequestJson('/api/comercios/productos', 'POST', datosValidos),
+      );
 
       expect(respuesta.status).toBe(404);
       const cuerpo = await respuesta.json();
@@ -215,9 +250,12 @@ describe('Endpoints de productos_comercio (Módulo 7, Paso 1: CRUD restringido a
     it('rechaza con 403 al intentar dar de baja el producto de otro comercio', async () => {
       autenticarComo(otroUsuarioId);
 
-      const respuesta = await darDeBajaProducto(crearRequestJson(`/api/comercios/productos/${productoId}`, 'DELETE'), {
-        params: { id: productoId },
-      });
+      const respuesta = await darDeBajaProducto(
+        crearRequestJson(`/api/comercios/productos/${productoId}`, 'DELETE'),
+        {
+          params: { id: productoId },
+        },
+      );
 
       expect(respuesta.status).toBe(403);
     });
@@ -225,9 +263,12 @@ describe('Endpoints de productos_comercio (Módulo 7, Paso 1: CRUD restringido a
     it('da de baja el producto propio (200)', async () => {
       autenticarComo(usuarioId);
 
-      const respuesta = await darDeBajaProducto(crearRequestJson(`/api/comercios/productos/${productoId}`, 'DELETE'), {
-        params: { id: productoId },
-      });
+      const respuesta = await darDeBajaProducto(
+        crearRequestJson(`/api/comercios/productos/${productoId}`, 'DELETE'),
+        {
+          params: { id: productoId },
+        },
+      );
 
       expect(respuesta.status).toBe(200);
     });

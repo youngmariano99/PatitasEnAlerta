@@ -4,7 +4,9 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { CampoTexto } from '@presentacion/componentes/formularios/CampoTexto';
 import {
   TAMANOS_FICHA_ADOPCION_SOPORTADOS,
+  NIVELES_ENERGIA_SOPORTADOS,
   type TamanoFichaAdopcion,
+  type NivelEnergiaFichaAdopcion,
 } from '@aplicacion/dtos/municipio/FichaAdopcionDto';
 import {
   ESTADOS_FICHA_ADOPCION_SOPORTADOS,
@@ -32,6 +34,10 @@ interface FichaApi {
   fotoUrl: string;
   estado: string;
   createdAt: string;
+  nivelEnergia: string | null;
+  compatibleNinos: boolean | null;
+  compatibleOtrosAnimales: boolean | null;
+  necesidadesMedicasDetalle: string | null;
 }
 
 interface RespuestaListado {
@@ -69,6 +75,10 @@ interface DatosFormularioFicha {
   temperamento: string;
   estadoSalud: string;
   requisitosAdopcion: string;
+  nivelEnergia: NivelEnergiaFichaAdopcion | '';
+  compatibleNinos: string;
+  compatibleOtrosAnimales: string;
+  necesidadesMedicasDetalle: string;
 }
 
 const FORMULARIO_VACIO: DatosFormularioFicha = {
@@ -80,6 +90,10 @@ const FORMULARIO_VACIO: DatosFormularioFicha = {
   temperamento: '',
   estadoSalud: '',
   requisitosAdopcion: '',
+  nivelEnergia: '',
+  compatibleNinos: '',
+  compatibleOtrosAnimales: '',
+  necesidadesMedicasDetalle: '',
 };
 
 function cuerpoDesdeFormulario(datos: DatosFormularioFicha) {
@@ -92,6 +106,12 @@ function cuerpoDesdeFormulario(datos: DatosFormularioFicha) {
     temperamento: datos.temperamento.trim() || undefined,
     estadoSalud: datos.estadoSalud.trim() || undefined,
     requisitosAdopcion: datos.requisitosAdopcion.trim() || undefined,
+    nivelEnergia: datos.nivelEnergia || undefined,
+    compatibleNinos: datos.compatibleNinos ? datos.compatibleNinos === 'true' : undefined,
+    compatibleOtrosAnimales: datos.compatibleOtrosAnimales
+      ? datos.compatibleOtrosAnimales === 'true'
+      : undefined,
+    necesidadesMedicasDetalle: datos.necesidadesMedicasDetalle.trim() || undefined,
   };
 }
 
@@ -178,6 +198,79 @@ function CamposFicha({ datos, onCambiar, prefijoId }: CamposFichaProps) {
         placeholder="Vivienda con patio, visita previa"
         value={datos.requisitosAdopcion}
         onChange={(evento) => onCambiar({ ...datos, requisitosAdopcion: evento.target.value })}
+      />
+      <div className="flex flex-col gap-1.5">
+        <label
+          htmlFor={`${prefijoId}-nivelEnergia`}
+          className="text-sm font-medium text-text-primary"
+        >
+          Nivel de energía (opcional)
+        </label>
+        <select
+          id={`${prefijoId}-nivelEnergia`}
+          value={datos.nivelEnergia}
+          onChange={(evento) =>
+            onCambiar({
+              ...datos,
+              nivelEnergia: evento.target.value as NivelEnergiaFichaAdopcion | '',
+            })
+          }
+          className="h-11 min-h-[44px] rounded-md border border-surface2 bg-surface1 px-3 text-[15px] text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+        >
+          <option value="">Sin especificar</option>
+          {NIVELES_ENERGIA_SOPORTADOS.map((valor) => (
+            <option key={valor} value={valor}>
+              {valor[0]!.toUpperCase() + valor.slice(1)}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <label
+          htmlFor={`${prefijoId}-compatibleNinos`}
+          className="text-sm font-medium text-text-primary"
+        >
+          ¿Compatible con niños? (opcional)
+        </label>
+        <select
+          id={`${prefijoId}-compatibleNinos`}
+          value={datos.compatibleNinos}
+          onChange={(evento) => onCambiar({ ...datos, compatibleNinos: evento.target.value })}
+          className="h-11 min-h-[44px] rounded-md border border-surface2 bg-surface1 px-3 text-[15px] text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+        >
+          <option value="">Sin especificar</option>
+          <option value="true">Sí</option>
+          <option value="false">No</option>
+        </select>
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <label
+          htmlFor={`${prefijoId}-compatibleOtrosAnimales`}
+          className="text-sm font-medium text-text-primary"
+        >
+          ¿Compatible con otros animales? (opcional)
+        </label>
+        <select
+          id={`${prefijoId}-compatibleOtrosAnimales`}
+          value={datos.compatibleOtrosAnimales}
+          onChange={(evento) =>
+            onCambiar({ ...datos, compatibleOtrosAnimales: evento.target.value })
+          }
+          className="h-11 min-h-[44px] rounded-md border border-surface2 bg-surface1 px-3 text-[15px] text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+        >
+          <option value="">Sin especificar</option>
+          <option value="true">Sí</option>
+          <option value="false">No</option>
+        </select>
+      </div>
+      <CampoTexto
+        id={`${prefijoId}-necesidadesMedicasDetalle`}
+        label="Necesidades médicas (opcional)"
+        placeholder="Requiere medicación diaria…"
+        value={datos.necesidadesMedicasDetalle}
+        onChange={(evento) =>
+          onCambiar({ ...datos, necesidadesMedicasDetalle: evento.target.value })
+        }
       />
     </div>
   );
@@ -286,6 +379,11 @@ export default function PaginaAdopcionesMunicipio() {
       temperamento: ficha.temperamento ?? '',
       estadoSalud: ficha.estadoSalud ?? '',
       requisitosAdopcion: ficha.requisitosAdopcion ?? '',
+      nivelEnergia: (ficha.nivelEnergia as NivelEnergiaFichaAdopcion | null) ?? '',
+      compatibleNinos: ficha.compatibleNinos == null ? '' : String(ficha.compatibleNinos),
+      compatibleOtrosAnimales:
+        ficha.compatibleOtrosAnimales == null ? '' : String(ficha.compatibleOtrosAnimales),
+      necesidadesMedicasDetalle: ficha.necesidadesMedicasDetalle ?? '',
     });
   }
 
