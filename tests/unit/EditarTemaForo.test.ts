@@ -2,8 +2,15 @@
  * @jest-environment node
  */
 import { EditarTemaForo } from '@aplicacion/casos-de-uso/foros-cursos/EditarTemaForo';
-import type { IRepositorioTemasForo, TemaForo, TemaForoActual } from '@dominio/puertos/IRepositorioTemasForo';
-import { TemaForoModeradoError, TemaForoNoEncontradoError } from '@dominio/errores/erroresForosCursos';
+import type {
+  IRepositorioTemasForo,
+  TemaForo,
+  TemaForoActual,
+} from '@dominio/puertos/IRepositorioTemasForo';
+import {
+  TemaForoModeradoError,
+  TemaForoNoEncontradoError,
+} from '@dominio/errores/erroresForosCursos';
 import { AccesoNoAutorizadoError } from '@dominio/errores/erroresTransversales';
 
 const usuarioId = '11111111-1111-1111-1111-111111111111';
@@ -13,7 +20,11 @@ const temaId = '33333333-3333-3333-3333-333333333333';
 const datosValidos = { titulo: 'Título editado', contenido: 'Contenido editado' };
 
 function crearTemaActual(opciones?: { creadoPor?: string; moderado?: boolean }): TemaForoActual {
-  return { id: temaId, creadoPor: opciones?.creadoPor ?? usuarioId, moderado: opciones?.moderado ?? false };
+  return {
+    id: temaId,
+    creadoPor: opciones?.creadoPor ?? usuarioId,
+    moderado: opciones?.moderado ?? false,
+  };
 }
 
 function crearFakes(opciones?: { actual?: TemaForoActual | null }) {
@@ -26,11 +37,14 @@ function crearFakes(opciones?: { actual?: TemaForoActual | null }) {
   };
   const repositorioTemas: jest.Mocked<IRepositorioTemasForo> = {
     crear: jest.fn(),
-    obtenerActual: jest.fn().mockResolvedValue(opciones?.actual === undefined ? crearTemaActual() : opciones.actual),
+    obtenerActual: jest
+      .fn()
+      .mockResolvedValue(opciones?.actual === undefined ? crearTemaActual() : opciones.actual),
     actualizar: jest.fn().mockResolvedValue(temaActualizado),
     moderar: jest.fn(),
     listar: jest.fn(),
     listarRespuestas: jest.fn(),
+    crearRespuesta: jest.fn(),
   };
   return { repositorioTemas, temaActualizado };
 }
@@ -47,10 +61,14 @@ describe('EditarTemaForo', () => {
   });
 
   it('rechaza con 403 / PEA-SIS-002 cuando quien invoca no es el autor', async () => {
-    const { repositorioTemas } = crearFakes({ actual: crearTemaActual({ creadoPor: otroUsuarioId }) });
+    const { repositorioTemas } = crearFakes({
+      actual: crearTemaActual({ creadoPor: otroUsuarioId }),
+    });
     const caso = new EditarTemaForo(repositorioTemas);
 
-    await expect(caso.ejecutar({ datosCrudos: datosValidos, temaId, usuarioId })).rejects.toBeInstanceOf(AccesoNoAutorizadoError);
+    await expect(
+      caso.ejecutar({ datosCrudos: datosValidos, temaId, usuarioId }),
+    ).rejects.toBeInstanceOf(AccesoNoAutorizadoError);
     expect(repositorioTemas.actualizar).not.toHaveBeenCalled();
   });
 
@@ -58,7 +76,9 @@ describe('EditarTemaForo', () => {
     const { repositorioTemas } = crearFakes({ actual: crearTemaActual({ moderado: true }) });
     const caso = new EditarTemaForo(repositorioTemas);
 
-    await expect(caso.ejecutar({ datosCrudos: datosValidos, temaId, usuarioId })).rejects.toBeInstanceOf(TemaForoModeradoError);
+    await expect(
+      caso.ejecutar({ datosCrudos: datosValidos, temaId, usuarioId }),
+    ).rejects.toBeInstanceOf(TemaForoModeradoError);
     expect(repositorioTemas.actualizar).not.toHaveBeenCalled();
   });
 
@@ -66,7 +86,9 @@ describe('EditarTemaForo', () => {
     const { repositorioTemas } = crearFakes({ actual: null });
     const caso = new EditarTemaForo(repositorioTemas);
 
-    await expect(caso.ejecutar({ datosCrudos: datosValidos, temaId, usuarioId })).rejects.toBeInstanceOf(TemaForoNoEncontradoError);
+    await expect(
+      caso.ejecutar({ datosCrudos: datosValidos, temaId, usuarioId }),
+    ).rejects.toBeInstanceOf(TemaForoNoEncontradoError);
   });
 
   it('rechaza con 403 / PEA-FORO-004 si el tema se modera entre autorizar() y persistir() (carrera)', async () => {
@@ -74,6 +96,8 @@ describe('EditarTemaForo', () => {
     repositorioTemas.actualizar.mockResolvedValueOnce(null);
     const caso = new EditarTemaForo(repositorioTemas);
 
-    await expect(caso.ejecutar({ datosCrudos: datosValidos, temaId, usuarioId })).rejects.toBeInstanceOf(TemaForoModeradoError);
+    await expect(
+      caso.ejecutar({ datosCrudos: datosValidos, temaId, usuarioId }),
+    ).rejects.toBeInstanceOf(TemaForoModeradoError);
   });
 });

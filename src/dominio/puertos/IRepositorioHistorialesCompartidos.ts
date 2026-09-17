@@ -25,6 +25,9 @@ export interface IRepositorioHistorialesCompartidos {
   /** El historial con ese id, exista o no vigente. `null` si el id no corresponde a ninguna fila. */
   obtenerActual(id: string): Promise<HistorialCompartido | null>;
 
+  /** Todos los historiales que `veterinarioOrigenId` compartió (vigentes y revocados) — para la vista "mis historiales compartidos". */
+  listarPorOrigen(veterinarioOrigenId: string): Promise<HistorialCompartido[]>;
+
   /**
    * Marca `revocado_en = now()` sobre la fila, condicionado a
    * `id + veterinario_origen_id + revocado_en IS NULL` en la misma

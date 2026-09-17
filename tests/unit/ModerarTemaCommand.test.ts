@@ -11,7 +11,13 @@ const usuarioId = '11111111-1111-1111-1111-111111111111';
 const temaId = '33333333-3333-3333-3333-333333333333';
 
 function crearPerfil(rol: string): ResumenPerfilPropio {
-  return { id: usuarioId, email: 'admin@ejemplo.test', rol, estadoVerificacion: 'no_requerido', verificadoEn: null };
+  return {
+    id: usuarioId,
+    email: 'admin@ejemplo.test',
+    rol,
+    estadoVerificacion: 'no_requerido',
+    verificadoEn: null,
+  };
 }
 
 function crearFakes(opciones?: { rol?: string; moderaOk?: boolean }) {
@@ -22,6 +28,7 @@ function crearFakes(opciones?: { rol?: string; moderaOk?: boolean }) {
     moderar: jest.fn().mockResolvedValue(opciones?.moderaOk ?? true),
     listar: jest.fn(),
     listarRespuestas: jest.fn(),
+    crearRespuesta: jest.fn(),
   };
   const repositorioPerfil: jest.Mocked<IRepositorioPerfil> = {
     obtenerPerfilPropio: jest.fn().mockResolvedValue(crearPerfil(opciones?.rol ?? 'administrador')),
@@ -46,7 +53,9 @@ describe('ModerarTemaCommand', () => {
       const { repositorioTemas, repositorioPerfil } = crearFakes({ rol });
       const caso = new ModerarTemaCommand(repositorioTemas, repositorioPerfil);
 
-      await expect(caso.ejecutar({ temaId, usuarioId })).rejects.toBeInstanceOf(AccesoNoAutorizadoError);
+      await expect(caso.ejecutar({ temaId, usuarioId })).rejects.toBeInstanceOf(
+        AccesoNoAutorizadoError,
+      );
       expect(repositorioTemas.moderar).not.toHaveBeenCalled();
     },
   );
@@ -55,6 +64,8 @@ describe('ModerarTemaCommand', () => {
     const { repositorioTemas, repositorioPerfil } = crearFakes({ moderaOk: false });
     const caso = new ModerarTemaCommand(repositorioTemas, repositorioPerfil);
 
-    await expect(caso.ejecutar({ temaId, usuarioId })).rejects.toBeInstanceOf(TemaForoNoEncontradoError);
+    await expect(caso.ejecutar({ temaId, usuarioId })).rejects.toBeInstanceOf(
+      TemaForoNoEncontradoError,
+    );
   });
 });

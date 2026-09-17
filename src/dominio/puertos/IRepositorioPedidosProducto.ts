@@ -14,15 +14,22 @@ export interface PedidoCreado {
   createdAt: Date;
 }
 
+export interface PaginaPedidos {
+  items: PedidoCreado[];
+  total: number;
+  pagina: number;
+  porPagina: number;
+}
+
+export type EstadoPedidoTransicionable = 'confirmado' | 'cancelado';
+
 /**
  * Puerto hacia `pedidos_producto` (Módulo 6 — Veterinarios Avanzado,
  * Post-MVP). `GenerarPedidoCommand.ts` depende únicamente de esta
- * abstracción, nunca de Prisma directamente. Alcance acotado a esta
- * actividad: solo el alta (Pasos 2/3 del ticket). El resto del ciclo de
- * vida descrito en `docs/ROLES.md` (`veterinario RU(p, de sus productos)` —
- * confirmar/cancelar un pedido propio) queda para el ticket que implemente
- * esa historia puntual, mismo criterio de entrega incremental que
- * `solicitudes_recurso`/`colaboraciones`.
+ * abstracción, nunca de Prisma directamente. Ciclo de vida completo por
+ * rol según `docs/ROLES.md`: `dueño CR(p)` (alta + lectura de lo propio) y
+ * `veterinario RU(p, de sus productos)` (lectura + confirmar/cancelar los
+ * pedidos recibidos sobre su propio catálogo).
  */
 export interface IRepositorioPedidosProducto {
   /**
@@ -38,4 +45,33 @@ export interface IRepositorioPedidosProducto {
    * que `ReservarTurnoCommand`/`TurnoYaReservadoError`.
    */
   crear(datos: DatosNuevoPedido): Promise<PedidoCreado | null>;
+
+  /** `dueño CR(p)` (docs/ROLES.md, Módulo 6): el comprador ve únicamente sus propios pedidos. */
+  listarPorComprador(
+    compradorId: string,
+    pagina: number,
+    porPagina: number,
+  ): Promise<PaginaPedidos>;
+
+  /** `veterinario RU(p, de sus productos)` (docs/ROLES.md, Módulo 6): pedidos recibidos sobre productos propios. */
+  listarPorVeterinario(
+    veterinarioId: string,
+    pagina: number,
+    porPagina: number,
+  ): Promise<PaginaPedidos>;
+
+  /**
+   * Transición de estado: solo el veterinario dueño del producto puede
+   * confirmar o cancelar un pedido, y solo mientras esté en `pendiente`
+   * (máquina de estados `pedidos_producto`, docs/SCHEMA.md —
+   * `confirmado`/`cancelado` son terminales). `null` si el pedido no
+   * existe, no pertenece a un producto de `veterinarioId`, o ya no está en
+   * `pendiente` — el caso de uso lo traduce siempre a PEA-VETADV-004 (409),
+   * mismo criterio anti-carrera que `GenerarPedidoCommand`.
+   */
+  actualizarEstado(
+    pedidoId: string,
+    veterinarioId: string,
+    nuevoEstado: EstadoPedidoTransicionable,
+  ): Promise<PedidoCreado | null>;
 }

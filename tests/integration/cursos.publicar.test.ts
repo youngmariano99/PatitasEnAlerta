@@ -38,13 +38,23 @@ class RepositorioCursosFalso implements IRepositorioCursos {
     this.creados.push({ publicadoPor, datos });
     return { ...cursoPersistido, publicadoPor, ...datos };
   }
+
+  async listar(): Promise<never> {
+    throw new Error('no usado en este test');
+  }
 }
 
 class RepositorioPerfilFalso implements IRepositorioPerfil {
   public rol = 'organizacion';
 
   async obtenerPerfilPropio(usuarioIdConsultado: string): Promise<ResumenPerfilPropio | null> {
-    return { id: usuarioIdConsultado, email: 'organizacion@ejemplo.test', rol: this.rol, estadoVerificacion: 'verificado', verificadoEn: new Date() };
+    return {
+      id: usuarioIdConsultado,
+      email: 'organizacion@ejemplo.test',
+      rol: this.rol,
+      estadoVerificacion: 'verificado',
+      verificadoEn: new Date(),
+    };
   }
 }
 
@@ -86,7 +96,9 @@ describe('POST /api/foros-cursos/cursos (Módulo 8, Paso 1: alta restringida a O
   it('publica el curso cuando quien invoca tiene rol organizacion (201)', async () => {
     autenticarComo(usuarioId);
 
-    const respuesta = await publicarCurso(crearRequestJson('/api/foros-cursos/cursos', 'POST', datosValidos));
+    const respuesta = await publicarCurso(
+      crearRequestJson('/api/foros-cursos/cursos', 'POST', datosValidos),
+    );
 
     expect(respuesta.status).toBe(201);
     expect(repositorioCursos.creados).toEqual([{ publicadoPor: usuarioId, datos: datosValidos }]);
@@ -96,7 +108,9 @@ describe('POST /api/foros-cursos/cursos (Módulo 8, Paso 1: alta restringida a O
     autenticarComo(usuarioId);
     repositorioPerfil.rol = 'municipio';
 
-    const respuesta = await publicarCurso(crearRequestJson('/api/foros-cursos/cursos', 'POST', datosValidos));
+    const respuesta = await publicarCurso(
+      crearRequestJson('/api/foros-cursos/cursos', 'POST', datosValidos),
+    );
 
     expect(respuesta.status).toBe(201);
   });
@@ -105,7 +119,9 @@ describe('POST /api/foros-cursos/cursos (Módulo 8, Paso 1: alta restringida a O
     autenticarComo(usuarioId);
     repositorioPerfil.rol = 'dueño';
 
-    const respuesta = await publicarCurso(crearRequestJson('/api/foros-cursos/cursos', 'POST', datosValidos));
+    const respuesta = await publicarCurso(
+      crearRequestJson('/api/foros-cursos/cursos', 'POST', datosValidos),
+    );
 
     expect(respuesta.status).toBe(403);
     const cuerpo = await respuesta.json();
@@ -117,7 +133,10 @@ describe('POST /api/foros-cursos/cursos (Módulo 8, Paso 1: alta restringida a O
     autenticarComo(usuarioId);
 
     const respuesta = await publicarCurso(
-      crearRequestJson('/api/foros-cursos/cursos', 'POST', { ...datosValidos, contenidoUrl: 'no-es-una-url' }),
+      crearRequestJson('/api/foros-cursos/cursos', 'POST', {
+        ...datosValidos,
+        contenidoUrl: 'no-es-una-url',
+      }),
     );
 
     expect(respuesta.status).toBe(400);
@@ -127,7 +146,9 @@ describe('POST /api/foros-cursos/cursos (Módulo 8, Paso 1: alta restringida a O
   it('responde 401 / PEA-SIS-001 sin sesión activa', async () => {
     autenticarComo(null);
 
-    const respuesta = await publicarCurso(crearRequestJson('/api/foros-cursos/cursos', 'POST', datosValidos));
+    const respuesta = await publicarCurso(
+      crearRequestJson('/api/foros-cursos/cursos', 'POST', datosValidos),
+    );
 
     expect(respuesta.status).toBe(401);
   });

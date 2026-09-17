@@ -88,4 +88,15 @@ export class PrismaTemasForoRepositorio implements IRepositorioTemasForo {
       select: SELECT_RESPUESTA,
     });
   }
+
+  async crearRespuesta(
+    temaId: string,
+    usuarioId: string,
+    contenido: string,
+  ): Promise<RespuestaForo> {
+    return prisma.respuestaForo.create({
+      data: { temaId, usuarioId, contenido },
+      select: SELECT_RESPUESTA,
+    });
+  }
 }

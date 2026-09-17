@@ -66,8 +66,19 @@ class RepositorioHistorialesFalso implements IRepositorioHistorialesCompartidos 
     return this.actual;
   }
 
-  async revocar(id: string, veterinarioOrigenIdSolicitante: string): Promise<HistorialCompartido | null> {
-    if (!this.actual || this.actual.id !== id || this.actual.veterinarioOrigenId !== veterinarioOrigenIdSolicitante) {
+  async listarPorOrigen(): Promise<HistorialCompartido[]> {
+    return this.actual ? [this.actual] : [];
+  }
+
+  async revocar(
+    id: string,
+    veterinarioOrigenIdSolicitante: string,
+  ): Promise<HistorialCompartido | null> {
+    if (
+      !this.actual ||
+      this.actual.id !== id ||
+      this.actual.veterinarioOrigenId !== veterinarioOrigenIdSolicitante
+    ) {
       return null;
     }
     return { ...this.actual, revocadoEn: new Date('2026-09-14T12:00:00.000Z') };
@@ -77,10 +88,22 @@ class RepositorioHistorialesFalso implements IRepositorioHistorialesCompartidos 
 class RepositorioPerfilFalso implements IRepositorioPerfil {
   async obtenerPerfilPropio(usuarioId: string): Promise<ResumenPerfilPropio | null> {
     if (usuarioId === otroVeterinarioId) {
-      return { id: usuarioId, email: 'otro@ejemplo.test', rol: 'veterinario', estadoVerificacion: 'verificado', verificadoEn: new Date() };
+      return {
+        id: usuarioId,
+        email: 'otro@ejemplo.test',
+        rol: 'veterinario',
+        estadoVerificacion: 'verificado',
+        verificadoEn: new Date(),
+      };
     }
     if (usuarioId === veterinarioOrigenId || usuarioId === veterinarioDestinoId) {
-      return { id: usuarioId, email: 'vet@ejemplo.test', rol: 'veterinario', estadoVerificacion: 'verificado', verificadoEn: new Date() };
+      return {
+        id: usuarioId,
+        email: 'vet@ejemplo.test',
+        rol: 'veterinario',
+        estadoVerificacion: 'verificado',
+        verificadoEn: new Date(),
+      };
     }
     return null;
   }
@@ -106,7 +129,9 @@ class RepositorioMascotasFalso implements IRepositorioMascotas {
 
 function autenticarComo(usuarioId: string | null) {
   getUserMock.mockResolvedValue(
-    usuarioId ? { data: { user: { id: usuarioId } }, error: null } : { data: { user: null }, error: { message: 'sin sesión' } },
+    usuarioId
+      ? { data: { user: { id: usuarioId } }, error: null }
+      : { data: { user: null }, error: { message: 'sin sesión' } },
   );
 }
 
@@ -128,9 +153,18 @@ describe('Endpoints de historiales_compartidos (Módulo 6, Paso 3: feature flag)
   beforeEach(() => {
     getUserMock.mockReset();
     container.reset();
-    container.registerInstance<IRepositorioHistorialesCompartidos>('IRepositorioHistorialesCompartidos', new RepositorioHistorialesFalso());
-    container.registerInstance<IRepositorioMascotas>('IRepositorioMascotas', new RepositorioMascotasFalso());
-    container.registerInstance<IRepositorioPerfil>('IRepositorioPerfil', new RepositorioPerfilFalso());
+    container.registerInstance<IRepositorioHistorialesCompartidos>(
+      'IRepositorioHistorialesCompartidos',
+      new RepositorioHistorialesFalso(),
+    );
+    container.registerInstance<IRepositorioMascotas>(
+      'IRepositorioMascotas',
+      new RepositorioMascotasFalso(),
+    );
+    container.registerInstance<IRepositorioPerfil>(
+      'IRepositorioPerfil',
+      new RepositorioPerfilFalso(),
+    );
   });
 
   it('Paso 3: con el flag deshabilitado (default), rechaza con 403 / PEA-SIS-002 aunque haya sesión válida', async () => {
@@ -138,7 +172,10 @@ describe('Endpoints de historiales_compartidos (Módulo 6, Paso 3: feature flag)
     autenticarComo(veterinarioOrigenId);
 
     const respuesta = await compartirHistorial(
-      crearRequestJson('/api/veterinarios/historiales-compartidos', 'POST', { mascotaId, veterinarioDestinoId }),
+      crearRequestJson('/api/veterinarios/historiales-compartidos', 'POST', {
+        mascotaId,
+        veterinarioDestinoId,
+      }),
     );
 
     expect(respuesta.status).toBe(403);
@@ -167,7 +204,10 @@ describe('Endpoints de historiales_compartidos (Módulo 6, Paso 3: feature flag)
       autenticarComo(veterinarioOrigenId);
 
       const respuesta = await compartirHistorial(
-        crearRequestJson('/api/veterinarios/historiales-compartidos', 'POST', { mascotaId, veterinarioDestinoId }),
+        crearRequestJson('/api/veterinarios/historiales-compartidos', 'POST', {
+          mascotaId,
+          veterinarioDestinoId,
+        }),
       );
 
       expect(respuesta.status).toBe(201);
@@ -195,7 +235,10 @@ describe('Endpoints de historiales_compartidos (Módulo 6, Paso 3: feature flag)
       autenticarComo(null);
 
       const respuesta = await compartirHistorial(
-        crearRequestJson('/api/veterinarios/historiales-compartidos', 'POST', { mascotaId, veterinarioDestinoId }),
+        crearRequestJson('/api/veterinarios/historiales-compartidos', 'POST', {
+          mascotaId,
+          veterinarioDestinoId,
+        }),
       );
 
       expect(respuesta.status).toBe(401);
@@ -205,7 +248,10 @@ describe('Endpoints de historiales_compartidos (Módulo 6, Paso 3: feature flag)
       autenticarComo(veterinarioOrigenId);
 
       const respuesta = await revocarHistorial(
-        crearRequestJson(`/api/veterinarios/historiales-compartidos/${historialId}/revocar`, 'PATCH'),
+        crearRequestJson(
+          `/api/veterinarios/historiales-compartidos/${historialId}/revocar`,
+          'PATCH',
+        ),
         { params: { id: historialId } },
       );
 
@@ -218,7 +264,10 @@ describe('Endpoints de historiales_compartidos (Módulo 6, Paso 3: feature flag)
       autenticarComo(otroVeterinarioId);
 
       const respuesta = await revocarHistorial(
-        crearRequestJson(`/api/veterinarios/historiales-compartidos/${historialId}/revocar`, 'PATCH'),
+        crearRequestJson(
+          `/api/veterinarios/historiales-compartidos/${historialId}/revocar`,
+          'PATCH',
+        ),
         { params: { id: historialId } },
       );
 
@@ -231,13 +280,25 @@ describe('Endpoints de historiales_compartidos (Módulo 6, Paso 3: feature flag)
       container.reset();
       const repositorioHistoriales = new RepositorioHistorialesFalso();
       repositorioHistoriales.actual = null;
-      container.registerInstance<IRepositorioHistorialesCompartidos>('IRepositorioHistorialesCompartidos', repositorioHistoriales);
-      container.registerInstance<IRepositorioMascotas>('IRepositorioMascotas', new RepositorioMascotasFalso());
-      container.registerInstance<IRepositorioPerfil>('IRepositorioPerfil', new RepositorioPerfilFalso());
+      container.registerInstance<IRepositorioHistorialesCompartidos>(
+        'IRepositorioHistorialesCompartidos',
+        repositorioHistoriales,
+      );
+      container.registerInstance<IRepositorioMascotas>(
+        'IRepositorioMascotas',
+        new RepositorioMascotasFalso(),
+      );
+      container.registerInstance<IRepositorioPerfil>(
+        'IRepositorioPerfil',
+        new RepositorioPerfilFalso(),
+      );
       autenticarComo(veterinarioOrigenId);
 
       const respuesta = await revocarHistorial(
-        crearRequestJson(`/api/veterinarios/historiales-compartidos/${historialId}/revocar`, 'PATCH'),
+        crearRequestJson(
+          `/api/veterinarios/historiales-compartidos/${historialId}/revocar`,
+          'PATCH',
+        ),
         { params: { id: historialId } },
       );
 

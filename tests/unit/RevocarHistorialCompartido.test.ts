@@ -2,7 +2,10 @@
  * @jest-environment node
  */
 import { RevocarHistorialCompartido } from '@aplicacion/casos-de-uso/veterinarios-avanzado/RevocarHistorialCompartido';
-import type { HistorialCompartido, IRepositorioHistorialesCompartidos } from '@dominio/puertos/IRepositorioHistorialesCompartidos';
+import type {
+  HistorialCompartido,
+  IRepositorioHistorialesCompartidos,
+} from '@dominio/puertos/IRepositorioHistorialesCompartidos';
 import { HistorialCompartidoNoEncontradoError } from '@dominio/errores/erroresVeterinariosAvanzados';
 import { AccesoNoAutorizadoError } from '@dominio/errores/erroresTransversales';
 
@@ -22,7 +25,8 @@ function crearHistorialActivo(): HistorialCompartido {
 }
 
 function crearFakes(opciones?: { historial?: HistorialCompartido | null }) {
-  const historialActivo = opciones?.historial === undefined ? crearHistorialActivo() : opciones.historial;
+  const historialActivo =
+    opciones?.historial === undefined ? crearHistorialActivo() : opciones.historial;
   const historialRevocado: HistorialCompartido | null = historialActivo
     ? { ...historialActivo, revocadoEn: new Date('2026-09-14T12:00:00.000Z') }
     : null;
@@ -30,6 +34,7 @@ function crearFakes(opciones?: { historial?: HistorialCompartido | null }) {
   const repositorioHistoriales: jest.Mocked<IRepositorioHistorialesCompartidos> = {
     crear: jest.fn(),
     obtenerActual: jest.fn().mockResolvedValue(historialActivo),
+    listarPorOrigen: jest.fn(),
     revocar: jest.fn().mockResolvedValue(historialRevocado),
   };
   return { repositorioHistoriales, historialActivo, historialRevocado };
@@ -50,9 +55,9 @@ describe('RevocarHistorialCompartido', () => {
     const { repositorioHistoriales } = crearFakes();
     const caso = new RevocarHistorialCompartido(repositorioHistoriales);
 
-    await expect(caso.ejecutar({ historialId, veterinarioOrigenId: otroVeterinarioId })).rejects.toBeInstanceOf(
-      AccesoNoAutorizadoError,
-    );
+    await expect(
+      caso.ejecutar({ historialId, veterinarioOrigenId: otroVeterinarioId }),
+    ).rejects.toBeInstanceOf(AccesoNoAutorizadoError);
     expect(repositorioHistoriales.revocar).not.toHaveBeenCalled();
   });
 
@@ -60,7 +65,9 @@ describe('RevocarHistorialCompartido', () => {
     const { repositorioHistoriales } = crearFakes({ historial: null });
     const caso = new RevocarHistorialCompartido(repositorioHistoriales);
 
-    await expect(caso.ejecutar({ historialId, veterinarioOrigenId })).rejects.toBeInstanceOf(HistorialCompartidoNoEncontradoError);
+    await expect(caso.ejecutar({ historialId, veterinarioOrigenId })).rejects.toBeInstanceOf(
+      HistorialCompartidoNoEncontradoError,
+    );
     expect(repositorioHistoriales.revocar).not.toHaveBeenCalled();
   });
 
@@ -69,6 +76,8 @@ describe('RevocarHistorialCompartido', () => {
     repositorioHistoriales.revocar.mockResolvedValue(null);
     const caso = new RevocarHistorialCompartido(repositorioHistoriales);
 
-    await expect(caso.ejecutar({ historialId, veterinarioOrigenId })).rejects.toBeInstanceOf(HistorialCompartidoNoEncontradoError);
+    await expect(caso.ejecutar({ historialId, veterinarioOrigenId })).rejects.toBeInstanceOf(
+      HistorialCompartidoNoEncontradoError,
+    );
   });
 });

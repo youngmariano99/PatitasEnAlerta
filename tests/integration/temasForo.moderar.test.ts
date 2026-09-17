@@ -8,7 +8,12 @@
  */
 import { NextRequest } from 'next/server';
 import { container } from '@aplicacion/contenedor-di';
-import type { DatosTemaForo, IRepositorioTemasForo, TemaForo, TemaForoActual } from '@dominio/puertos/IRepositorioTemasForo';
+import type {
+  DatosTemaForo,
+  IRepositorioTemasForo,
+  TemaForo,
+  TemaForoActual,
+} from '@dominio/puertos/IRepositorioTemasForo';
 import type { IRepositorioPerfil, ResumenPerfilPropio } from '@dominio/puertos/IRepositorioPerfil';
 
 const getUserMock = jest.fn();
@@ -63,10 +68,18 @@ class RepositorioTemasForoFalso implements IRepositorioTemasForo {
   async listarRespuestas(): Promise<never> {
     throw new Error('no usado en este test');
   }
+
+  async crearRespuesta(): Promise<never> {
+    throw new Error('no usado en este test');
+  }
 }
 
 class RepositorioPerfilFalso implements IRepositorioPerfil {
-  public roles: Record<string, string> = { [autorId]: 'dueño', [adminId]: 'administrador', [dueñoId]: 'dueño' };
+  public roles: Record<string, string> = {
+    [autorId]: 'dueño',
+    [adminId]: 'administrador',
+    [dueñoId]: 'dueño',
+  };
 
   async obtenerPerfilPropio(usuarioIdConsultado: string): Promise<ResumenPerfilPropio | null> {
     return {
@@ -91,7 +104,10 @@ function crearRequestJson(url: string, method: string, body?: unknown): NextRequ
   });
 }
 
-const datosTema = { titulo: '¿Cada cuánto desparasitar a un gato adulto?', contenido: 'Vive en un departamento, ¿cambia la frecuencia?' };
+const datosTema = {
+  titulo: '¿Cada cuánto desparasitar a un gato adulto?',
+  contenido: 'Vive en un departamento, ¿cambia la frecuencia?',
+};
 const datosEditados = { titulo: 'Título editado', contenido: 'Contenido editado' };
 
 describe('Moderación de temas del foro (Módulo 8, Paso 2/3/4)', () => {
@@ -109,19 +125,27 @@ describe('Moderación de temas del foro (Módulo 8, Paso 2/3/4)', () => {
 
   it('Paso 4: crea un tema, lo modera como Administrador y bloquea la edición posterior del autor (403/PEA-FORO-004)', async () => {
     autenticarComo(autorId);
-    const respuestaCrear = await publicarTema(crearRequestJson('/api/foros-cursos/temas', 'POST', datosTema));
+    const respuestaCrear = await publicarTema(
+      crearRequestJson('/api/foros-cursos/temas', 'POST', datosTema),
+    );
     expect(respuestaCrear.status).toBe(201);
 
     autenticarComo(adminId);
-    const respuestaModerar = await moderarTema(crearRequestJson(`/api/foros-cursos/temas/${temaId}/moderar`, 'POST'), {
-      params: { id: temaId },
-    });
+    const respuestaModerar = await moderarTema(
+      crearRequestJson(`/api/foros-cursos/temas/${temaId}/moderar`, 'POST'),
+      {
+        params: { id: temaId },
+      },
+    );
     expect(respuestaModerar.status).toBe(200);
 
     autenticarComo(autorId);
-    const respuestaEditar = await editarTema(crearRequestJson(`/api/foros-cursos/temas/${temaId}`, 'PATCH', datosEditados), {
-      params: { id: temaId },
-    });
+    const respuestaEditar = await editarTema(
+      crearRequestJson(`/api/foros-cursos/temas/${temaId}`, 'PATCH', datosEditados),
+      {
+        params: { id: temaId },
+      },
+    );
 
     expect(respuestaEditar.status).toBe(403);
     const cuerpo = await respuestaEditar.json();
@@ -133,9 +157,12 @@ describe('Moderación de temas del foro (Módulo 8, Paso 2/3/4)', () => {
     await publicarTema(crearRequestJson('/api/foros-cursos/temas', 'POST', datosTema));
 
     autenticarComo(dueñoId);
-    const respuesta = await moderarTema(crearRequestJson(`/api/foros-cursos/temas/${temaId}/moderar`, 'POST'), {
-      params: { id: temaId },
-    });
+    const respuesta = await moderarTema(
+      crearRequestJson(`/api/foros-cursos/temas/${temaId}/moderar`, 'POST'),
+      {
+        params: { id: temaId },
+      },
+    );
 
     expect(respuesta.status).toBe(403);
     const cuerpo = await respuesta.json();
@@ -146,9 +173,12 @@ describe('Moderación de temas del foro (Módulo 8, Paso 2/3/4)', () => {
     autenticarComo(autorId);
     await publicarTema(crearRequestJson('/api/foros-cursos/temas', 'POST', datosTema));
 
-    const respuesta = await editarTema(crearRequestJson(`/api/foros-cursos/temas/${temaId}`, 'PATCH', datosEditados), {
-      params: { id: temaId },
-    });
+    const respuesta = await editarTema(
+      crearRequestJson(`/api/foros-cursos/temas/${temaId}`, 'PATCH', datosEditados),
+      {
+        params: { id: temaId },
+      },
+    );
 
     expect(respuesta.status).toBe(200);
   });

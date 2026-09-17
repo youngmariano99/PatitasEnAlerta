@@ -74,4 +74,7 @@ export interface IRepositorioTemasForo {
 
   /** Respuestas activas de un tema, vía `ix_respuestas_tema` (Paso 2), ordenadas por `createdAt` ascendente (orden cronológico de un hilo). */
   listarRespuestas(temaId: string): Promise<RespuestaForo[]>;
+
+  /** Alta de una respuesta a un tema — sin verificación de existencia del tema acá (mismo criterio de simplicidad que `listarRespuestas`); la FK de `respuestas_foro.tema_id` (docs/SCHEMA.md) es la única defensa contra un `temaId` inexistente. */
+  crearRespuesta(temaId: string, usuarioId: string, contenido: string): Promise<RespuestaForo>;
 }
