@@ -197,7 +197,7 @@ export function CampanaNotificaciones({ usuarioId }: CampanaNotificacionesProps)
                         >
                           {info.texto}
                         </p>
-                        <p className="mt-0.5 font-mono text-xs text-text-primary0">
+                        <p className="mt-0.5 font-mono text-xs text-text-primary">
                           {formatearFecha(item.createdAt)}
                         </p>
                       </div>

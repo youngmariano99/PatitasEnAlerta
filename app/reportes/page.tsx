@@ -359,7 +359,7 @@ export default function PaginaReportes() {
                   <td className="px-4 py-3 text-text-muted">
                     {ETIQUETAS_TIPO[item.tipo as TipoReporte] ?? item.tipo}
                     {item.especie ? (
-                      <span className="text-text-primary0"> · {item.especie}</span>
+                      <span className="text-text-primary"> · {item.especie}</span>
                     ) : null}
                   </td>
                   <td className="px-4 py-3 text-text-muted">{badgeEstado(item.estado)}</td>

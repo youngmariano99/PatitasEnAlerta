@@ -79,7 +79,7 @@ function ControlCambioEstado({ reporte, onCambiar }: ControlCambioEstadoProps) {
   const [error, setError] = useState<string | null>(null);
 
   if (transicionesValidas.length === 0) {
-    return <span className="text-xs text-text-primary0">Sin transiciones disponibles</span>;
+    return <span className="text-xs text-text-primary">Sin transiciones disponibles</span>;
   }
 
   async function confirmar() {
@@ -366,7 +366,7 @@ export function PanelReportesMunicipio({ rol }: PanelReportesMunicipioProps) {
                   <td className="px-4 py-3 text-text-muted">
                     {ETIQUETAS_TIPO[item.tipo as TipoReporte] ?? item.tipo}
                     {item.especie ? (
-                      <span className="text-text-primary0"> · {item.especie}</span>
+                      <span className="text-text-primary"> · {item.especie}</span>
                     ) : null}
                   </td>
                   <td className="px-4 py-3 text-text-muted">{badgeEstado(item.estado)}</td>

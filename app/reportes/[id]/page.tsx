@@ -18,7 +18,7 @@ export default function PaginaDetalleReporte() {
   return (
     <main className="mx-auto max-w-3xl px-6 py-12 text-text-primary">
       <h1 className="mb-1 text-xl font-semibold">Historial del reporte</h1>
-      <p className="mb-6 font-mono text-xs text-text-primary0">{reporteId}</p>
+      <p className="mb-6 font-mono text-xs text-text-primary">{reporteId}</p>
 
       <LineaTiempoEstadoReporte reporteId={reporteId} />
     </main>

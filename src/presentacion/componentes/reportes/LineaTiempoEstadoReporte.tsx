@@ -126,7 +126,7 @@ export function LineaTiempoEstadoReporte({ reporteId }: LineaTiempoEstadoReporte
               {' → '}
               <span className="font-medium">{etiquetaEstado(item.estadoNuevo)}</span>
             </p>
-            <p className="font-mono text-xs text-text-primary0">
+            <p className="font-mono text-xs text-text-primary">
               {formatearFecha(item.registradoEn)}
             </p>
           </div>
