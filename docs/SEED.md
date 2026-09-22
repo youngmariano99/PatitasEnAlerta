@@ -414,12 +414,24 @@ WITH ins AS (
   RETURNING id
 ) SELECT id FROM ins;
 
+-- Muestreo sin reemplazo sobre el cross join de solicitudes x rescatistas
+-- (cada par aparece una única vez por construcción) en vez de tirar dos
+-- `random() LIMIT 1` independientes por fila: con 60 solicitudes x 15
+-- rescatistas, 90 sorteos independientes tienen probabilidad real de repetir
+-- un mismo par y violar `ux_colaboraciones_solicitud_stakeholder`
+-- (docs/SCHEMA.md, migrado en la Fase 5 del sprint de cierre).
 INSERT INTO colaboraciones (solicitud_id, stakeholder_id, estado)
-SELECT
-  (SELECT id FROM tmp_solicitudes ORDER BY random() LIMIT 1),
-  (SELECT id FROM tmp_rescatistas ORDER BY random() LIMIT 1),
-  (ARRAY['propuesta','aceptada','rechazada','completada'])[1 + floor(random()*4)::int]
-FROM generate_series(1, 90);
+SELECT solicitud_id, stakeholder_id, estado
+FROM (
+  SELECT
+    s.id AS solicitud_id,
+    r.id AS stakeholder_id,
+    (ARRAY['propuesta','aceptada','rechazada','completada'])[1 + floor(random()*4)::int] AS estado
+  FROM tmp_solicitudes s
+  CROSS JOIN tmp_rescatistas r
+  ORDER BY random()
+  LIMIT 90
+) muestra;
 
 -- 21. Veterinarios avanzado
 CREATE TEMP TABLE tmp_productos_vet AS
