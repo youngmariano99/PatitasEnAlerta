@@ -72,28 +72,11 @@ npm ci
 npx prisma generate
 ```
 
-1. **Aplicar las migraciones ya existentes en `prisma/migrations/`** (crean todas las tablas MVP + Post-MVP, con los `CHECK` constraints, índices HNSW de pgvector, vistas materializadas del dashboard, y RLS de las tablas MVP):
+1. **Aplicar todas las migraciones ya existentes en `prisma/migrations/`** — esto ya incluye, además de las tablas MVP + Post-MVP (`CHECK` constraints, índices HNSW de pgvector, vistas materializadas del dashboard, RLS de las tablas MVP), las 3 migraciones agregadas en la Fase 5 del sprint (`20260917100000_habilita_rls_tablas_post_mvp_modulos_5_a_9`, `20260917110000_agrega_indices_unicos_autorizacion_y_colaboracion`, `20260917120000_agrega_catalogo_roles`): RLS completa de los Módulos 5-9, los índices únicos `ux_autorizacion_activa`/`ux_colaboraciones_solicitud_stakeholder`, y el catálogo de `roles` como INSERT idempotente. **Ya no hace falta crear ninguna migración manual para esto** (los sub-pasos 2-4 de una versión anterior de este documento quedaron resueltos en el código):
    ```bash
    npx prisma migrate deploy
    ```
-2. **Crear y aplicar la migración de RLS faltante de Post-MVP** (Sección 2 de la Auditoría — hoy ninguna tabla de los Módulos 5, 6, 8, 9 tiene RLS, y `comercios` solo tiene la política de lectura pública). Usar `docs/ROLES.md` Sección 3 como fuente de verdad de qué política corresponde a cada tabla:
-   ```bash
-   npx prisma migrate dev --create-only --name completa_rls_post_mvp
-   # Editar el archivo generado y agregar, por cada tabla de docs/ROLES.md
-   # sección 3.7 que todavía diga "sin RLS aplicada": ALTER TABLE ... ENABLE
-   # ROW LEVEL SECURITY + sus CREATE POLICY correspondientes.
-   npx prisma migrate dev
-   ```
-3. **(Recomendado, no bloqueante) Extraer el catálogo de `roles` a su propia migración** en vez de dejarlo solo dentro del script de datos de prueba (ver Auditoría Sección 2 — sin esto, un ambiente sin datos de prueba no tiene ningún rol y nadie puede registrarse):
-   ```bash
-   npx prisma migrate dev --create-only --name seed_catalogo_roles
-   # Agregar: INSERT INTO roles (id, nombre) VALUES (1,'dueño'), (2,'veterinario'),
-   # (3,'municipio'), (4,'administrador'), (5,'rescatista'), (6,'comerciante'),
-   # (7,'organizacion') ON CONFLICT (id) DO NOTHING;
-   npx prisma migrate dev
-   ```
-4. **(Recomendado) Migrar los índices únicos documentados pero nunca aplicados** (`ux_autorizacion_activa` sobre `autorizaciones_libreta`, `ux_colaboraciones_solicitud_stakeholder` sobre `colaboraciones`) — copiar la definición exacta de `docs/SCHEMA.md`.
-5. Verificar visualmente en el SQL Editor de Supabase (o `npx prisma studio`) que las tablas existen y que `SELECT * FROM roles;` devuelve 7 filas.
+2. Verificar visualmente en el SQL Editor de Supabase (o `npx prisma studio`) que las tablas existen y que `SELECT * FROM roles;` devuelve 7 filas.
 
 ## Paso 5 — Alta manual de la primera cuenta `municipio` y del primer `administrador`
 
