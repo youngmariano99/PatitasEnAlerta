@@ -76,7 +76,7 @@ INSERT INTO roles (id, nombre) VALUES
 ON CONFLICT (id) DO NOTHING;
 
 -- 2. Usuarios: Dueños de mascota
-CREATE TEMP TABLE tmp_dueños AS
+CREATE TEMP TABLE tmp_duenos AS
 WITH ins AS (
   INSERT INTO usuarios (email, password_hash, rol_id, estado_verificacion)
   SELECT 'dueño' || gs || '@ejemplo.test',
@@ -148,7 +148,7 @@ CREATE TEMP TABLE tmp_mascotas AS
 WITH ins AS (
   INSERT INTO mascotas (dueño_id, nombre, especie, raza, edad_aproximada, foto_url, identificacion_chip)
   SELECT
-    (SELECT id FROM tmp_dueños ORDER BY random() LIMIT 1),
+    (SELECT id FROM tmp_duenos ORDER BY random() LIMIT 1),
     (ARRAY['Toby','Luna','Rocky','Nina','Max','Bella','Simba','Michi','Firulais','Kiara','Thor','Coco','Duke','Mia','Rex'])[1 + floor(random()*15)::int],
     (ARRAY['perro','gato'])[1 + floor(random()*2)::int],
     (ARRAY['Mestizo','Labrador','Caniche','Siamés','Ovejero Alemán','Común Europeo','Bulldog','Fox Terrier'])[1 + floor(random()*8)::int],
@@ -170,7 +170,7 @@ WITH ins AS (
     CASE WHEN t.tipo = 'problematica'
          THEN (ARRAY['animal_suelto','foco_sanitario','accidente_vial'])[1 + floor(random()*3)::int]
          ELSE NULL END,
-    (SELECT id FROM tmp_dueños ORDER BY random() LIMIT 1),
+    (SELECT id FROM tmp_duenos ORDER BY random() LIMIT 1),
     CASE WHEN t.tipo IN ('perdido','encontrado') AND random() < 0.6
          THEN (SELECT id FROM tmp_mascotas ORDER BY random() LIMIT 1) ELSE NULL END,
     CASE t.tipo
@@ -206,11 +206,11 @@ SELECT id, estado, row_number() OVER () AS rn FROM ins;
 INSERT INTO reportes (tipo, subtipo, reportado_por, mascota_id, descripcion, foto_url,
                        latitud, longitud, especie, estado, created_at)
 VALUES
-  ('perdido', NULL, (SELECT id FROM tmp_dueños ORDER BY random() LIMIT 1), NULL,
+  ('perdido', NULL, (SELECT id FROM tmp_duenos ORDER BY random() LIMIT 1), NULL,
    'Mi perro Toby se perdió cerca de la plaza central, es muy sociable.',
    'https://res.cloudinary.com/patitas-en-alerta/reportes/seed-match-perdido.jpg',
    -37.9989, -61.3565, 'perro', 'reportado', now() - interval '2 days'),
-  ('encontrado', NULL, (SELECT id FROM tmp_dueños ORDER BY random() LIMIT 1), NULL,
+  ('encontrado', NULL, (SELECT id FROM tmp_duenos ORDER BY random() LIMIT 1), NULL,
    'Encontré un perro suelto cerca de la plaza central, parece perdido.',
    'https://res.cloudinary.com/patitas-en-alerta/reportes/seed-match-encontrado.jpg',
    -37.9995, -61.3560, 'perro', 'reportado', now() - interval '1 day');
@@ -242,7 +242,7 @@ FROM (
 -- 12. Notificaciones
 INSERT INTO notificaciones (usuario_id, tipo, referencia_tabla, referencia_id, leido, created_at)
 SELECT
-  (SELECT id FROM tmp_dueños ORDER BY random() LIMIT 1),
+  (SELECT id FROM tmp_duenos ORDER BY random() LIMIT 1),
   'reporte_coincidente', 'reportes',
   (SELECT id FROM tmp_reportes ORDER BY random() LIMIT 1),
   random() < 0.5,
@@ -285,7 +285,7 @@ SELECT
   'municipio',
   (SELECT id FROM tmp_municipio),
   e.id,
-  CASE WHEN random() < 0.6 THEN (SELECT id FROM tmp_dueños ORDER BY random() LIMIT 1) ELSE NULL END,
+  CASE WHEN random() < 0.6 THEN (SELECT id FROM tmp_duenos ORDER BY random() LIMIT 1) ELSE NULL END,
   ts.inicio, ts.inicio + interval '20 minutes',
   CASE WHEN random() < 0.6 THEN 'reservado' WHEN random() < 0.9 THEN 'disponible' ELSE 'cancelado' END
 FROM tmp_eventos e
@@ -300,7 +300,7 @@ SELECT
   'veterinario',
   v.id,
   NULL,
-  CASE WHEN random() < 0.5 THEN (SELECT id FROM tmp_dueños ORDER BY random() LIMIT 1) ELSE NULL END,
+  CASE WHEN random() < 0.5 THEN (SELECT id FROM tmp_duenos ORDER BY random() LIMIT 1) ELSE NULL END,
   ts.inicio, ts.inicio + interval '30 minutes',
   CASE WHEN random() < 0.5 THEN 'reservado' WHEN random() < 0.85 THEN 'disponible' ELSE 'cancelado' END
 FROM tmp_veterinarios v
@@ -414,12 +414,24 @@ WITH ins AS (
   RETURNING id
 ) SELECT id FROM ins;
 
+-- Muestreo sin reemplazo sobre el cross join de solicitudes x rescatistas
+-- (cada par aparece una única vez por construcción) en vez de tirar dos
+-- `random() LIMIT 1` independientes por fila: con 60 solicitudes x 15
+-- rescatistas, 90 sorteos independientes tienen probabilidad real de repetir
+-- un mismo par y violar `ux_colaboraciones_solicitud_stakeholder`
+-- (docs/SCHEMA.md, migrado en la Fase 5 del sprint de cierre).
 INSERT INTO colaboraciones (solicitud_id, stakeholder_id, estado)
-SELECT
-  (SELECT id FROM tmp_solicitudes ORDER BY random() LIMIT 1),
-  (SELECT id FROM tmp_rescatistas ORDER BY random() LIMIT 1),
-  (ARRAY['propuesta','aceptada','rechazada','completada'])[1 + floor(random()*4)::int]
-FROM generate_series(1, 90);
+SELECT solicitud_id, stakeholder_id, estado
+FROM (
+  SELECT
+    s.id AS solicitud_id,
+    r.id AS stakeholder_id,
+    (ARRAY['propuesta','aceptada','rechazada','completada'])[1 + floor(random()*4)::int] AS estado
+  FROM tmp_solicitudes s
+  CROSS JOIN tmp_rescatistas r
+  ORDER BY random()
+  LIMIT 90
+) muestra;
 
 -- 21. Veterinarios avanzado
 CREATE TEMP TABLE tmp_productos_vet AS
@@ -437,7 +449,7 @@ WITH ins AS (
 INSERT INTO pedidos_producto (producto_id, comprador_id, cantidad, precio_unitario, estado)
 SELECT
   (SELECT id FROM tmp_productos_vet ORDER BY random() LIMIT 1),
-  (SELECT id FROM tmp_dueños ORDER BY random() LIMIT 1),
+  (SELECT id FROM tmp_duenos ORDER BY random() LIMIT 1),
   1 + floor(random()*3)::int,
   (random()*15000 + 1000)::numeric(10,2),
   (ARRAY['pendiente','confirmado','cancelado'])[1 + floor(random()*3)::int]
@@ -491,18 +503,28 @@ WITH ins AS (
   RETURNING id
 ) SELECT id FROM ins;
 
+-- Mismo criterio que la colaboraciones de más arriba: muestreo sin
+-- reemplazo sobre el cross join de cursos x dueños (cada par existe una
+-- única vez por construcción) — el `SELECT DISTINCT ON (curso_id, usuario_id)`
+-- original no compilaba (esas subconsultas escalares sin alias no exponen
+-- esos nombres de columna a DISTINCT ON, PostgreSQL 42703) y, aun
+-- corregido el alias, seguía dependiendo de un sorteo con reemplazo que
+-- puede violar ux_inscripcion_curso_usuario bajo mala suerte.
 INSERT INTO inscripciones_curso (curso_id, usuario_id)
-SELECT DISTINCT ON (curso_id, usuario_id)
-  (SELECT id FROM tmp_cursos ORDER BY random() LIMIT 1),
-  (SELECT id FROM tmp_dueños ORDER BY random() LIMIT 1)
-FROM generate_series(1, 250)
-LIMIT 150;
+SELECT curso_id, usuario_id
+FROM (
+  SELECT c.id AS curso_id, d.id AS usuario_id
+  FROM tmp_cursos c
+  CROSS JOIN tmp_duenos d
+  ORDER BY random()
+  LIMIT 150
+) muestra;
 
 CREATE TEMP TABLE tmp_temas_foro AS
 WITH ins AS (
   INSERT INTO temas_foro (creado_por, titulo, contenido)
   SELECT
-    (SELECT id FROM tmp_dueños ORDER BY random() LIMIT 1),
+    (SELECT id FROM tmp_duenos ORDER BY random() LIMIT 1),
     (ARRAY['¿Cómo sé si mi perro está bien de peso?','Recomendaciones para la primera visita al veterinario',
            '¿Cada cuánto desparasitar a un gato adulto?','Tips para adaptar a un rescatado al hogar'])[1 + floor(random()*4)::int] || ' #' || gs,
     'Consulta de la comunidad sobre bienestar y cuidado de mascotas.'
@@ -513,7 +535,7 @@ WITH ins AS (
 INSERT INTO respuestas_foro (tema_id, usuario_id, contenido)
 SELECT
   (SELECT id FROM tmp_temas_foro ORDER BY random() LIMIT 1),
-  (SELECT id FROM tmp_dueños ORDER BY random() LIMIT 1),
+  (SELECT id FROM tmp_duenos ORDER BY random() LIMIT 1),
   'Respuesta de prueba con recomendación general de la comunidad.'
 FROM generate_series(1, 300);
 
@@ -523,7 +545,7 @@ WITH ins AS (
   INSERT INTO cuestionarios_adoptante (usuario_id, horas_solo_estimadas, presencia_ninos,
                                         espacio_disponible, experiencia_previa)
   SELECT
-    (SELECT id FROM tmp_dueños ORDER BY random() LIMIT 1),
+    (SELECT id FROM tmp_duenos ORDER BY random() LIMIT 1),
     floor(random()*10)::smallint,
     random() < 0.4,
     (ARRAY['departamento','casa_patio_pequeño','casa_patio_grande'])[1 + floor(random()*3)::int],
