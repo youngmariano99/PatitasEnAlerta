@@ -503,12 +503,22 @@ WITH ins AS (
   RETURNING id
 ) SELECT id FROM ins;
 
+-- Mismo criterio que la colaboraciones de más arriba: muestreo sin
+-- reemplazo sobre el cross join de cursos x dueños (cada par existe una
+-- única vez por construcción) — el `SELECT DISTINCT ON (curso_id, usuario_id)`
+-- original no compilaba (esas subconsultas escalares sin alias no exponen
+-- esos nombres de columna a DISTINCT ON, PostgreSQL 42703) y, aun
+-- corregido el alias, seguía dependiendo de un sorteo con reemplazo que
+-- puede violar ux_inscripcion_curso_usuario bajo mala suerte.
 INSERT INTO inscripciones_curso (curso_id, usuario_id)
-SELECT DISTINCT ON (curso_id, usuario_id)
-  (SELECT id FROM tmp_cursos ORDER BY random() LIMIT 1),
-  (SELECT id FROM tmp_dueños ORDER BY random() LIMIT 1)
-FROM generate_series(1, 250)
-LIMIT 150;
+SELECT curso_id, usuario_id
+FROM (
+  SELECT c.id AS curso_id, d.id AS usuario_id
+  FROM tmp_cursos c
+  CROSS JOIN tmp_dueños d
+  ORDER BY random()
+  LIMIT 150
+) muestra;
 
 CREATE TEMP TABLE tmp_temas_foro AS
 WITH ins AS (
