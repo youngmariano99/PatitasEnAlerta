@@ -105,7 +105,12 @@ export function CampanaNotificaciones({ usuarioId }: CampanaNotificacionesProps)
       .channel(`notificaciones-${usuarioId}`)
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'notificaciones', filter: `usuario_id=eq.${usuarioId}` },
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notificaciones',
+          filter: `usuario_id=eq.${usuarioId}`,
+        },
         (payload: { new: FilaRealtime }) => {
           const nueva = filaRealtimeANotificacion(payload.new);
           setItems((actuales) => [nueva, ...actuales].slice(0, 10));
@@ -121,7 +126,9 @@ export function CampanaNotificaciones({ usuarioId }: CampanaNotificacionesProps)
 
   async function marcarComoLeida(id: string) {
     const anteriores = items;
-    setItems((actuales) => actuales.map((item) => (item.id === id ? { ...item, leido: true } : item)));
+    setItems((actuales) =>
+      actuales.map((item) => (item.id === id ? { ...item, leido: true } : item)),
+    );
     setNoLeidas((actual) => Math.max(0, actual - 1));
 
     try {
@@ -143,33 +150,33 @@ export function CampanaNotificaciones({ usuarioId }: CampanaNotificacionesProps)
         aria-haspopup="true"
         aria-expanded={abierto}
         aria-label={noLeidas > 0 ? `Notificaciones, ${noLeidas} sin leer` : 'Notificaciones'}
-        className="relative flex h-11 w-11 min-h-[44px] items-center justify-center rounded-full border border-slate-700 bg-slate-800 text-lg text-slate-50"
+        className="relative flex h-11 w-11 min-h-[44px] items-center justify-center rounded-full border border-surface2 bg-surface1 text-lg text-text-primary"
       >
         <span aria-hidden="true">🔔</span>
         {noLeidas > 0 ? (
-          <span className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-blue-500 px-1 text-xs font-medium text-slate-50">
+          <span className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-accent px-1 text-xs font-medium text-text-primary">
             {noLeidas > 99 ? '99+' : noLeidas}
           </span>
         ) : null}
       </button>
 
       {abierto ? (
-        <div className="absolute right-0 z-10 mt-2 w-80 rounded-md border border-slate-700 bg-slate-900 shadow-lg">
-          <div className="border-b border-slate-700 px-4 py-3">
-            <p className="text-sm font-medium text-slate-50">Notificaciones</p>
+        <div className="absolute right-0 z-10 mt-2 w-80 rounded-md border border-surface2 bg-surface1 shadow-lg">
+          <div className="border-b border-surface2 px-4 py-3">
+            <p className="text-sm font-medium text-text-primary">Notificaciones</p>
           </div>
 
-          {cargando ? <p className="px-4 py-3 text-sm text-slate-400">Cargando…</p> : null}
+          {cargando ? <p className="px-4 py-3 text-sm text-text-muted">Cargando…</p> : null}
 
           {errorCarga ? (
-            <p className="flex items-center gap-1.5 px-4 py-3 text-sm text-red-500">
+            <p className="flex items-center gap-1.5 px-4 py-3 text-sm text-danger">
               <span aria-hidden="true">⚠️</span>
               {errorCarga}
             </p>
           ) : null}
 
           {!cargando && !errorCarga && items.length === 0 ? (
-            <p className="px-4 py-3 text-sm text-slate-400">Todavía no tenés notificaciones.</p>
+            <p className="px-4 py-3 text-sm text-text-muted">Todavía no tenés notificaciones.</p>
           ) : null}
 
           {!cargando && !errorCarga && items.length > 0 ? (
@@ -177,21 +184,29 @@ export function CampanaNotificaciones({ usuarioId }: CampanaNotificacionesProps)
               {items.map((item) => {
                 const info = ETIQUETAS_TIPO[item.tipo] ?? { texto: item.tipo, icono: '•' };
                 return (
-                  <li key={item.id} className="border-b border-slate-800 px-4 py-3 last:border-b-0">
+                  <li key={item.id} className="border-b border-surface2 px-4 py-3 last:border-b-0">
                     <div className="flex items-start gap-2">
                       <span aria-hidden="true">{info.icono}</span>
                       <div className="flex-1">
-                        <p className={item.leido ? 'text-sm text-slate-400' : 'text-sm font-medium text-slate-50'}>
+                        <p
+                          className={
+                            item.leido
+                              ? 'text-sm text-text-muted'
+                              : 'text-sm font-medium text-text-primary'
+                          }
+                        >
                           {info.texto}
                         </p>
-                        <p className="mt-0.5 font-mono text-xs text-slate-500">{formatearFecha(item.createdAt)}</p>
+                        <p className="mt-0.5 font-mono text-xs text-text-primary0">
+                          {formatearFecha(item.createdAt)}
+                        </p>
                       </div>
                     </div>
                     {!item.leido ? (
                       <button
                         type="button"
                         onClick={() => marcarComoLeida(item.id)}
-                        className="mt-2 text-xs font-medium text-blue-400 underline underline-offset-2"
+                        className="mt-2 text-xs font-medium text-accent underline underline-offset-2"
                       >
                         Marcar como leída
                       </button>

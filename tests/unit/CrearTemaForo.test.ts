@@ -27,6 +27,7 @@ function crearFakes() {
     moderar: jest.fn(),
     listar: jest.fn(),
     listarRespuestas: jest.fn(),
+    crearRespuesta: jest.fn(),
   };
   return { repositorioTemas, temaCreado };
 }
@@ -56,13 +57,16 @@ describe('CrearTemaForo', () => {
     expect(datosEnviados.contenido).not.toContain('<script>');
   });
 
-  it.each(['titulo', 'contenido'])('rechaza con 400 / PEA-FORO-003 cuando falta %s', async (campoVacio) => {
-    const { repositorioTemas } = crearFakes();
-    const caso = new CrearTemaForo(repositorioTemas);
+  it.each(['titulo', 'contenido'])(
+    'rechaza con 400 / PEA-FORO-003 cuando falta %s',
+    async (campoVacio) => {
+      const { repositorioTemas } = crearFakes();
+      const caso = new CrearTemaForo(repositorioTemas);
 
-    await expect(
-      caso.ejecutar({ datosCrudos: { ...datosValidos, [campoVacio]: '   ' }, usuarioId }),
-    ).rejects.toBeInstanceOf(ContenidoTemaRequeridoError);
-    expect(repositorioTemas.crear).not.toHaveBeenCalled();
-  });
+      await expect(
+        caso.ejecutar({ datosCrudos: { ...datosValidos, [campoVacio]: '   ' }, usuarioId }),
+      ).rejects.toBeInstanceOf(ContenidoTemaRequeridoError);
+      expect(repositorioTemas.crear).not.toHaveBeenCalled();
+    },
+  );
 });

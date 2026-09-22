@@ -67,7 +67,11 @@ export class PrismaTurnoRepositorio implements IRepositorioTurnos {
     return fila;
   }
 
-  async reservar(turnoId: string, reservadoPor: string, versionEsperada: number): Promise<TurnoReservado | null> {
+  async reservar(
+    turnoId: string,
+    reservadoPor: string,
+    versionEsperada: number,
+  ): Promise<TurnoReservado | null> {
     // updateMany (no update): necesitamos el conteo de filas afectadas para
     // detectar la carrera (0 filas = alguien más ganó, docs/SCHEMA.md) sin
     // que Prisma lance una excepción por "registro no encontrado" — un
@@ -82,7 +86,11 @@ export class PrismaTurnoRepositorio implements IRepositorioTurnos {
     return { id: turnoId, estado: 'reservado', reservadoPor, version: versionEsperada + 1 };
   }
 
-  async listarPropios(reservadoPor: string, pagina: number, porPagina: number): Promise<PaginaTurnosPropios> {
+  async listarPropios(
+    reservadoPor: string,
+    pagina: number,
+    porPagina: number,
+  ): Promise<PaginaTurnosPropios> {
     const where = { reservadoPor, deletedAt: null };
 
     const [filas, total] = await Promise.all([
@@ -160,13 +168,23 @@ export class PrismaTurnoRepositorio implements IRepositorioTurnos {
         if (!actual) throw new PasoDeReprogramacionFallidoError();
 
         const cancelacion = await tx.turno.updateMany({
-          where: { id: turnoActualId, estado: 'reservado', version: versionActualEsperada, deletedAt: null },
+          where: {
+            id: turnoActualId,
+            estado: 'reservado',
+            version: versionActualEsperada,
+            deletedAt: null,
+          },
           data: { estado: 'cancelado', version: { increment: 1 } },
         });
         if (cancelacion.count === 0) throw new PasoDeReprogramacionFallidoError();
 
         const reserva = await tx.turno.updateMany({
-          where: { id: turnoNuevoId, estado: 'disponible', version: versionNuevaEsperada, deletedAt: null },
+          where: {
+            id: turnoNuevoId,
+            estado: 'disponible',
+            version: versionNuevaEsperada,
+            deletedAt: null,
+          },
           data: { estado: 'reservado', reservadoPor: usuarioId, version: { increment: 1 } },
         });
         // Si este paso falla, lanzar acá revierte TAMBIÉN la cancelación de
@@ -205,7 +223,11 @@ export class PrismaTurnoRepositorio implements IRepositorioTurnos {
     return filas.map((fila) => fila.franjaInicio);
   }
 
-  async listarReservadosPorProveedor(proveedorId: string, pagina: number, porPagina: number): Promise<PaginaTurnosReservadosVeterinario> {
+  async listarReservadosPorProveedor(
+    proveedorId: string,
+    pagina: number,
+    porPagina: number,
+  ): Promise<PaginaTurnosReservadosVeterinario> {
     const where = { proveedorId, estado: 'reservado', deletedAt: null };
 
     const [filas, total] = await Promise.all([
@@ -246,12 +268,26 @@ export class PrismaTurnoRepositorio implements IRepositorioTurnos {
     // `reservadoPor` nunca null acá: mismo invariante que
     // `listarReservadosPorProveedor` (estado='reservado' siempre trae
     // reservado_por seteado, ver `reservar()` arriba).
-    return filas.map((fila) => ({ id: fila.id, reservadoPor: fila.reservadoPor!, franjaInicio: fila.franjaInicio }));
+    return filas.map((fila) => ({
+      id: fila.id,
+      reservadoPor: fila.reservadoPor!,
+      franjaInicio: fila.franjaInicio,
+    }));
   }
 
-  async actualizarAsistio(turnoId: string, proveedorId: string, asistio: boolean): Promise<TurnoAsistioActualizado | null> {
+  async actualizarAsistio(
+    turnoId: string,
+    proveedorId: string,
+    asistio: boolean,
+  ): Promise<TurnoAsistioActualizado | null> {
     const resultado = await prisma.turno.updateMany({
-      where: { id: turnoId, proveedorId, estado: 'reservado', franjaFin: { lte: new Date() }, deletedAt: null },
+      where: {
+        id: turnoId,
+        proveedorId,
+        estado: 'reservado',
+        franjaFin: { lte: new Date() },
+        deletedAt: null,
+      },
       data: { asistio },
     });
 
@@ -265,6 +301,18 @@ export class PrismaTurnoRepositorio implements IRepositorioTurnos {
       prisma.turno.count({ where: { proveedorId, asistio: false, deletedAt: null } }),
     ]);
 
-    return { totalConcluidos, totalNoShow, tasa: totalConcluidos > 0 ? totalNoShow / totalConcluidos : 0 };
+    return {
+      totalConcluidos,
+      totalNoShow,
+      tasa: totalConcluidos > 0 ? totalNoShow / totalConcluidos : 0,
+    };
+  }
+
+  async listarPorEvento(eventoId: string): Promise<TurnoGenerado[]> {
+    return prisma.turno.findMany({
+      where: { eventoId, deletedAt: null },
+      orderBy: { franjaInicio: 'asc' },
+      select: SELECT_TURNO,
+    });
   }
 }

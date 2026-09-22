@@ -2,8 +2,14 @@
 
 import { useState, type FormEvent } from 'react';
 import Link from 'next/link';
-import { PerfilFormularioFactory, type RolFormularioPerfil } from '@aplicacion/fabricas/PerfilFormularioFactory';
+import {
+  PerfilFormularioFactory,
+  type RolFormularioPerfil,
+} from '@aplicacion/fabricas/PerfilFormularioFactory';
 import { CampoTexto } from '@presentacion/componentes/formularios/CampoTexto';
+import { Boton } from '@presentacion/componentes/ui/Boton';
+import { EncabezadoIlustrado } from '@presentacion/componentes/estado/EncabezadoIlustrado';
+import { EstadoIlustrado } from '@presentacion/componentes/estado/EstadoIlustrado';
 
 interface RespuestaError {
   codigo: string;
@@ -14,7 +20,7 @@ type EstadoEnvio = 'inactivo' | 'enviando' | 'exito';
 type RolAutoservicio = Extract<RolFormularioPerfil, 'dueño' | 'veterinario'>;
 
 const ETIQUETAS_ROL: Record<RolAutoservicio, string> = {
-  'dueño': 'Dueño de mascota',
+  dueño: 'Dueño de mascota',
   veterinario: 'Veterinario/a',
 };
 
@@ -90,31 +96,44 @@ export default function PaginaRegistro() {
       }
       setEstado('inactivo');
     } catch {
-      setErrorGeneral('No pudimos conectarnos con el servidor. Revisá tu conexión e intentá de nuevo.');
+      setErrorGeneral(
+        'No pudimos conectarnos con el servidor. Revisá tu conexión e intentá de nuevo.',
+      );
       setEstado('inactivo');
     }
   }
 
   if (estado === 'exito') {
     return (
-      <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-4 px-6 py-12 text-slate-50">
-        <h1 className="text-xl font-semibold">¡Cuenta creada!</h1>
-        <p className="text-slate-400">
-          {rol === 'veterinario'
-            ? 'Te enviamos un email para confirmar tu cuenta. Tu matrícula queda en revisión — te avisamos cuando quede verificada.'
-            : 'Te enviamos un email para confirmar tu cuenta. Una vez confirmada, ya podés iniciar sesión.'}
-        </p>
-        <Link href="/auth/login" className="text-blue-500 underline underline-offset-2">
-          Ir a iniciar sesión
-        </Link>
+      <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-12">
+        <EstadoIlustrado
+          imagenSrc="/animales/Éxito-Confirmación.png"
+          alt="Mascotas de Patitas en Alerta festejando"
+          titulo="¡Cuenta creada!"
+          descripcion={
+            rol === 'veterinario'
+              ? 'Te enviamos un email para confirmar tu cuenta. Tu matrícula queda en revisión — te avisamos cuando quede verificada.'
+              : 'Te enviamos un email para confirmar tu cuenta. Una vez confirmada, ya podés iniciar sesión.'
+          }
+          accion={
+            <Link href="/auth/login" className="text-accent underline underline-offset-2">
+              Ir a iniciar sesión
+            </Link>
+          }
+        />
       </main>
     );
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-12 text-slate-50">
-      <h1 className="mb-1 text-xl font-semibold">Creá tu cuenta</h1>
-      <p className="mb-6 text-sm text-slate-400">Elegí tu perfil para mostrarte los datos que necesitamos.</p>
+    <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-12 text-text-primary">
+      <EncabezadoIlustrado
+        imagenSrc="/animales/Registro.png"
+        alt="Mascota de Patitas en Alerta dando la bienvenida"
+        titulo="Creá tu cuenta"
+        descripcion="Elegí tu perfil para mostrarte los datos que necesitamos."
+      />
+      <div className="mb-6" />
 
       <div role="radiogroup" aria-label="Tipo de cuenta" className="mb-6 grid grid-cols-2 gap-2">
         {(Object.keys(ETIQUETAS_ROL) as RolAutoservicio[]).map((opcion) => (
@@ -126,8 +145,8 @@ export default function PaginaRegistro() {
             onClick={() => cambiarRol(opcion)}
             className={`h-11 min-h-[44px] rounded-md border text-[15px] font-medium transition-colors ${
               rol === opcion
-                ? 'border-blue-500 bg-blue-500 text-slate-50'
-                : 'border-slate-700 bg-slate-800 text-slate-50 hover:border-slate-500'
+                ? 'border-accent bg-accent text-base'
+                : 'border-surface2 bg-surface1 text-text-primary hover:border-text-muted'
             }`}
           >
             {ETIQUETAS_ROL[opcion]}
@@ -173,7 +192,10 @@ export default function PaginaRegistro() {
               value={matricula}
               onChange={(evento) => setMatricula(evento.target.value)}
               onBlur={() => marcarTocado('matricula')}
-              error={errorDe('matricula') ?? (errorMatriculaDuplicada ? MENSAJE_MATRICULA_DUPLICADA : undefined)}
+              error={
+                errorDe('matricula') ??
+                (errorMatriculaDuplicada ? MENSAJE_MATRICULA_DUPLICADA : undefined)
+              }
               required
             />
 
@@ -184,23 +206,29 @@ export default function PaginaRegistro() {
               value={colegioEmisor}
               onChange={(evento) => setColegioEmisor(evento.target.value)}
               onBlur={() => marcarTocado('colegioEmisor')}
-              error={errorDe('colegioEmisor') ?? (errorMatriculaDuplicada ? MENSAJE_MATRICULA_DUPLICADA : undefined)}
+              error={
+                errorDe('colegioEmisor') ??
+                (errorMatriculaDuplicada ? MENSAJE_MATRICULA_DUPLICADA : undefined)
+              }
               required
             />
           </>
         ) : null}
 
         {errorEmailDuplicado ? (
-          <div className="flex flex-col gap-2 rounded-md border border-red-500 bg-slate-800 p-3 text-sm">
-            <p className="flex items-center gap-1.5 text-red-500">
+          <div className="flex flex-col gap-2 rounded-md border border-danger bg-surface1 p-3 text-sm">
+            <p className="flex items-center gap-1.5 text-danger">
               <span aria-hidden="true">⚠️</span>
               Ya existe una cuenta con ese email. ¿Querés iniciar sesión o recuperar tu contraseña?
             </p>
             <div className="flex gap-4">
-              <Link href="/auth/login" className="text-blue-500 underline underline-offset-2">
+              <Link href="/auth/login" className="text-accent underline underline-offset-2">
                 Iniciar sesión
               </Link>
-              <Link href="/auth/recuperar-password" className="text-blue-500 underline underline-offset-2">
+              <Link
+                href="/auth/recuperar-password"
+                className="text-accent underline underline-offset-2"
+              >
                 Recuperar contraseña
               </Link>
             </div>
@@ -208,19 +236,19 @@ export default function PaginaRegistro() {
         ) : null}
 
         {errorGeneral ? (
-          <p className="flex items-center gap-1.5 text-sm text-red-500">
+          <p className="flex items-center gap-1.5 text-sm text-danger">
             <span aria-hidden="true">⚠️</span>
             {errorGeneral}
           </p>
         ) : null}
 
-        <button
+        <Boton
           type="submit"
           disabled={!formularioValido || estado === 'enviando'}
-          className="mt-2 h-11 min-h-[44px] rounded-md bg-blue-500 text-[15px] font-medium text-slate-50 transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
+          className="mt-2 w-full"
         >
           {estado === 'enviando' ? 'Creando cuenta…' : 'Crear cuenta'}
-        </button>
+        </Boton>
       </form>
     </main>
   );

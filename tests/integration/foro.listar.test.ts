@@ -8,7 +8,13 @@
  */
 import { NextRequest } from 'next/server';
 import { container } from '@aplicacion/contenedor-di';
-import type { IRepositorioTemasForo, PaginaTemasForo, RespuestaForo, TemaForo, TemaForoActual } from '@dominio/puertos/IRepositorioTemasForo';
+import type {
+  IRepositorioTemasForo,
+  PaginaTemasForo,
+  RespuestaForo,
+  TemaForo,
+  TemaForoActual,
+} from '@dominio/puertos/IRepositorioTemasForo';
 
 const getUserMock = jest.fn();
 
@@ -39,8 +45,20 @@ class RepositorioTemasForoFalso implements IRepositorioTemasForo {
   }));
   public respuestasPorTema: Record<string, RespuestaForo[]> = {
     [temaId]: [
-      { id: 'r1', temaId, usuarioId, contenido: 'Primera respuesta', createdAt: new Date('2026-09-15T10:00:00.000Z') },
-      { id: 'r2', temaId, usuarioId, contenido: 'Segunda respuesta', createdAt: new Date('2026-09-15T11:00:00.000Z') },
+      {
+        id: 'r1',
+        temaId,
+        usuarioId,
+        contenido: 'Primera respuesta',
+        createdAt: new Date('2026-09-15T10:00:00.000Z'),
+      },
+      {
+        id: 'r2',
+        temaId,
+        usuarioId,
+        contenido: 'Segunda respuesta',
+        createdAt: new Date('2026-09-15T11:00:00.000Z'),
+      },
     ],
   };
 
@@ -68,6 +86,10 @@ class RepositorioTemasForoFalso implements IRepositorioTemasForo {
 
   async listarRespuestas(temaId: string): Promise<RespuestaForo[]> {
     return this.respuestasPorTema[temaId] ?? [];
+  }
+
+  async crearRespuesta(): Promise<RespuestaForo> {
+    throw new Error('no usado en este test');
   }
 }
 
@@ -148,22 +170,30 @@ describe('GET /api/foros-cursos/temas y /api/foros-cursos/temas/[id]/respuestas 
   it('AC: las respuestas de un tema se filtran correctamente por tema_id', async () => {
     autenticarComo(usuarioId);
 
-    const respuesta = await listarRespuestas(crearRequestGet(`/api/foros-cursos/temas/${temaId}/respuestas`), {
-      params: { id: temaId },
-    });
+    const respuesta = await listarRespuestas(
+      crearRequestGet(`/api/foros-cursos/temas/${temaId}/respuestas`),
+      {
+        params: { id: temaId },
+      },
+    );
     const cuerpo = await respuesta.json();
 
     expect(respuesta.status).toBe(200);
     expect(cuerpo).toHaveLength(2);
-    expect(cuerpo.every((respuestaItem: RespuestaForo) => respuestaItem.temaId === temaId)).toBe(true);
+    expect(cuerpo.every((respuestaItem: RespuestaForo) => respuestaItem.temaId === temaId)).toBe(
+      true,
+    );
   });
 
   it('responde 401 en las respuestas de un tema sin sesión activa', async () => {
     autenticarComo(null);
 
-    const respuesta = await listarRespuestas(crearRequestGet(`/api/foros-cursos/temas/${temaId}/respuestas`), {
-      params: { id: temaId },
-    });
+    const respuesta = await listarRespuestas(
+      crearRequestGet(`/api/foros-cursos/temas/${temaId}/respuestas`),
+      {
+        params: { id: temaId },
+      },
+    );
 
     expect(respuesta.status).toBe(401);
   });

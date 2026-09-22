@@ -8,8 +8,20 @@ const temaId = '33333333-3333-3333-3333-333333333333';
 
 function crearFakes() {
   const respuestas: RespuestaForo[] = [
-    { id: 'r1', temaId, usuarioId: 'user-1', contenido: 'Primera respuesta', createdAt: new Date('2026-09-15T10:00:00.000Z') },
-    { id: 'r2', temaId, usuarioId: 'user-2', contenido: 'Segunda respuesta', createdAt: new Date('2026-09-15T11:00:00.000Z') },
+    {
+      id: 'r1',
+      temaId,
+      usuarioId: 'user-1',
+      contenido: 'Primera respuesta',
+      createdAt: new Date('2026-09-15T10:00:00.000Z'),
+    },
+    {
+      id: 'r2',
+      temaId,
+      usuarioId: 'user-2',
+      contenido: 'Segunda respuesta',
+      createdAt: new Date('2026-09-15T11:00:00.000Z'),
+    },
   ];
   const repositorioTemas: jest.Mocked<IRepositorioTemasForo> = {
     crear: jest.fn(),
@@ -18,6 +30,7 @@ function crearFakes() {
     moderar: jest.fn(),
     listar: jest.fn(),
     listarRespuestas: jest.fn().mockResolvedValue(respuestas),
+    crearRespuesta: jest.fn(),
   };
   return { repositorioTemas, respuestas };
 }

@@ -4,14 +4,18 @@ import { useCallback, useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import clsx from 'clsx';
-import { TIPOS_REPORTE_SOPORTADOS, type TipoReporte } from '@aplicacion/dtos/reportes/CrearReporteDto';
+import {
+  TIPOS_REPORTE_SOPORTADOS,
+  type TipoReporte,
+} from '@aplicacion/dtos/reportes/CrearReporteDto';
 import { ESTADOS_REPORTE_SOPORTADOS, type EstadoReporte } from '@dominio/entidades/Reporte';
+import { EncabezadoIlustrado } from '@presentacion/componentes/estado/EncabezadoIlustrado';
 
 // Leaflet toca `window` al inicializarse — dynamic import con ssr:false,
 // mismo criterio que SelectorUbicacionMapa (app/reportes/nuevo).
 const MapaReportes = dynamic(
   () => import('@presentacion/componentes/mapas/MapaReportes').then((mod) => mod.MapaReportes),
-  { ssr: false, loading: () => <p className="text-sm text-slate-400">Cargando mapa…</p> },
+  { ssr: false, loading: () => <p className="text-sm text-text-muted">Cargando mapa…</p> },
 );
 
 const POR_PAGINA = 50;
@@ -100,7 +104,10 @@ export default function PaginaReportes() {
       setCargando(true);
       setErrorCarga(null);
       try {
-        const params = new URLSearchParams({ pagina: String(paginaSolicitada), porPagina: String(POR_PAGINA) });
+        const params = new URLSearchParams({
+          pagina: String(paginaSolicitada),
+          porPagina: String(POR_PAGINA),
+        });
         if (tipo) params.set('tipo', tipo);
         if (estado) params.set('estado', estado);
         if (cercaDeMi && posicion) {
@@ -120,7 +127,9 @@ export default function PaginaReportes() {
         setTotal(datos.total);
         setPagina(datos.pagina);
       } catch {
-        setErrorCarga('No pudimos conectarnos con el servidor. Revisá tu conexión e intentá de nuevo.');
+        setErrorCarga(
+          'No pudimos conectarnos con el servidor. Revisá tu conexión e intentá de nuevo.',
+        );
       } finally {
         setCargando(false);
       }
@@ -169,25 +178,30 @@ export default function PaginaReportes() {
     latitud: item.latitud,
     longitud: item.longitud,
   }));
-  const centroMapa: [number, number] = posicion ?? (items[0] ? [items[0].latitud, items[0].longitud] : CENTRO_POR_DEFECTO);
+  const centroMapa: [number, number] =
+    posicion ?? (items[0] ? [items[0].latitud, items[0].longitud] : CENTRO_POR_DEFECTO);
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-12 text-slate-50">
-      <h1 className="mb-1 text-xl font-semibold">Reportes activos</h1>
-      <p className="mb-6 text-sm text-slate-400">
-        Mascotas perdidas, encontradas y problemáticas urbanas reportadas por la comunidad.
-      </p>
+    <main className="mx-auto max-w-5xl px-6 py-12 text-text-primary">
+      <div className="mb-6">
+        <EncabezadoIlustrado
+          imagenSrc="/animales/Mapa-Animales-encontrados.png"
+          alt="Mascota señalando un punto en el mapa"
+          titulo="Reportes activos"
+          descripcion="Mascotas perdidas, encontradas y problemáticas urbanas reportadas por la comunidad."
+        />
+      </div>
 
       <div className="mb-4 flex flex-wrap items-end gap-3">
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="filtro-tipo" className="text-xs font-medium text-slate-400">
+          <label htmlFor="filtro-tipo" className="text-xs font-medium text-text-muted">
             Tipo
           </label>
           <select
             id="filtro-tipo"
             value={tipo}
             onChange={(evento) => setTipo(evento.target.value as TipoReporte | '')}
-            className="h-11 min-h-[44px] rounded-md border border-slate-700 bg-slate-800 px-3 text-[15px] text-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="h-11 min-h-[44px] rounded-md border border-surface2 bg-surface1 px-3 text-[15px] text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
           >
             <option value="">Todos</option>
             {TIPOS_REPORTE_SOPORTADOS.map((valor) => (
@@ -199,14 +213,14 @@ export default function PaginaReportes() {
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="filtro-estado" className="text-xs font-medium text-slate-400">
+          <label htmlFor="filtro-estado" className="text-xs font-medium text-text-muted">
             Estado
           </label>
           <select
             id="filtro-estado"
             value={estado}
             onChange={(evento) => setEstado(evento.target.value as EstadoReporte | '')}
-            className="h-11 min-h-[44px] rounded-md border border-slate-700 bg-slate-800 px-3 text-[15px] text-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="h-11 min-h-[44px] rounded-md border border-surface2 bg-surface1 px-3 text-[15px] text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
           >
             <option value="">Activos</option>
             {ESTADOS_REPORTE_SOPORTADOS.map((valor) => (
@@ -223,7 +237,9 @@ export default function PaginaReportes() {
           aria-pressed={cercaDeMi}
           className={clsx(
             'h-11 min-h-[44px] rounded-md border px-4 text-[15px] font-medium',
-            cercaDeMi ? 'border-blue-500 bg-blue-500 text-slate-50' : 'border-slate-700 bg-slate-800 text-slate-300',
+            cercaDeMi
+              ? 'border-accent bg-accent text-text-primary'
+              : 'border-surface2 bg-surface1 text-text-muted',
           )}
         >
           <span aria-hidden="true">📍</span> Cerca de mí
@@ -233,7 +249,7 @@ export default function PaginaReportes() {
           <button
             type="button"
             onClick={limpiarFiltros}
-            className="h-11 min-h-[44px] rounded-md border border-slate-600 px-4 text-[15px] font-medium text-slate-300"
+            className="h-11 min-h-[44px] rounded-md border border-surface2 px-4 text-[15px] font-medium text-text-muted"
           >
             Limpiar filtros
           </button>
@@ -247,7 +263,9 @@ export default function PaginaReportes() {
             onClick={() => setVista('tabla')}
             className={clsx(
               'h-11 min-h-[44px] rounded-md border px-4 text-[15px] font-medium',
-              vista === 'tabla' ? 'border-blue-500 bg-blue-500 text-slate-50' : 'border-slate-700 bg-slate-800 text-slate-300',
+              vista === 'tabla'
+                ? 'border-accent bg-accent text-text-primary'
+                : 'border-surface2 bg-surface1 text-text-muted',
             )}
           >
             Tabla
@@ -259,7 +277,9 @@ export default function PaginaReportes() {
             onClick={() => setVista('mapa')}
             className={clsx(
               'h-11 min-h-[44px] rounded-md border px-4 text-[15px] font-medium',
-              vista === 'mapa' ? 'border-blue-500 bg-blue-500 text-slate-50' : 'border-slate-700 bg-slate-800 text-slate-300',
+              vista === 'mapa'
+                ? 'border-accent bg-accent text-text-primary'
+                : 'border-surface2 bg-surface1 text-text-muted',
             )}
           >
             Mapa
@@ -268,39 +288,41 @@ export default function PaginaReportes() {
       </div>
 
       {errorUbicacion ? (
-        <p className="mb-4 flex items-center gap-1.5 text-sm text-red-500">
+        <p className="mb-4 flex items-center gap-1.5 text-sm text-danger">
           <span aria-hidden="true">⚠️</span>
           {errorUbicacion}
         </p>
       ) : null}
 
       {errorCarga ? (
-        <p className="mb-4 flex items-center gap-1.5 text-sm text-red-500">
+        <p className="mb-4 flex items-center gap-1.5 text-sm text-danger">
           <span aria-hidden="true">⚠️</span>
           {errorCarga}
         </p>
       ) : null}
 
-      {cargando ? <p className="text-sm text-slate-400">Cargando…</p> : null}
+      {cargando ? <p className="text-sm text-text-muted">Cargando…</p> : null}
 
       {!cargando && !errorCarga && items.length === 0 ? (
-        <div className="rounded-md border border-dashed border-slate-700 p-8 text-center">
-          <p className="mb-1 text-sm font-medium text-slate-50">No encontramos reportes con estos filtros.</p>
-          <p className="mb-4 text-sm text-slate-400">
+        <div className="rounded-md border border-dashed border-surface2 p-8 text-center">
+          <p className="mb-1 text-sm font-medium text-text-primary">
+            No encontramos reportes con estos filtros.
+          </p>
+          <p className="mb-4 text-sm text-text-muted">
             Probá con otra categoría o estado, o publicá el primer reporte de tu zona.
           </p>
           {hayFiltrosActivos ? (
             <button
               type="button"
               onClick={limpiarFiltros}
-              className="inline-flex h-11 min-h-[44px] items-center rounded-md bg-blue-500 px-4 text-[15px] font-medium text-slate-50"
+              className="inline-flex h-11 min-h-[44px] items-center rounded-md bg-accent px-4 text-[15px] font-medium text-text-primary"
             >
               Limpiar filtros
             </button>
           ) : (
             <Link
               href="/reportes/nuevo"
-              className="inline-flex h-11 min-h-[44px] items-center rounded-md bg-blue-500 px-4 text-[15px] font-medium text-slate-50"
+              className="inline-flex h-11 min-h-[44px] items-center rounded-md bg-accent px-4 text-[15px] font-medium text-text-primary"
             >
               Publicar un reporte
             </Link>
@@ -309,10 +331,10 @@ export default function PaginaReportes() {
       ) : null}
 
       {!cargando && !errorCarga && items.length > 0 && vista === 'tabla' ? (
-        <div className="overflow-x-auto rounded-md border border-slate-700">
+        <div className="overflow-x-auto rounded-md border border-surface2">
           <table className="w-full min-w-[760px] border-collapse text-left text-sm">
             <thead>
-              <tr className="border-b border-slate-700 bg-slate-800 text-xs uppercase tracking-wide text-slate-400">
+              <tr className="border-b border-surface2 bg-surface1 text-xs uppercase tracking-wide text-text-muted">
                 <th scope="col" className="px-4 py-3 font-medium">
                   ID
                 </th>
@@ -332,17 +354,24 @@ export default function PaginaReportes() {
             </thead>
             <tbody>
               {items.map((item) => (
-                <tr key={item.id} className="border-b border-slate-800 last:border-b-0">
-                  <td className="px-4 py-3 font-mono text-xs text-slate-400">{item.id}</td>
-                  <td className="px-4 py-3 text-slate-300">
+                <tr key={item.id} className="border-b border-surface2 last:border-b-0">
+                  <td className="px-4 py-3 font-mono text-xs text-text-muted">{item.id}</td>
+                  <td className="px-4 py-3 text-text-muted">
                     {ETIQUETAS_TIPO[item.tipo as TipoReporte] ?? item.tipo}
-                    {item.especie ? <span className="text-slate-500"> · {item.especie}</span> : null}
+                    {item.especie ? (
+                      <span className="text-text-primary0"> · {item.especie}</span>
+                    ) : null}
                   </td>
-                  <td className="px-4 py-3 text-slate-300">{badgeEstado(item.estado)}</td>
-                  <td className="max-w-xs truncate px-4 py-3 text-slate-300" title={item.descripcion}>
+                  <td className="px-4 py-3 text-text-muted">{badgeEstado(item.estado)}</td>
+                  <td
+                    className="max-w-xs truncate px-4 py-3 text-text-muted"
+                    title={item.descripcion}
+                  >
                     {item.descripcion}
                   </td>
-                  <td className="px-4 py-3 font-mono text-xs text-slate-400">{formatearFecha(item.createdAt)}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-text-muted">
+                    {formatearFecha(item.createdAt)}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -355,12 +384,12 @@ export default function PaginaReportes() {
       ) : null}
 
       {total > POR_PAGINA ? (
-        <div className="mt-6 flex items-center justify-between text-sm text-slate-400">
+        <div className="mt-6 flex items-center justify-between text-sm text-text-muted">
           <button
             type="button"
             onClick={() => cargarPagina(pagina - 1)}
             disabled={pagina <= 1 || cargando}
-            className="h-11 min-h-[44px] rounded-md border border-slate-600 px-4 disabled:cursor-not-allowed disabled:opacity-50"
+            className="h-11 min-h-[44px] rounded-md border border-surface2 px-4 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Anterior
           </button>
@@ -371,7 +400,7 @@ export default function PaginaReportes() {
             type="button"
             onClick={() => cargarPagina(pagina + 1)}
             disabled={pagina >= totalPaginas || cargando}
-            className="h-11 min-h-[44px] rounded-md border border-slate-600 px-4 disabled:cursor-not-allowed disabled:opacity-50"
+            className="h-11 min-h-[44px] rounded-md border border-surface2 px-4 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Siguiente
           </button>

@@ -2,7 +2,11 @@
  * @jest-environment node
  */
 import { CancelarTurnoCommand } from '@aplicacion/casos-de-uso/turnos/CancelarTurnoCommand';
-import type { IRepositorioTurnos, TurnoActual, TurnoCancelado } from '@dominio/puertos/IRepositorioTurnos';
+import type {
+  IRepositorioTurnos,
+  TurnoActual,
+  TurnoCancelado,
+} from '@dominio/puertos/IRepositorioTurnos';
 import type { INotificacionesRepositorio } from '@dominio/puertos/INotificacionesRepositorio';
 import { EventoOTurnoNoEncontradoError } from '@dominio/errores/erroresMunicipio';
 import { AccesoNoAutorizadoError } from '@dominio/errores/erroresTransversales';
@@ -20,7 +24,10 @@ const turnoReservado: TurnoActual = {
   proveedorId: proveedor,
 };
 
-function crearFakes(opciones?: { turnoActual?: TurnoActual | null; cancelarDevuelve?: TurnoCancelado | null }) {
+function crearFakes(opciones?: {
+  turnoActual?: TurnoActual | null;
+  cancelarDevuelve?: TurnoCancelado | null;
+}) {
   const repositorioTurnos: jest.Mocked<IRepositorioTurnos> = {
     contarDisponiblesPorEvento: jest.fn(),
     crearLote: jest.fn(),
@@ -32,14 +39,25 @@ function crearFakes(opciones?: { turnoActual?: TurnoActual | null; cancelarDevue
     listarReservadosEnVentana: jest.fn(),
     actualizarAsistio: jest.fn(),
     calcularTasaNoShow: jest.fn(),
-    obtenerActual: jest.fn().mockResolvedValue(opciones?.turnoActual === undefined ? turnoReservado : opciones.turnoActual),
+    obtenerActual: jest
+      .fn()
+      .mockResolvedValue(
+        opciones?.turnoActual === undefined ? turnoReservado : opciones.turnoActual,
+      ),
     cancelar: jest
       .fn()
       .mockResolvedValue(
         opciones?.cancelarDevuelve === undefined
-          ? { id: turnoId, estado: 'cancelado', reservadoPor: reservante, proveedorId: proveedor, version: 6 }
+          ? {
+              id: turnoId,
+              estado: 'cancelado',
+              reservadoPor: reservante,
+              proveedorId: proveedor,
+              version: 6,
+            }
           : opciones.cancelarDevuelve,
       ),
+    listarPorEvento: jest.fn(),
   };
   const repositorioNotificaciones: jest.Mocked<INotificacionesRepositorio> = {
     crear: jest.fn().mockResolvedValue(undefined),
@@ -96,9 +114,9 @@ describe('CancelarTurnoCommand', () => {
     const { repositorioTurnos, repositorioNotificaciones } = crearFakes();
     const caso = new CancelarTurnoCommand(repositorioTurnos, repositorioNotificaciones);
 
-    await expect(caso.ejecutar({ datosCrudos: { turnoId }, usuarioId: otroUsuario })).rejects.toBeInstanceOf(
-      AccesoNoAutorizadoError,
-    );
+    await expect(
+      caso.ejecutar({ datosCrudos: { turnoId }, usuarioId: otroUsuario }),
+    ).rejects.toBeInstanceOf(AccesoNoAutorizadoError);
     expect(repositorioTurnos.cancelar).not.toHaveBeenCalled();
   });
 
@@ -106,9 +124,9 @@ describe('CancelarTurnoCommand', () => {
     const { repositorioTurnos, repositorioNotificaciones } = crearFakes({ turnoActual: null });
     const caso = new CancelarTurnoCommand(repositorioTurnos, repositorioNotificaciones);
 
-    await expect(caso.ejecutar({ datosCrudos: { turnoId }, usuarioId: reservante })).rejects.toBeInstanceOf(
-      EventoOTurnoNoEncontradoError,
-    );
+    await expect(
+      caso.ejecutar({ datosCrudos: { turnoId }, usuarioId: reservante }),
+    ).rejects.toBeInstanceOf(EventoOTurnoNoEncontradoError);
     expect(repositorioTurnos.cancelar).not.toHaveBeenCalled();
   });
 
@@ -120,9 +138,9 @@ describe('CancelarTurnoCommand', () => {
       });
       const caso = new CancelarTurnoCommand(repositorioTurnos, repositorioNotificaciones);
 
-      await expect(caso.ejecutar({ datosCrudos: { turnoId }, usuarioId: reservante })).rejects.toBeInstanceOf(
-        EventoOTurnoNoEncontradoError,
-      );
+      await expect(
+        caso.ejecutar({ datosCrudos: { turnoId }, usuarioId: reservante }),
+      ).rejects.toBeInstanceOf(EventoOTurnoNoEncontradoError);
       expect(repositorioTurnos.cancelar).not.toHaveBeenCalled();
     },
   );
@@ -131,18 +149,22 @@ describe('CancelarTurnoCommand', () => {
     const { repositorioTurnos, repositorioNotificaciones } = crearFakes({ cancelarDevuelve: null });
     const caso = new CancelarTurnoCommand(repositorioTurnos, repositorioNotificaciones);
 
-    await expect(caso.ejecutar({ datosCrudos: { turnoId }, usuarioId: reservante })).rejects.toBeInstanceOf(
-      EventoOTurnoNoEncontradoError,
-    );
+    await expect(
+      caso.ejecutar({ datosCrudos: { turnoId }, usuarioId: reservante }),
+    ).rejects.toBeInstanceOf(EventoOTurnoNoEncontradoError);
     expect(repositorioNotificaciones.crear).not.toHaveBeenCalled();
   });
 
   it('no falla la cancelación si la notificación posterior falla (Observer desacoplado)', async () => {
     const { repositorioTurnos, repositorioNotificaciones } = crearFakes();
-    repositorioNotificaciones.crear.mockRejectedValue(new Error('la tabla notificaciones no responde'));
+    repositorioNotificaciones.crear.mockRejectedValue(
+      new Error('la tabla notificaciones no responde'),
+    );
     const caso = new CancelarTurnoCommand(repositorioTurnos, repositorioNotificaciones);
 
-    await expect(caso.ejecutar({ datosCrudos: { turnoId }, usuarioId: reservante })).resolves.toMatchObject({
+    await expect(
+      caso.ejecutar({ datosCrudos: { turnoId }, usuarioId: reservante }),
+    ).resolves.toMatchObject({
       estado: 'cancelado',
     });
   });

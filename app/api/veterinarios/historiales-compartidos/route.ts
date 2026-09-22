@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { ZodError } from 'zod';
 import { container } from '@aplicacion/contenedor-di';
 import { CompartirHistorial } from '@aplicacion/casos-de-uso/veterinarios-avanzado/CompartirHistorial';
+import { ListarHistorialesCompartidos } from '@aplicacion/casos-de-uso/veterinarios-avanzado/ListarHistorialesCompartidos';
 import { ErrorDominio } from '@dominio/errores/ErrorDominio';
 import { PayloadInvalidoError } from '@dominio/errores/erroresAutenticacion';
 import { NoAutenticadoError, AccesoNoAutorizadoError } from '@dominio/errores/erroresTransversales';
@@ -11,6 +12,40 @@ import { logger } from '@infraestructura/logging/logger';
 
 function respuestaDeError(codigo: string, mensaje: string, statusHttp: number) {
   return NextResponse.json({ codigo, mensaje }, { status: statusHttp });
+}
+
+/** "Mis historiales compartidos" (como origen) — mismo gateo por feature flag que POST. */
+export async function GET(request: NextRequest) {
+  if (!historialesCompartidosHabilitado()) {
+    const error = new AccesoNoAutorizadoError();
+    return respuestaDeError(error.codigo, error.message, error.statusHttp);
+  }
+
+  const usuarioAutenticado = await obtenerUsuarioAutenticado(request);
+  if (!usuarioAutenticado) {
+    const error = new NoAutenticadoError();
+    return respuestaDeError(error.codigo, error.message, error.statusHttp);
+  }
+
+  try {
+    const casoDeUso = container.resolve(ListarHistorialesCompartidos);
+    const resultado = await casoDeUso.ejecutar({ veterinarioOrigenId: usuarioAutenticado.id });
+    return NextResponse.json(resultado, { status: 200 });
+  } catch (error) {
+    if (error instanceof ErrorDominio) {
+      return respuestaDeError(error.codigo, error.message, error.statusHttp);
+    }
+
+    logger.error(
+      { err: error },
+      'Error no controlado en GET /api/veterinarios/historiales-compartidos',
+    );
+    return respuestaDeError(
+      'PEA-SIS-003',
+      'Algo salió mal de nuestro lado. Ya estamos al tanto, probá de nuevo en unos minutos.',
+      500,
+    );
+  }
 }
 
 /**
@@ -43,7 +78,10 @@ export async function POST(request: NextRequest) {
 
   try {
     const casoDeUso = container.resolve(CompartirHistorial);
-    const resultado = await casoDeUso.ejecutar({ datosCrudos: cuerpo, veterinarioOrigenId: usuarioAutenticado.id });
+    const resultado = await casoDeUso.ejecutar({
+      datosCrudos: cuerpo,
+      veterinarioOrigenId: usuarioAutenticado.id,
+    });
     return NextResponse.json(resultado, { status: 201 });
   } catch (error) {
     if (error instanceof ZodError) {
@@ -54,7 +92,10 @@ export async function POST(request: NextRequest) {
       return respuestaDeError(error.codigo, error.message, error.statusHttp);
     }
 
-    logger.error({ err: error }, 'Error no controlado en POST /api/veterinarios/historiales-compartidos');
+    logger.error(
+      { err: error },
+      'Error no controlado en POST /api/veterinarios/historiales-compartidos',
+    );
     return respuestaDeError(
       'PEA-SIS-003',
       'Algo salió mal de nuestro lado. Ya estamos al tanto, probá de nuevo en unos minutos.',

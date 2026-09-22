@@ -12,9 +12,14 @@ const turnoId = '11111111-1111-1111-1111-111111111111';
 const proveedorId = '22222222-2222-2222-2222-222222222222';
 const otroUsuarioId = '33333333-3333-3333-3333-333333333333';
 
-function crearFakes(opciones?: { turnoActual?: TurnoActual | null; asistioActualizadoDevuelve?: boolean }) {
+function crearFakes(opciones?: {
+  turnoActual?: TurnoActual | null;
+  asistioActualizadoDevuelve?: boolean;
+}) {
   const turnoActual: TurnoActual | null =
-    opciones && 'turnoActual' in opciones ? opciones.turnoActual! : { id: turnoId, estado: 'reservado', version: 0, reservadoPor: otroUsuarioId, proveedorId };
+    opciones && 'turnoActual' in opciones
+      ? opciones.turnoActual!
+      : { id: turnoId, estado: 'reservado', version: 0, reservadoPor: otroUsuarioId, proveedorId };
 
   const repositorioTurnos: jest.Mocked<IRepositorioTurnos> = {
     contarDisponiblesPorEvento: jest.fn(),
@@ -29,8 +34,11 @@ function crearFakes(opciones?: { turnoActual?: TurnoActual | null; asistioActual
     listarReservadosEnVentana: jest.fn(),
     actualizarAsistio: jest
       .fn()
-      .mockResolvedValue((opciones?.asistioActualizadoDevuelve ?? true) ? { id: turnoId, asistio: true } : null),
+      .mockResolvedValue(
+        (opciones?.asistioActualizadoDevuelve ?? true) ? { id: turnoId, asistio: true } : null,
+      ),
     calcularTasaNoShow: jest.fn(),
+    listarPorEvento: jest.fn(),
   };
   return { repositorioTurnos };
 }
@@ -40,7 +48,10 @@ describe('ActualizarAsistioTurnoCommand', () => {
     const { repositorioTurnos } = crearFakes();
     const comando = new ActualizarAsistioTurnoCommand(repositorioTurnos);
 
-    const resultado = await comando.ejecutar({ datosCrudos: { turnoId, asistio: true }, proveedorId });
+    const resultado = await comando.ejecutar({
+      datosCrudos: { turnoId, asistio: true },
+      proveedorId,
+    });
 
     expect(resultado).toEqual({ id: turnoId, asistio: true });
     expect(repositorioTurnos.actualizarAsistio).toHaveBeenCalledWith(turnoId, proveedorId, true);
@@ -50,7 +61,9 @@ describe('ActualizarAsistioTurnoCommand', () => {
     const { repositorioTurnos } = crearFakes();
     const comando = new ActualizarAsistioTurnoCommand(repositorioTurnos);
 
-    await expect(comando.ejecutar({ datosCrudos: { turnoId }, proveedorId })).rejects.toBeInstanceOf(ZodError);
+    await expect(
+      comando.ejecutar({ datosCrudos: { turnoId }, proveedorId }),
+    ).rejects.toBeInstanceOf(ZodError);
     expect(repositorioTurnos.actualizarAsistio).not.toHaveBeenCalled();
   });
 
@@ -58,20 +71,26 @@ describe('ActualizarAsistioTurnoCommand', () => {
     const { repositorioTurnos } = crearFakes({ turnoActual: null });
     const comando = new ActualizarAsistioTurnoCommand(repositorioTurnos);
 
-    await expect(comando.ejecutar({ datosCrudos: { turnoId, asistio: true }, proveedorId })).rejects.toBeInstanceOf(
-      EventoOTurnoNoEncontradoError,
-    );
+    await expect(
+      comando.ejecutar({ datosCrudos: { turnoId, asistio: true }, proveedorId }),
+    ).rejects.toBeInstanceOf(EventoOTurnoNoEncontradoError);
   });
 
   it('rechaza con 403 / PEA-SIS-002 si quien invoca no es el proveedor del turno (ni siquiera el reservante)', async () => {
     const { repositorioTurnos } = crearFakes({
-      turnoActual: { id: turnoId, estado: 'reservado', version: 0, reservadoPor: proveedorId, proveedorId: otroUsuarioId },
+      turnoActual: {
+        id: turnoId,
+        estado: 'reservado',
+        version: 0,
+        reservadoPor: proveedorId,
+        proveedorId: otroUsuarioId,
+      },
     });
     const comando = new ActualizarAsistioTurnoCommand(repositorioTurnos);
 
-    await expect(comando.ejecutar({ datosCrudos: { turnoId, asistio: true }, proveedorId })).rejects.toBeInstanceOf(
-      AccesoNoAutorizadoError,
-    );
+    await expect(
+      comando.ejecutar({ datosCrudos: { turnoId, asistio: true }, proveedorId }),
+    ).rejects.toBeInstanceOf(AccesoNoAutorizadoError);
     expect(repositorioTurnos.actualizarAsistio).not.toHaveBeenCalled();
   });
 
@@ -79,8 +98,8 @@ describe('ActualizarAsistioTurnoCommand', () => {
     const { repositorioTurnos } = crearFakes({ asistioActualizadoDevuelve: false });
     const comando = new ActualizarAsistioTurnoCommand(repositorioTurnos);
 
-    await expect(comando.ejecutar({ datosCrudos: { turnoId, asistio: true }, proveedorId })).rejects.toBeInstanceOf(
-      TurnoAunNoConcluidoError,
-    );
+    await expect(
+      comando.ejecutar({ datosCrudos: { turnoId, asistio: true }, proveedorId }),
+    ).rejects.toBeInstanceOf(TurnoAunNoConcluidoError);
   });
 });

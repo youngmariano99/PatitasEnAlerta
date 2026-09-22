@@ -14,8 +14,11 @@ import { crearClienteSupabaseNavegador } from '@infraestructura/adaptadores/Clie
 // obligatorio (no un simple import estático) para que Next.js no intente
 // renderizarlo en el servidor.
 const SelectorUbicacionMapa = dynamic(
-  () => import('@presentacion/componentes/mapas/SelectorUbicacionMapa').then((mod) => mod.SelectorUbicacionMapa),
-  { ssr: false, loading: () => <p className="text-sm text-slate-400">Cargando mapa…</p> },
+  () =>
+    import('@presentacion/componentes/mapas/SelectorUbicacionMapa').then(
+      (mod) => mod.SelectorUbicacionMapa,
+    ),
+  { ssr: false, loading: () => <p className="text-sm text-text-muted">Cargando mapa…</p> },
 );
 
 // Coordenadas de Coronel Pringles (docs/SCHEMA.md) — centro por defecto del
@@ -48,10 +51,12 @@ interface CopiaPorTipo {
 const COPIA_POR_TIPO: Record<TipoReporte, CopiaPorTipo> = {
   perdido: {
     titulo: 'Reportá tu mascota perdida',
-    bajada: 'Reportar protege. Cuanto antes lo publiques, más vecinos pueden ayudarte a encontrarla.',
+    bajada:
+      'Reportar protege. Cuanto antes lo publiques, más vecinos pueden ayudarte a encontrarla.',
     etiquetaFoto: 'Foto de tu mascota',
     placeholderDescripcion: 'Se perdió cerca de la plaza, responde a su nombre, es muy sociable…',
-    ayudaDescripcion: 'Contá dónde y cuándo la viste por última vez, y cualquier detalle que ayude a reconocerla.',
+    ayudaDescripcion:
+      'Contá dónde y cuándo la viste por última vez, y cualquier detalle que ayude a reconocerla.',
     etiquetaEspecie: 'Especie de tu mascota (opcional)',
   },
   encontrado: {
@@ -59,15 +64,19 @@ const COPIA_POR_TIPO: Record<TipoReporte, CopiaPorTipo> = {
     bajada: 'Gracias por avisar. Publicarlo ayuda a que su familia la encuentre lo antes posible.',
     etiquetaFoto: 'Foto de la mascota que encontraste',
     placeholderDescripcion: 'La encontré deambulando sola cerca de la plaza, parece perdida…',
-    ayudaDescripcion: 'Contá dónde y cuándo la encontraste, y cualquier detalle que ayude a identificarla.',
+    ayudaDescripcion:
+      'Contá dónde y cuándo la encontraste, y cualquier detalle que ayude a identificarla.',
     etiquetaEspecie: 'Especie del animal (opcional)',
   },
   problematica: {
     titulo: 'Reportá una problemática urbana',
-    bajada: 'Municipio recibe tu reporte para actuar sobre animales sueltos, focos sanitarios o accidentes viales.',
+    bajada:
+      'Municipio recibe tu reporte para actuar sobre animales sueltos, focos sanitarios o accidentes viales.',
     etiquetaFoto: 'Foto de la situación',
-    placeholderDescripcion: 'Hay un perro suelto en la esquina, sin dueño a la vista, riesgo para el tránsito…',
-    ayudaDescripcion: 'Contá dónde y cuándo ocurrió, y cualquier detalle que ayude a dimensionar la urgencia.',
+    placeholderDescripcion:
+      'Hay un perro suelto en la esquina, sin dueño a la vista, riesgo para el tránsito…',
+    ayudaDescripcion:
+      'Contá dónde y cuándo ocurrió, y cualquier detalle que ayude a dimensionar la urgencia.',
     etiquetaEspecie: 'Especie del animal involucrado, si aplica (opcional)',
   },
 };
@@ -251,21 +260,25 @@ export function FormularioReporteWizard({ tipoInicial }: FormularioReporteWizard
       setErrorGeneral(cuerpo.mensaje);
       setEnviando(false);
     } catch {
-      setErrorGeneral('No pudimos conectarnos con el servidor. Revisá tu conexión e intentá de nuevo.');
+      setErrorGeneral(
+        'No pudimos conectarnos con el servidor. Revisá tu conexión e intentá de nuevo.',
+      );
       setEnviando(false);
     }
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-12 text-slate-50">
-      <p className="mb-1 text-xs font-medium uppercase tracking-wide text-blue-400">Paso {paso} de 3</p>
+    <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-12 text-text-primary">
+      <p className="mb-1 text-xs font-medium uppercase tracking-wide text-accent">
+        Paso {paso} de 3
+      </p>
       <h1 className="mb-1 text-xl font-semibold">{copia.titulo}</h1>
-      <p className="mb-6 text-sm text-slate-400">{copia.bajada}</p>
+      <p className="mb-6 text-sm text-text-muted">{copia.bajada}</p>
 
       <form onSubmit={manejarEnvio} noValidate className="flex flex-col gap-4">
         {paso === 1 ? (
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="foto" className="text-sm font-medium text-slate-50">
+            <label htmlFor="foto" className="text-sm font-medium text-text-primary">
               {copia.etiquetaFoto}
             </label>
             <input
@@ -273,7 +286,7 @@ export function FormularioReporteWizard({ tipoInicial }: FormularioReporteWizard
               type="file"
               accept="image/*"
               onChange={manejarSeleccionDeImagen}
-              className="text-sm text-slate-400 file:mr-3 file:h-11 file:min-h-[44px] file:rounded-md file:border-0 file:bg-blue-500 file:px-4 file:text-slate-50"
+              className="text-sm text-text-muted file:mr-3 file:h-11 file:min-h-[44px] file:rounded-md file:border-0 file:bg-accent file:px-4 file:text-text-primary"
               aria-invalid={Boolean(errorImagen)}
               aria-describedby={errorImagen ? 'foto-error' : undefined}
             />
@@ -282,12 +295,14 @@ export function FormularioReporteWizard({ tipoInicial }: FormularioReporteWizard
               <img
                 src={previewLocal}
                 alt="Vista previa de la foto del reporte"
-                className="mt-1 h-32 w-32 rounded-md border border-slate-700 object-cover"
+                className="mt-1 h-32 w-32 rounded-md border border-surface2 object-cover"
               />
             ) : null}
-            {estadoImagen === 'subiendo' ? <p className="text-sm text-slate-400">Subiendo imagen…</p> : null}
+            {estadoImagen === 'subiendo' ? (
+              <p className="text-sm text-text-muted">Subiendo imagen…</p>
+            ) : null}
             {errorImagen ? (
-              <p id="foto-error" className="flex items-center gap-1.5 text-sm text-red-500">
+              <p id="foto-error" className="flex items-center gap-1.5 text-sm text-danger">
                 <span aria-hidden="true">⚠️</span>
                 {errorImagen}
               </p>
@@ -299,7 +314,7 @@ export function FormularioReporteWizard({ tipoInicial }: FormularioReporteWizard
           <div className="flex flex-col gap-4">
             {esProblematica ? (
               <div className="flex flex-col gap-1.5">
-                <span className="text-sm font-medium text-slate-50" id="subtipo-label">
+                <span className="text-sm font-medium text-text-primary" id="subtipo-label">
                   ¿De qué se trata?
                 </span>
                 <div
@@ -323,8 +338,8 @@ export function FormularioReporteWizard({ tipoInicial }: FormularioReporteWizard
                         }}
                         className={
                           seleccionado
-                            ? 'h-11 min-h-[44px] rounded-md border border-blue-500 bg-blue-500 px-4 text-[15px] font-medium text-slate-50'
-                            : 'h-11 min-h-[44px] rounded-md border border-slate-700 bg-slate-800 px-4 text-[15px] font-medium text-slate-50'
+                            ? 'h-11 min-h-[44px] rounded-md border border-accent bg-accent px-4 text-[15px] font-medium text-text-primary'
+                            : 'h-11 min-h-[44px] rounded-md border border-surface2 bg-surface1 px-4 text-[15px] font-medium text-text-primary'
                         }
                       >
                         {ETIQUETAS_SUBTIPO[valor]}
@@ -333,7 +348,7 @@ export function FormularioReporteWizard({ tipoInicial }: FormularioReporteWizard
                   })}
                 </div>
                 {errorSubtipo ? (
-                  <p id="subtipo-error" className="flex items-center gap-1.5 text-sm text-red-500">
+                  <p id="subtipo-error" className="flex items-center gap-1.5 text-sm text-danger">
                     <span aria-hidden="true">⚠️</span>
                     {errorSubtipo}
                   </p>
@@ -342,7 +357,7 @@ export function FormularioReporteWizard({ tipoInicial }: FormularioReporteWizard
             ) : null}
 
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="descripcion" className="text-sm font-medium text-slate-50">
+              <label htmlFor="descripcion" className="text-sm font-medium text-text-primary">
                 ¿Qué pasó?
               </label>
               <textarea
@@ -352,13 +367,13 @@ export function FormularioReporteWizard({ tipoInicial }: FormularioReporteWizard
                 placeholder={copia.placeholderDescripcion}
                 value={descripcion}
                 onChange={(evento) => setDescripcion(evento.target.value)}
-                className="rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-[15px] text-slate-50 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="rounded-md border border-surface2 bg-surface1 px-3 py-2 text-[15px] text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-accent"
               />
-              <p className="text-sm text-slate-400">{copia.ayudaDescripcion}</p>
+              <p className="text-sm text-text-muted">{copia.ayudaDescripcion}</p>
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="especie" className="text-sm font-medium text-slate-50">
+              <label htmlFor="especie" className="text-sm font-medium text-text-primary">
                 {copia.etiquetaEspecie}
               </label>
               <input
@@ -368,9 +383,9 @@ export function FormularioReporteWizard({ tipoInicial }: FormularioReporteWizard
                 placeholder="Perro, gato…"
                 value={especie}
                 onChange={(evento) => setEspecie(evento.target.value)}
-                className="h-11 min-h-[44px] rounded-md border border-slate-700 bg-slate-800 px-3 text-[15px] text-slate-50 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="h-11 min-h-[44px] rounded-md border border-surface2 bg-surface1 px-3 text-[15px] text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-accent"
               />
-              <p className="text-sm text-slate-400">
+              <p className="text-sm text-text-muted">
                 Nos ayuda a avisarte automáticamente si aparece un reporte compatible en tu zona.
               </p>
             </div>
@@ -379,18 +394,18 @@ export function FormularioReporteWizard({ tipoInicial }: FormularioReporteWizard
 
         {paso === 3 ? (
           <div className="flex flex-col gap-3">
-            <p className="text-sm font-medium text-slate-50">Ubicación</p>
+            <p className="text-sm font-medium text-text-primary">Ubicación</p>
             {estadoUbicacion === 'buscando' ? (
-              <p className="text-sm text-slate-400">Buscando tu ubicación…</p>
+              <p className="text-sm text-text-muted">Buscando tu ubicación…</p>
             ) : null}
             {estadoUbicacion === 'automatica' && posicion ? (
-              <p className="flex items-center gap-1.5 text-sm text-emerald-500">
+              <p className="flex items-center gap-1.5 text-sm text-success">
                 <span aria-hidden="true">📍</span>
                 Usamos tu ubicación actual. Podés ajustarla tocando el mapa.
               </p>
             ) : null}
             {estadoUbicacion === 'manual' ? (
-              <p className="flex items-center gap-1.5 text-sm text-slate-400">
+              <p className="flex items-center gap-1.5 text-sm text-text-muted">
                 <span aria-hidden="true">🗺️</span>
                 No pudimos obtener tu ubicación automáticamente. Tocá el mapa para marcarla.
               </p>
@@ -407,7 +422,7 @@ export function FormularioReporteWizard({ tipoInicial }: FormularioReporteWizard
         ) : null}
 
         {errorGeneral ? (
-          <p className="flex items-center gap-1.5 text-sm text-red-500">
+          <p className="flex items-center gap-1.5 text-sm text-danger">
             <span aria-hidden="true">⚠️</span>
             {errorGeneral}
           </p>
@@ -419,7 +434,7 @@ export function FormularioReporteWizard({ tipoInicial }: FormularioReporteWizard
               type="button"
               onClick={volverAlPasoAnterior}
               disabled={enviando}
-              className="h-11 min-h-[44px] flex-1 rounded-md border border-slate-600 text-[15px] font-medium text-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+              className="h-11 min-h-[44px] flex-1 rounded-md border border-surface2 text-[15px] font-medium text-text-primary disabled:cursor-not-allowed disabled:opacity-50"
             >
               Atrás
             </button>
@@ -430,7 +445,7 @@ export function FormularioReporteWizard({ tipoInicial }: FormularioReporteWizard
               type="button"
               onClick={irAlPasoSiguiente}
               disabled={estadoImagen === 'subiendo'}
-              className="h-11 min-h-[44px] flex-1 rounded-md bg-blue-500 text-[15px] font-medium text-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+              className="h-11 min-h-[44px] flex-1 rounded-md bg-accent text-[15px] font-medium text-text-primary disabled:cursor-not-allowed disabled:opacity-50"
             >
               Continuar
             </button>
@@ -438,7 +453,7 @@ export function FormularioReporteWizard({ tipoInicial }: FormularioReporteWizard
             <button
               type="submit"
               disabled={enviando || !posicion}
-              className="h-11 min-h-[44px] flex-1 rounded-md bg-blue-500 text-[15px] font-medium text-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+              className="h-11 min-h-[44px] flex-1 rounded-md bg-accent text-[15px] font-medium text-text-primary disabled:cursor-not-allowed disabled:opacity-50"
             >
               {enviando ? 'Publicando…' : 'Publicar reporte'}
             </button>

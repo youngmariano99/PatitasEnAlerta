@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { crearClienteSupabaseNavegador } from '@infraestructura/adaptadores/ClienteSupabaseNavegador';
+import { EncabezadoIlustrado } from '@presentacion/componentes/estado/EncabezadoIlustrado';
 
 const POR_PAGINA = 50;
 
@@ -44,13 +45,17 @@ interface ConfiguracionEstado {
   clases: string;
 }
 
-// Paleta obligatoria del Design System (PLANIFICACION.md Sección 5): solo
-// slate/blue/emerald/red. Cada estado se comunica con ícono + texto, nunca
+// Paleta obligatoria del Design System (docs/DISENO.md): tokens semánticos
+// (surface/accent/danger). Cada estado se comunica con ícono + texto, nunca
 // solo con el color del badge (Paso 3 del ticket).
 const ETIQUETAS_ESTADO: Record<string, ConfiguracionEstado> = {
-  disponible: { texto: 'Disponible', icono: '🕓', clases: 'border-slate-600 bg-slate-800 text-slate-300' },
-  reservado: { texto: 'Reservado', icono: '📅', clases: 'border-blue-500 bg-slate-800 text-blue-400' },
-  cancelado: { texto: 'Cancelado', icono: '❌', clases: 'border-red-500 bg-slate-800 text-red-500' },
+  disponible: {
+    texto: 'Disponible',
+    icono: '🕓',
+    clases: 'border-surface2 bg-surface1 text-text-muted',
+  },
+  reservado: { texto: 'Reservado', icono: '📅', clases: 'border-accent bg-surface1 text-accent' },
+  cancelado: { texto: 'Cancelado', icono: '❌', clases: 'border-danger bg-surface1 text-danger' },
 };
 
 function formatearFranja(iso: string): string {
@@ -105,7 +110,9 @@ export default function MisTurnos() {
     setCargando(true);
     setErrorCarga(null);
     try {
-      const respuesta = await fetch(`/api/turnos/mis-turnos?pagina=${paginaSolicitada}&porPagina=${POR_PAGINA}`);
+      const respuesta = await fetch(
+        `/api/turnos/mis-turnos?pagina=${paginaSolicitada}&porPagina=${POR_PAGINA}`,
+      );
       if (!respuesta.ok) {
         const cuerpo = (await respuesta.json()) as RespuestaError;
         setErrorCarga(cuerpo.mensaje);
@@ -116,7 +123,9 @@ export default function MisTurnos() {
       setTotal(datos.total);
       setPagina(datos.pagina);
     } catch {
-      setErrorCarga('No pudimos conectarnos con el servidor. Revisá tu conexión e intentá de nuevo.');
+      setErrorCarga(
+        'No pudimos conectarnos con el servidor. Revisá tu conexión e intentá de nuevo.',
+      );
     } finally {
       setCargando(false);
     }
@@ -145,7 +154,12 @@ export default function MisTurnos() {
       .channel(`turnos-propios-${usuarioId}`)
       .on(
         'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'turnos', filter: `reservado_por=eq.${usuarioId}` },
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'turnos',
+          filter: `reservado_por=eq.${usuarioId}`,
+        },
         (payload: { new: FilaRealtimeTurno }) => {
           setItems((actuales) => {
             const existente = actuales.find((item) => item.id === payload.new.id);
@@ -170,25 +184,33 @@ export default function MisTurnos() {
   const totalPaginas = Math.max(1, Math.ceil(total / POR_PAGINA));
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-12 text-slate-50">
-      <h1 className="mb-1 text-xl font-semibold">Mis turnos</h1>
-      <p className="mb-6 text-sm text-slate-400">
-        Turnos reservados en operativos municipales y veterinarios. Se actualiza automáticamente si el estado cambia.
-      </p>
+    <main className="mx-auto max-w-3xl px-6 py-12 text-text-primary">
+      <div className="mb-6">
+        <EncabezadoIlustrado
+          imagenSrc="/animales/Datos y turnos del municipio.png"
+          alt="Mascota organizando un calendario de turnos"
+          titulo="Mis turnos"
+          descripcion="Turnos reservados en operativos municipales y veterinarios. Se actualiza automáticamente si el estado cambia."
+        />
+      </div>
 
       {errorCarga ? (
-        <p className="mb-4 flex items-center gap-1.5 text-sm text-red-500">
+        <p className="mb-4 flex items-center gap-1.5 text-sm text-danger">
           <span aria-hidden="true">⚠️</span>
           {errorCarga}
         </p>
       ) : null}
 
-      {cargando ? <p className="text-sm text-slate-400">Cargando…</p> : null}
+      {cargando ? <p className="text-sm text-text-muted">Cargando…</p> : null}
 
       {!cargando && !errorCarga && items.length === 0 ? (
-        <div className="rounded-md border border-dashed border-slate-700 p-8 text-center">
-          <p className="mb-1 text-sm font-medium text-slate-50">Todavía no reservaste ningún turno.</p>
-          <p className="text-sm text-slate-400">Elegí un operativo en el calendario público para reservar el tuyo.</p>
+        <div className="rounded-md border border-dashed border-surface2 p-8 text-center">
+          <p className="mb-1 text-sm font-medium text-text-primary">
+            Todavía no reservaste ningún turno.
+          </p>
+          <p className="text-sm text-text-muted">
+            Elegí un operativo en el calendario público para reservar el tuyo.
+          </p>
         </div>
       ) : null}
 
@@ -198,14 +220,18 @@ export default function MisTurnos() {
             const info = ETIQUETAS_ESTADO[item.estado] ?? {
               texto: item.estado,
               icono: '•',
-              clases: 'border-slate-600 bg-slate-800 text-slate-300',
+              clases: 'border-surface2 bg-surface1 text-text-muted',
             };
             return (
-              <li key={item.id} className="rounded-md border border-slate-700 bg-slate-800/50 p-4">
+              <li key={item.id} className="rounded-md border border-surface2 bg-surface1/50 p-4">
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div>
-                    <p className="text-sm font-medium text-slate-50">{item.eventoTitulo ?? 'Turno veterinario'}</p>
-                    <p className="mt-1 font-mono text-xs text-slate-400">{formatearFranja(item.franjaInicio)}</p>
+                    <p className="text-sm font-medium text-text-primary">
+                      {item.eventoTitulo ?? 'Turno veterinario'}
+                    </p>
+                    <p className="mt-1 font-mono text-xs text-text-muted">
+                      {formatearFranja(item.franjaInicio)}
+                    </p>
                   </div>
                   <span
                     role="status"
@@ -222,12 +248,12 @@ export default function MisTurnos() {
       ) : null}
 
       {total > POR_PAGINA ? (
-        <div className="mt-6 flex items-center justify-between text-sm text-slate-400">
+        <div className="mt-6 flex items-center justify-between text-sm text-text-muted">
           <button
             type="button"
             onClick={() => cargarPagina(pagina - 1)}
             disabled={pagina <= 1 || cargando}
-            className="h-11 min-h-[44px] rounded-md border border-slate-600 px-4 disabled:cursor-not-allowed disabled:opacity-50"
+            className="h-11 min-h-[44px] rounded-md border border-surface2 px-4 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Anterior
           </button>
@@ -238,7 +264,7 @@ export default function MisTurnos() {
             type="button"
             onClick={() => cargarPagina(pagina + 1)}
             disabled={pagina >= totalPaginas || cargando}
-            className="h-11 min-h-[44px] rounded-md border border-slate-600 px-4 disabled:cursor-not-allowed disabled:opacity-50"
+            className="h-11 min-h-[44px] rounded-md border border-surface2 px-4 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Siguiente
           </button>

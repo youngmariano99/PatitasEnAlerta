@@ -115,4 +115,21 @@ export class PrismaSolicitudesRecursoRepositorio implements IRepositorioSolicitu
 
     return { items, total, pagina, porPagina };
   }
+
+  async listarAbiertas(pagina: number, porPagina: number): Promise<PaginaSolicitudesVeterinarias> {
+    const where = { estado: ESTADO_ABIERTA, deletedAt: null };
+
+    const [items, total] = await Promise.all([
+      prisma.solicitudRecurso.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (pagina - 1) * porPagina,
+        take: porPagina,
+        select: SELECT_SOLICITUD,
+      }),
+      prisma.solicitudRecurso.count({ where }),
+    ]);
+
+    return { items, total, pagina, porPagina };
+  }
 }

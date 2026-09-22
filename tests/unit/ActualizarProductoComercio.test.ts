@@ -16,13 +16,21 @@ const usuarioId = '11111111-1111-1111-1111-111111111111';
 const comercioId = '22222222-2222-2222-2222-222222222222';
 const otroComercioId = '44444444-4444-4444-4444-444444444444';
 
-const datosValidos = { nombre: 'Correa reforzada', descripcion: '<b>Resistente</b>', categoria: 'accesorios', precio: 3500 };
+const datosValidos = {
+  nombre: 'Correa reforzada',
+  descripcion: '<b>Resistente</b>',
+  categoria: 'accesorios',
+  precio: 3500,
+};
 
 function crearActual(comercioIdDelProducto = comercioId): ProductoComercioActual {
   return { id: productoId, comercioId: comercioIdDelProducto };
 }
 
-function crearFakes(opciones?: { actual?: ProductoComercioActual | null; comercio?: ComercioPropio | null }) {
+function crearFakes(opciones?: {
+  actual?: ProductoComercioActual | null;
+  comercio?: ComercioPropio | null;
+}) {
   const productoActualizado: ProductoComercio = {
     id: productoId,
     comercioId,
@@ -34,13 +42,22 @@ function crearFakes(opciones?: { actual?: ProductoComercioActual | null; comerci
   };
   const repositorioProductos: jest.Mocked<IRepositorioProductosComercio> = {
     crear: jest.fn(),
-    obtenerActual: jest.fn().mockResolvedValue(opciones?.actual === undefined ? crearActual() : opciones.actual),
+    obtenerActual: jest
+      .fn()
+      .mockResolvedValue(opciones?.actual === undefined ? crearActual() : opciones.actual),
     actualizar: jest.fn().mockResolvedValue(productoActualizado),
     darDeBaja: jest.fn(),
+    listarPorComercio: jest.fn(),
   };
   const repositorioComercios: jest.Mocked<IRepositorioComercios> = {
     crear: jest.fn(),
-    obtenerPropio: jest.fn().mockResolvedValue(opciones?.comercio === undefined ? { id: comercioId, estadoVerificacion: 'verificado' } : opciones.comercio),
+    obtenerPropio: jest
+      .fn()
+      .mockResolvedValue(
+        opciones?.comercio === undefined
+          ? { id: comercioId, estadoVerificacion: 'verificado' }
+          : opciones.comercio,
+      ),
     listarVerificados: jest.fn(),
   };
   return { repositorioProductos, repositorioComercios, productoActualizado };
@@ -73,10 +90,14 @@ describe('ActualizarProductoComercio', () => {
   });
 
   it('AC: rechaza con 403 / PEA-SIS-002 cuando el producto pertenece a otro comercio', async () => {
-    const { repositorioProductos, repositorioComercios } = crearFakes({ actual: crearActual(otroComercioId) });
+    const { repositorioProductos, repositorioComercios } = crearFakes({
+      actual: crearActual(otroComercioId),
+    });
     const caso = new ActualizarProductoComercio(repositorioProductos, repositorioComercios);
 
-    await expect(caso.ejecutar({ datosCrudos: datosValidos, productoId, usuarioId })).rejects.toBeInstanceOf(AccesoNoAutorizadoError);
+    await expect(
+      caso.ejecutar({ datosCrudos: datosValidos, productoId, usuarioId }),
+    ).rejects.toBeInstanceOf(AccesoNoAutorizadoError);
     expect(repositorioProductos.actualizar).not.toHaveBeenCalled();
   });
 
@@ -84,14 +105,18 @@ describe('ActualizarProductoComercio', () => {
     const { repositorioProductos, repositorioComercios } = crearFakes({ comercio: null });
     const caso = new ActualizarProductoComercio(repositorioProductos, repositorioComercios);
 
-    await expect(caso.ejecutar({ datosCrudos: datosValidos, productoId, usuarioId })).rejects.toBeInstanceOf(AccesoNoAutorizadoError);
+    await expect(
+      caso.ejecutar({ datosCrudos: datosValidos, productoId, usuarioId }),
+    ).rejects.toBeInstanceOf(AccesoNoAutorizadoError);
   });
 
   it('responde 404 / PEA-COM-004 si el producto no existe', async () => {
     const { repositorioProductos, repositorioComercios } = crearFakes({ actual: null });
     const caso = new ActualizarProductoComercio(repositorioProductos, repositorioComercios);
 
-    await expect(caso.ejecutar({ datosCrudos: datosValidos, productoId, usuarioId })).rejects.toBeInstanceOf(ProductoComercioNoEncontradoError);
+    await expect(
+      caso.ejecutar({ datosCrudos: datosValidos, productoId, usuarioId }),
+    ).rejects.toBeInstanceOf(ProductoComercioNoEncontradoError);
   });
 
   it('responde 404 / PEA-COM-004 si el UPDATE condicionado no afecta ninguna fila (carrera entre autorizar y persistir)', async () => {
@@ -99,6 +124,8 @@ describe('ActualizarProductoComercio', () => {
     repositorioProductos.actualizar.mockResolvedValue(null);
     const caso = new ActualizarProductoComercio(repositorioProductos, repositorioComercios);
 
-    await expect(caso.ejecutar({ datosCrudos: datosValidos, productoId, usuarioId })).rejects.toBeInstanceOf(ProductoComercioNoEncontradoError);
+    await expect(
+      caso.ejecutar({ datosCrudos: datosValidos, productoId, usuarioId }),
+    ).rejects.toBeInstanceOf(ProductoComercioNoEncontradoError);
   });
 });

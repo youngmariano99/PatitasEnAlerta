@@ -1,10 +1,18 @@
 import 'reflect-metadata';
 import { injectable, inject } from 'tsyringe';
 import { CasoDeUsoBase } from '@aplicacion/casos-de-uso/CasoDeUsoBase';
-import { ReservarTurnoSchema, type ComandoReservarTurno, type TurnoReservadoDto } from '@aplicacion/dtos/turnos/ReservarTurnoDto';
+import {
+  ReservarTurnoSchema,
+  type ComandoReservarTurno,
+  type TurnoReservadoDto,
+} from '@aplicacion/dtos/turnos/ReservarTurnoDto';
 import type { IRepositorioTurnos } from '@dominio/puertos/IRepositorioTurnos';
 import type { INotificacionesRepositorio } from '@dominio/puertos/INotificacionesRepositorio';
-import { EventoOTurnoNoEncontradoError, TurnoYaReservadoError } from '@dominio/errores/erroresMunicipio';
+import {
+  EventoOTurnoNoEncontradoError,
+  TurnoYaReservadoError,
+} from '@dominio/errores/erroresMunicipio';
+import { conTraza } from '@infraestructura/observabilidad/trazas';
 import { logger } from '@infraestructura/logging/logger';
 
 /** Payload crudo del cliente + quién reserva, resuelto por el route handler desde la sesión. */
@@ -48,10 +56,15 @@ export interface EntradaReservarTurno {
  * debe hacer parecer fallida una reserva que en los hechos sí se aplicó.
  */
 @injectable()
-export class ReservarTurnoCommand extends CasoDeUsoBase<EntradaReservarTurno, TurnoReservadoDto, ComandoReservarTurno> {
+export class ReservarTurnoCommand extends CasoDeUsoBase<
+  EntradaReservarTurno,
+  TurnoReservadoDto,
+  ComandoReservarTurno
+> {
   constructor(
     @inject('IRepositorioTurnos') private readonly repositorioTurnos: IRepositorioTurnos,
-    @inject('INotificacionesRepositorio') private readonly repositorioNotificaciones: INotificacionesRepositorio,
+    @inject('INotificacionesRepositorio')
+    private readonly repositorioNotificaciones: INotificacionesRepositorio,
   ) {
     super();
   }
@@ -66,17 +79,26 @@ export class ReservarTurnoCommand extends CasoDeUsoBase<EntradaReservarTurno, Tu
   }
 
   protected async persistir(dato: ComandoReservarTurno): Promise<TurnoReservadoDto> {
-    const actual = await this.repositorioTurnos.obtenerActual(dato.turnoId);
-    if (!actual) {
-      throw new EventoOTurnoNoEncontradoError();
-    }
+    // Flujo crítico instrumentado (docs/REQUISITOS.md, NFR de
+    // Trazabilidad): "reserva de turno" — ver
+    // src/infraestructura/observabilidad/trazas.ts.
+    return conTraza('turnos.reservar', { turnoId: dato.turnoId }, async () => {
+      const actual = await this.repositorioTurnos.obtenerActual(dato.turnoId);
+      if (!actual) {
+        throw new EventoOTurnoNoEncontradoError();
+      }
 
-    const reservado = await this.repositorioTurnos.reservar(dato.turnoId, dato.reservadoPor, actual.version);
-    if (!reservado) {
-      throw new TurnoYaReservadoError();
-    }
+      const reservado = await this.repositorioTurnos.reservar(
+        dato.turnoId,
+        dato.reservadoPor,
+        actual.version,
+      );
+      if (!reservado) {
+        throw new TurnoYaReservadoError();
+      }
 
-    return reservado;
+      return reservado;
+    });
   }
 
   protected override async publicarEvento(resultado: TurnoReservadoDto): Promise<void> {

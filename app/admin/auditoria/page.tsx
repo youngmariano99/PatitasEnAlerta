@@ -53,7 +53,9 @@ export default function PaginaHistorialAuditoria() {
     setCargando(true);
     setErrorCarga(null);
     try {
-      const respuesta = await fetch(`/api/admin/auditoria?pagina=${paginaSolicitada}&porPagina=${POR_PAGINA}`);
+      const respuesta = await fetch(
+        `/api/admin/auditoria?pagina=${paginaSolicitada}&porPagina=${POR_PAGINA}`,
+      );
       if (respuesta.status === 401 || respuesta.status === 403) {
         setErrorCarga('No tenés permiso para ver este panel.');
         return;
@@ -63,12 +65,18 @@ export default function PaginaHistorialAuditoria() {
         setErrorCarga(cuerpo.mensaje);
         return;
       }
-      const datos = (await respuesta.json()) as { items: FilaHistorialApi[]; total: number; pagina: number };
+      const datos = (await respuesta.json()) as {
+        items: FilaHistorialApi[];
+        total: number;
+        pagina: number;
+      };
       setFilas(datos.items);
       setTotal(datos.total);
       setPagina(datos.pagina);
     } catch {
-      setErrorCarga('No pudimos conectarnos con el servidor. Revisá tu conexión e intentá de nuevo.');
+      setErrorCarga(
+        'No pudimos conectarnos con el servidor. Revisá tu conexión e intentá de nuevo.',
+      );
     } finally {
       setCargando(false);
     }
@@ -82,8 +90,8 @@ export default function PaginaHistorialAuditoria() {
 
   if (errorCarga) {
     return (
-      <main className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center px-6 py-12 text-slate-50">
-        <p className="flex items-center gap-1.5 text-sm text-red-500">
+      <main className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center px-6 py-12 text-text-primary">
+        <p className="flex items-center gap-1.5 text-sm text-danger">
           <span aria-hidden="true">⚠️</span>
           {errorCarga}
         </p>
@@ -92,26 +100,26 @@ export default function PaginaHistorialAuditoria() {
   }
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-12 text-slate-50">
+    <main className="mx-auto max-w-5xl px-6 py-12 text-text-primary">
       <h1 className="mb-1 text-xl font-semibold">Historial de auditoría</h1>
-      <p className="mb-6 text-sm text-slate-400">
-        Registro de solo lectura de las verificaciones ya resueltas. Ninguna acción de esta vista modifica el
-        historial.
+      <p className="mb-6 text-sm text-text-muted">
+        Registro de solo lectura de las verificaciones ya resueltas. Ninguna acción de esta vista
+        modifica el historial.
       </p>
 
-      {cargando ? <p className="text-sm text-slate-400">Cargando…</p> : null}
+      {cargando ? <p className="text-sm text-text-muted">Cargando…</p> : null}
 
       {!cargando && filas.length === 0 ? (
-        <div className="rounded-md border border-dashed border-slate-700 p-6 text-center text-sm text-slate-400">
+        <div className="rounded-md border border-dashed border-surface2 p-6 text-center text-sm text-text-muted">
           Todavía no hay verificaciones resueltas.
         </div>
       ) : null}
 
       {!cargando && filas.length > 0 ? (
-        <div className="overflow-x-auto rounded-md border border-slate-700">
+        <div className="overflow-x-auto rounded-md border border-surface2">
           <table className="w-full min-w-[860px] border-collapse text-left text-sm">
             <thead>
-              <tr className="border-b border-slate-700 bg-slate-800 text-xs uppercase tracking-wide text-slate-400">
+              <tr className="border-b border-surface2 bg-surface1 text-xs uppercase tracking-wide text-text-muted">
                 <th scope="col" className="px-4 py-3 font-medium">
                   Solicitante
                 </th>
@@ -137,29 +145,35 @@ export default function PaginaHistorialAuditoria() {
             </thead>
             <tbody>
               {filas.map((fila) => (
-                <tr key={fila.id} className="border-b border-slate-800 last:border-b-0">
+                <tr key={fila.id} className="border-b border-surface2 last:border-b-0">
                   <td className="px-4 py-3">
-                    <p className="font-medium text-slate-50">{fila.email}</p>
-                    <p className="text-xs text-slate-400">{detalleSolicitante(fila)}</p>
+                    <p className="font-medium text-text-primary">{fila.email}</p>
+                    <p className="text-xs text-text-muted">{detalleSolicitante(fila)}</p>
                   </td>
-                  <td className="px-4 py-3 text-slate-300">{fila.tipo}</td>
+                  <td className="px-4 py-3 text-text-muted">{fila.tipo}</td>
                   <td className="px-4 py-3">
                     {fila.estado === 'aprobado' ? (
-                      <span className="flex items-center gap-1.5 text-emerald-500">
+                      <span className="flex items-center gap-1.5 text-success">
                         <span aria-hidden="true">✓</span>
                         Aprobado
                       </span>
                     ) : (
-                      <span className="flex items-center gap-1.5 text-red-500">
+                      <span className="flex items-center gap-1.5 text-danger">
                         <span aria-hidden="true">✕</span>
                         Rechazado
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-slate-300">{fila.motivoRechazo ?? '—'}</td>
-                  <td className="px-4 py-3 font-mono text-xs text-slate-400">{fila.revisadoPor ?? '—'}</td>
-                  <td className="px-4 py-3 font-mono text-xs text-slate-400">{formatearFecha(fila.resueltoEn)}</td>
-                  <td className="px-4 py-3 font-mono text-xs text-slate-400">{formatearFecha(fila.createdAt)}</td>
+                  <td className="px-4 py-3 text-text-muted">{fila.motivoRechazo ?? '—'}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-text-muted">
+                    {fila.revisadoPor ?? '—'}
+                  </td>
+                  <td className="px-4 py-3 font-mono text-xs text-text-muted">
+                    {formatearFecha(fila.resueltoEn)}
+                  </td>
+                  <td className="px-4 py-3 font-mono text-xs text-text-muted">
+                    {formatearFecha(fila.createdAt)}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -168,12 +182,12 @@ export default function PaginaHistorialAuditoria() {
       ) : null}
 
       {total > POR_PAGINA ? (
-        <div className="mt-6 flex items-center justify-between text-sm text-slate-400">
+        <div className="mt-6 flex items-center justify-between text-sm text-text-muted">
           <button
             type="button"
             onClick={() => cargarPagina(pagina - 1)}
             disabled={pagina <= 1 || cargando}
-            className="h-11 min-h-[44px] rounded-md border border-slate-600 px-4 disabled:cursor-not-allowed disabled:opacity-50"
+            className="h-11 min-h-[44px] rounded-md border border-surface2 px-4 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Anterior
           </button>
@@ -184,7 +198,7 @@ export default function PaginaHistorialAuditoria() {
             type="button"
             onClick={() => cargarPagina(pagina + 1)}
             disabled={pagina >= totalPaginas || cargando}
-            className="h-11 min-h-[44px] rounded-md border border-slate-600 px-4 disabled:cursor-not-allowed disabled:opacity-50"
+            className="h-11 min-h-[44px] rounded-md border border-surface2 px-4 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Siguiente
           </button>

@@ -15,7 +15,13 @@ const datosValidos = {
 };
 
 function crearPerfil(rol: string): ResumenPerfilPropio {
-  return { id: usuarioId, email: 'organizacion@ejemplo.test', rol, estadoVerificacion: 'verificado', verificadoEn: new Date() };
+  return {
+    id: usuarioId,
+    email: 'organizacion@ejemplo.test',
+    rol,
+    estadoVerificacion: 'verificado',
+    verificadoEn: new Date(),
+  };
 }
 
 function crearFakes(opciones?: { rol?: string }) {
@@ -29,6 +35,7 @@ function crearFakes(opciones?: { rol?: string }) {
   };
   const repositorioCursos: jest.Mocked<IRepositorioCursos> = {
     crear: jest.fn().mockResolvedValue(cursoCreado),
+    listar: jest.fn(),
   };
   const repositorioPerfil: jest.Mocked<IRepositorioPerfil> = {
     obtenerPerfilPropio: jest.fn().mockResolvedValue(crearPerfil(opciones?.rol ?? 'organizacion')),
@@ -37,19 +44,22 @@ function crearFakes(opciones?: { rol?: string }) {
 }
 
 describe('PublicarCurso', () => {
-  it.each(['organizacion', 'municipio'])('Paso 1: publica el curso cuando quien invoca tiene rol %s', async (rol) => {
-    const { repositorioCursos, repositorioPerfil } = crearFakes({ rol });
-    const caso = new PublicarCurso(repositorioCursos, repositorioPerfil);
+  it.each(['organizacion', 'municipio'])(
+    'Paso 1: publica el curso cuando quien invoca tiene rol %s',
+    async (rol) => {
+      const { repositorioCursos, repositorioPerfil } = crearFakes({ rol });
+      const caso = new PublicarCurso(repositorioCursos, repositorioPerfil);
 
-    const resultado = await caso.ejecutar({ datosCrudos: datosValidos, usuarioId });
+      const resultado = await caso.ejecutar({ datosCrudos: datosValidos, usuarioId });
 
-    expect(resultado.publicadoPor).toBe(usuarioId);
-    expect(repositorioCursos.crear).toHaveBeenCalledWith(usuarioId, {
-      titulo: datosValidos.titulo,
-      descripcion: 'Curso introductorio orientado a tutores de mascotas.',
-      contenidoUrl: datosValidos.contenidoUrl,
-    });
-  });
+      expect(resultado.publicadoPor).toBe(usuarioId);
+      expect(repositorioCursos.crear).toHaveBeenCalledWith(usuarioId, {
+        titulo: datosValidos.titulo,
+        descripcion: 'Curso introductorio orientado a tutores de mascotas.',
+        contenidoUrl: datosValidos.contenidoUrl,
+      });
+    },
+  );
 
   it('Paso 2: rechaza con Zod (400) un contenidoUrl mal formado', async () => {
     const { repositorioCursos, repositorioPerfil } = crearFakes();
@@ -78,7 +88,9 @@ describe('PublicarCurso', () => {
       const { repositorioCursos, repositorioPerfil } = crearFakes({ rol });
       const caso = new PublicarCurso(repositorioCursos, repositorioPerfil);
 
-      await expect(caso.ejecutar({ datosCrudos: datosValidos, usuarioId })).rejects.toBeInstanceOf(AccesoNoAutorizadoError);
+      await expect(caso.ejecutar({ datosCrudos: datosValidos, usuarioId })).rejects.toBeInstanceOf(
+        AccesoNoAutorizadoError,
+      );
       expect(repositorioCursos.crear).not.toHaveBeenCalled();
     },
   );

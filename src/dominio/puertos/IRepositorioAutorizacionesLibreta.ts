@@ -26,7 +26,10 @@ export interface IRepositorioAutorizacionesLibreta {
    * `null`, el acceso está actualmente revocado (PEA-VET-004) aunque haya
    * habido una autorización activa en el pasado.
    */
-  obtenerActual(mascotaId: string, veterinarioId: string): Promise<AutorizacionLibretaPersistida | null>;
+  obtenerActual(
+    mascotaId: string,
+    veterinarioId: string,
+  ): Promise<AutorizacionLibretaPersistida | null>;
 
   /**
    * Inserta una nueva fila de autorización (nunca upsert): `ux_autorizacion_activa`
@@ -47,4 +50,6 @@ export interface IRepositorioAutorizacionesLibreta {
 
   /** Historial completo (vigentes y revocadas) de una mascota, más reciente primero — auditoría exigida por VET-05. */
   listarPorMascota(mascotaId: string): Promise<AutorizacionLibretaPersistida[]>;
+  /** Autorizaciones vigentes (`revocadaEn IS NULL`) de un veterinario — "mis pacientes" (Módulo 4). */
+  listarVigentesPorVeterinario(veterinarioId: string): Promise<AutorizacionLibretaPersistida[]>;
 }

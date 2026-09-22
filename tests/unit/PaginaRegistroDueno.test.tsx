@@ -65,7 +65,10 @@ describe('PaginaRegistroDueno (app/auth/registro)', () => {
     await usuario.click(screen.getByRole('button', { name: 'Crear cuenta' }));
 
     expect(await screen.findByText(/Ya existe una cuenta con ese email/)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Iniciar sesión' })).toHaveAttribute('href', '/auth/login');
+    expect(screen.getByRole('link', { name: 'Iniciar sesión' })).toHaveAttribute(
+      'href',
+      '/auth/login',
+    );
     expect(screen.getByRole('link', { name: 'Recuperar contraseña' })).toHaveAttribute(
       'href',
       '/auth/recuperar-password',
@@ -93,7 +96,9 @@ describe('PaginaRegistroDueno (app/auth/registro)', () => {
     await usuario.click(screen.getByRole('button', { name: 'Crear cuenta' }));
 
     expect(await screen.findByText(/No pudimos conectarnos con el servidor/)).toBeInTheDocument();
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Crear cuenta' })).not.toBeDisabled());
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Crear cuenta' })).not.toBeDisabled(),
+    );
   });
 
   it('al elegir "Veterinario/a" muestra los campos de matrícula y colegio emisor (PerfilFormularioFactory, AC1)', async () => {
@@ -112,7 +117,13 @@ describe('PaginaRegistroDueno (app/auth/registro)', () => {
   it('registra un veterinario con éxito enviando rol=veterinario y los campos de matrícula', async () => {
     mockearFetch({
       status: 201,
-      body: { id: '1', email: 'vet@ejemplo.test', matricula: 'MP-1001', colegioEmisor: 'Colegio X', estadoVerificacion: 'pendiente' },
+      body: {
+        id: '1',
+        email: 'vet@ejemplo.test',
+        matricula: 'MP-1001',
+        colegioEmisor: 'Colegio X',
+        estadoVerificacion: 'pendiente',
+      },
     });
     const usuario = userEvent.setup();
     render(<PaginaRegistroDueno />);
@@ -138,7 +149,10 @@ describe('PaginaRegistroDueno (app/auth/registro)', () => {
   it('resalta matrícula y colegio emisor ante un conflicto de unicidad (409 / PEA-AUTH-006)', async () => {
     mockearFetch({
       status: 409,
-      body: { codigo: 'PEA-AUTH-006', mensaje: 'Ya existe una matrícula registrada con esos datos para este colegio.' },
+      body: {
+        codigo: 'PEA-AUTH-006',
+        mensaje: 'Ya existe una matrícula registrada con esos datos para este colegio.',
+      },
     });
     const usuario = userEvent.setup();
     render(<PaginaRegistroDueno />);
@@ -154,12 +168,15 @@ describe('PaginaRegistroDueno (app/auth/registro)', () => {
       'Ya existe una matrícula registrada con esos datos para este colegio. Verificá el número ingresado.',
     );
     expect(mensajes).toHaveLength(2);
-    expect(screen.getByLabelText('Matrícula profesional')).toHaveClass('border-red-500');
-    expect(screen.getByLabelText('Colegio que emitió tu matrícula')).toHaveClass('border-red-500');
+    expect(screen.getByLabelText('Matrícula profesional')).toHaveClass('border-danger');
+    expect(screen.getByLabelText('Colegio que emitió tu matrícula')).toHaveClass('border-danger');
   });
 
   it('cambiar de rol limpia los errores de duplicado mostrados previamente', async () => {
-    mockearFetch({ status: 409, body: { codigo: 'PEA-AUTH-001', mensaje: 'Ya existe una cuenta con ese email.' } });
+    mockearFetch({
+      status: 409,
+      body: { codigo: 'PEA-AUTH-001', mensaje: 'Ya existe una cuenta con ese email.' },
+    });
     render(<PaginaRegistroDueno />);
     const usuario = await completarFormularioValido();
     await usuario.click(screen.getByRole('button', { name: 'Crear cuenta' }));

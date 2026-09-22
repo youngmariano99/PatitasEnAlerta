@@ -37,9 +37,13 @@ function CapturadorDeClicks({ onSeleccionar }: Pick<SelectorUbicacionMapaProps, 
  * automática. Un click sobre el mapa mueve el pin y reporta la coordenada;
  * nunca bloquea el resto del formulario.
  */
-export function SelectorUbicacionMapa({ centro, posicion, onSeleccionar }: SelectorUbicacionMapaProps) {
+export function SelectorUbicacionMapa({
+  centro,
+  posicion,
+  onSeleccionar,
+}: SelectorUbicacionMapaProps) {
   return (
-    <div className="overflow-hidden rounded-md border border-slate-700">
+    <div className="overflow-hidden rounded-md border border-surface2">
       <MapContainer center={centro} zoom={13} style={{ height: 260, width: '100%' }}>
         <TileLayer
           attribution='&copy; colaboradores de <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'

@@ -87,3 +87,23 @@ jobs:
           DATABASE_URL: postgresql://patitas:placeholder@localhost:5432/placeholder
           NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: placeholder
           NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET: placeholder
+
+  e2e:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npx playwright install --with-deps chromium
+      - name: Ejecutar E2E de flujos críticos (Supabase Auth simulado, ver playwright.config.ts)
+        run: npx playwright test --project=chromium
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/

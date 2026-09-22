@@ -3,8 +3,14 @@
  */
 import { ZodError } from 'zod';
 import { RegistrarEntradaLibreta } from '@aplicacion/casos-de-uso/veterinarios/RegistrarEntradaLibreta';
-import type { AutorizacionLibretaPersistida, IRepositorioAutorizacionesLibreta } from '@dominio/puertos/IRepositorioAutorizacionesLibreta';
-import type { EntradaLibretaPersistida, IRepositorioEntradasLibreta } from '@dominio/puertos/IRepositorioEntradasLibreta';
+import type {
+  AutorizacionLibretaPersistida,
+  IRepositorioAutorizacionesLibreta,
+} from '@dominio/puertos/IRepositorioAutorizacionesLibreta';
+import type {
+  EntradaLibretaPersistida,
+  IRepositorioEntradasLibreta,
+} from '@dominio/puertos/IRepositorioEntradasLibreta';
 import type { IRepositorioMascotas } from '@dominio/puertos/IRepositorioMascotas';
 import type { IRepositorioPerfil, ResumenPerfilPropio } from '@dominio/puertos/IRepositorioPerfil';
 import { Mascota } from '@dominio/entidades/Mascota';
@@ -62,10 +68,15 @@ function crearFakes(opciones?: {
   autorizacion?: AutorizacionLibretaPersistida | null;
 }) {
   const repositorioAutorizaciones: jest.Mocked<IRepositorioAutorizacionesLibreta> = {
-    obtenerActual: jest.fn().mockResolvedValue(opciones?.autorizacion === undefined ? autorizacionActiva : opciones.autorizacion),
+    obtenerActual: jest
+      .fn()
+      .mockResolvedValue(
+        opciones?.autorizacion === undefined ? autorizacionActiva : opciones.autorizacion,
+      ),
     crear: jest.fn(),
     revocar: jest.fn(),
     listarPorMascota: jest.fn(),
+    listarVigentesPorVeterinario: jest.fn(),
   };
   const repositorioEntradas: jest.Mocked<IRepositorioEntradasLibreta> = {
     crear: jest.fn().mockResolvedValue(entradaPersistida),
@@ -73,7 +84,11 @@ function crearFakes(opciones?: {
   };
   const repositorioMascotas: jest.Mocked<IRepositorioMascotas> = {
     crear: jest.fn(),
-    buscarPorId: jest.fn().mockResolvedValue(opciones?.mascotaEncontrada === undefined ? mascota : opciones.mascotaEncontrada),
+    buscarPorId: jest
+      .fn()
+      .mockResolvedValue(
+        opciones?.mascotaEncontrada === undefined ? mascota : opciones.mascotaEncontrada,
+      ),
     listarPorDueño: jest.fn(),
     actualizar: jest.fn(),
     darDeBaja: jest.fn(),
@@ -81,7 +96,9 @@ function crearFakes(opciones?: {
   const repositorioPerfil: jest.Mocked<IRepositorioPerfil> = {
     obtenerPerfilPropio: jest
       .fn()
-      .mockResolvedValue(opciones?.perfil === undefined ? perfilVeterinarioVerificado : opciones.perfil),
+      .mockResolvedValue(
+        opciones?.perfil === undefined ? perfilVeterinarioVerificado : opciones.perfil,
+      ),
   };
   return { repositorioAutorizaciones, repositorioEntradas, repositorioMascotas, repositorioPerfil };
 }
@@ -108,13 +125,19 @@ describe('RegistrarEntradaLibreta', () => {
 
     const resultado = await caso.ejecutar(entradaCruda);
 
-    expect(fakes.repositorioAutorizaciones.obtenerActual).toHaveBeenCalledWith(mascotaId, veterinarioId);
+    expect(fakes.repositorioAutorizaciones.obtenerActual).toHaveBeenCalledWith(
+      mascotaId,
+      veterinarioId,
+    );
     expect(fakes.repositorioEntradas.crear).toHaveBeenCalledWith(mascotaId, veterinarioId, {
       tipo: 'vacuna',
       descripcion: 'Vacuna antirrábica aplicada, sin reacciones adversas.',
       fecha: '2026-09-08',
     });
-    expect(resultado).toEqual({ ...entradaPersistida, createdAt: entradaPersistida.createdAt.toISOString() });
+    expect(resultado).toEqual({
+      ...entradaPersistida,
+      createdAt: entradaPersistida.createdAt.toISOString(),
+    });
   });
 
   it('rechaza fail-fast (Zod) un tipo fuera del enum soportado mapeándolo a PEA-VET-006', async () => {
@@ -127,7 +150,10 @@ describe('RegistrarEntradaLibreta', () => {
     );
 
     await expect(
-      caso.ejecutar({ ...entradaCruda, datosCrudos: { ...entradaCruda.datosCrudos, tipo: 'cirugia' } }),
+      caso.ejecutar({
+        ...entradaCruda,
+        datosCrudos: { ...entradaCruda.datosCrudos, tipo: 'cirugia' },
+      }),
     ).rejects.toBeInstanceOf(TipoEntradaInvalidoError);
     expect(fakes.repositorioPerfil.obtenerPerfilPropio).not.toHaveBeenCalled();
   });
@@ -142,7 +168,10 @@ describe('RegistrarEntradaLibreta', () => {
     );
 
     await expect(
-      caso.ejecutar({ ...entradaCruda, datosCrudos: { ...entradaCruda.datosCrudos, fecha: '08-09-2026' } }),
+      caso.ejecutar({
+        ...entradaCruda,
+        datosCrudos: { ...entradaCruda.datosCrudos, fecha: '08-09-2026' },
+      }),
     ).rejects.toBeInstanceOf(ZodError);
   });
 
@@ -160,7 +189,9 @@ describe('RegistrarEntradaLibreta', () => {
   });
 
   it('rechaza con PEA-VET-007 si la matrícula del veterinario no está verificada', async () => {
-    const fakes = crearFakes({ perfil: { ...perfilVeterinarioVerificado, estadoVerificacion: 'pendiente' } });
+    const fakes = crearFakes({
+      perfil: { ...perfilVeterinarioVerificado, estadoVerificacion: 'pendiente' },
+    });
     const caso = new RegistrarEntradaLibreta(
       fakes.repositorioAutorizaciones,
       fakes.repositorioEntradas,
@@ -168,7 +199,9 @@ describe('RegistrarEntradaLibreta', () => {
       fakes.repositorioPerfil,
     );
 
-    await expect(caso.ejecutar(entradaCruda)).rejects.toBeInstanceOf(CuentaVeterinariaNoVerificadaError);
+    await expect(caso.ejecutar(entradaCruda)).rejects.toBeInstanceOf(
+      CuentaVeterinariaNoVerificadaError,
+    );
     expect(fakes.repositorioMascotas.buscarPorId).not.toHaveBeenCalled();
   });
 
@@ -209,7 +242,9 @@ describe('RegistrarEntradaLibreta', () => {
       fakes.repositorioPerfil,
     );
 
-    await expect(caso.ejecutar(entradaCruda)).rejects.toBeInstanceOf(AutorizacionLibretaRevocadaError);
+    await expect(caso.ejecutar(entradaCruda)).rejects.toBeInstanceOf(
+      AutorizacionLibretaRevocadaError,
+    );
     expect(fakes.repositorioEntradas.crear).not.toHaveBeenCalled();
   });
 });

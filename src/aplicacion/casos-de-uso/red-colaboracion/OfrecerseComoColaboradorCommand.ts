@@ -1,11 +1,15 @@
 import 'reflect-metadata';
 import { injectable, inject } from 'tsyringe';
+import { Prisma } from '@prisma/client';
 import { CasoDeUsoBase } from '@aplicacion/casos-de-uso/CasoDeUsoBase';
 import {
   OfrecerseComoColaboradorComandoSchema,
   type ComandoOfrecerseComoColaborador,
 } from '@aplicacion/dtos/red-colaboracion/OfrecerseComoColaboradorDto';
-import type { ColaboracionPropuesta, IRepositorioColaboraciones } from '@dominio/puertos/IRepositorioColaboraciones';
+import type {
+  ColaboracionPropuesta,
+  IRepositorioColaboraciones,
+} from '@dominio/puertos/IRepositorioColaboraciones';
 import type { IRepositorioSolicitudesRecurso } from '@dominio/puertos/IRepositorioSolicitudesRecurso';
 import type { IRepositorioPerfil } from '@dominio/puertos/IRepositorioPerfil';
 import type { INotificacionesRepositorio } from '@dominio/puertos/INotificacionesRepositorio';
@@ -37,13 +41,15 @@ const ROLES_AUTORIZADOS = ['rescatista', 'veterinario'];
  * PEA-RED-004 en ActualizarEstadoColaboracionCommand), y recién al final que
  * no exista ya una propuesta previa del mismo stakeholder sobre la misma
  * solicitud (PEA-RED-002) — chequeo de aplicación antes del INSERT, mismo
- * criterio que `ux_autorizacion_activa`/PEA-VET-009 en `AutorizarVeterinario`
- * (índice único documentado en docs/SCHEMA.md, no forzado hoy a nivel de
- * base de datos).
+ * criterio que `ux_autorizacion_activa`/PEA-VET-009 en `AutorizarVeterinario`.
  *
  * `persistir()` vuelve a confiar únicamente en el propio INSERT (nunca en lo
  * que `autorizar()` ya leyó) — mismo criterio de "nunca confiar en una
- * lectura anterior" que `ActualizarEstadoColaboracionCommand.persistir`.
+ * lectura anterior" que `ActualizarEstadoColaboracionCommand.persistir`. Con
+ * `ux_colaboraciones_solicitud_stakeholder` ya migrado (docs/SCHEMA.md),
+ * `persistir()` también captura la violación (P2002 de Prisma) como defensa
+ * final ante la carrera entre dos ofrecimientos concurrentes, mismo criterio
+ * que `InscribirseCurso`.
  *
  * `publicarEvento` (Observer) notifica a la organización dueña de la
  * solicitud — `tipo='colaboracion_propuesta'` (docs/SCHEMA.md,
@@ -53,12 +59,18 @@ const ROLES_AUTORIZADOS = ['rescatista', 'veterinario'];
  * los hechos sí se aplicó.
  */
 @injectable()
-export class OfrecerseComoColaboradorCommand extends CasoDeUsoBase<ComandoOfrecerseComoColaborador, ColaboracionPropuesta> {
+export class OfrecerseComoColaboradorCommand extends CasoDeUsoBase<
+  ComandoOfrecerseComoColaborador,
+  ColaboracionPropuesta
+> {
   constructor(
-    @inject('IRepositorioColaboraciones') private readonly repositorioColaboraciones: IRepositorioColaboraciones,
-    @inject('IRepositorioSolicitudesRecurso') private readonly repositorioSolicitudes: IRepositorioSolicitudesRecurso,
+    @inject('IRepositorioColaboraciones')
+    private readonly repositorioColaboraciones: IRepositorioColaboraciones,
+    @inject('IRepositorioSolicitudesRecurso')
+    private readonly repositorioSolicitudes: IRepositorioSolicitudesRecurso,
     @inject('IRepositorioPerfil') private readonly repositorioPerfil: IRepositorioPerfil,
-    @inject('INotificacionesRepositorio') private readonly repositorioNotificaciones: INotificacionesRepositorio,
+    @inject('INotificacionesRepositorio')
+    private readonly repositorioNotificaciones: INotificacionesRepositorio,
   ) {
     super();
   }
@@ -81,17 +93,27 @@ export class OfrecerseComoColaboradorCommand extends CasoDeUsoBase<ComandoOfrece
       throw new SolicitudYaCubiertaError();
     }
 
-    const yaPropuso = await this.repositorioColaboraciones.existePropuestaDe(dato.solicitudId, dato.stakeholderId);
+    const yaPropuso = await this.repositorioColaboraciones.existePropuestaDe(
+      dato.solicitudId,
+      dato.stakeholderId,
+    );
     if (yaPropuso) {
       throw new ColaboracionYaPropuestaError();
     }
   }
 
   protected async persistir(dato: ComandoOfrecerseComoColaborador): Promise<ColaboracionPropuesta> {
-    return this.repositorioColaboraciones.crear({
-      solicitudId: dato.solicitudId,
-      stakeholderId: dato.stakeholderId,
-    });
+    try {
+      return await this.repositorioColaboraciones.crear({
+        solicitudId: dato.solicitudId,
+        stakeholderId: dato.stakeholderId,
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        throw new ColaboracionYaPropuestaError();
+      }
+      throw error;
+    }
   }
 
   protected override async publicarEvento(resultado: ColaboracionPropuesta): Promise<void> {

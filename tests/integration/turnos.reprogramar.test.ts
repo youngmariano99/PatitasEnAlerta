@@ -53,7 +53,13 @@ class RepositorioTurnosEnMemoria implements IRepositorioTurnos {
   async obtenerActual(id: string): Promise<TurnoActual | null> {
     const fila = this.turnos.get(id);
     if (!fila) return null;
-    return { id: fila.id, estado: fila.estado, version: fila.version, reservadoPor: fila.reservadoPor, proveedorId: fila.proveedorId };
+    return {
+      id: fila.id,
+      estado: fila.estado,
+      version: fila.version,
+      reservadoPor: fila.reservadoPor,
+      proveedorId: fila.proveedorId,
+    };
   }
 
   async reservar(): Promise<TurnoReservado | null> {
@@ -92,8 +98,19 @@ class RepositorioTurnosEnMemoria implements IRepositorioTurnos {
     nuevo.version += 1;
 
     return {
-      turnoCancelado: { id: actual.id, estado: actual.estado, reservadoPor: actual.reservadoPor, proveedorId: actual.proveedorId, version: actual.version },
-      turnoReservado: { id: nuevo.id, estado: nuevo.estado, reservadoPor: usuarioId, version: nuevo.version },
+      turnoCancelado: {
+        id: actual.id,
+        estado: actual.estado,
+        reservadoPor: actual.reservadoPor,
+        proveedorId: actual.proveedorId,
+        version: actual.version,
+      },
+      turnoReservado: {
+        id: nuevo.id,
+        estado: nuevo.estado,
+        reservadoPor: usuarioId,
+        version: nuevo.version,
+      },
     };
   }
 
@@ -116,6 +133,10 @@ class RepositorioTurnosEnMemoria implements IRepositorioTurnos {
   async calcularTasaNoShow() {
     return { totalConcluidos: 0, totalNoShow: 0, tasa: 0 };
   }
+
+  async listarPorEvento() {
+    return [];
+  }
 }
 
 function crearRequest(body: unknown): NextRequest {
@@ -128,7 +149,9 @@ function crearRequest(body: unknown): NextRequest {
 
 function autenticarComo(usuarioId: string | null) {
   getUserMock.mockResolvedValue(
-    usuarioId ? { data: { user: { id: usuarioId } }, error: null } : { data: { user: null }, error: { message: 'sin sesión' } },
+    usuarioId
+      ? { data: { user: { id: usuarioId } }, error: null }
+      : { data: { user: null }, error: { message: 'sin sesión' } },
   );
 }
 
@@ -158,22 +181,56 @@ describe('POST /api/turnos/reprogramar (Reprogramación de turno propio — todo
 
   it('AC (Paso 2): reprograma exitosamente — cancela el actual y reserva el nuevo en una sola operación', async () => {
     autenticarComo(reservante);
-    repositorioTurnos.turnos.set(turnoActualId, { id: turnoActualId, estado: 'reservado', version: 2, reservadoPor: reservante, proveedorId: proveedor });
-    repositorioTurnos.turnos.set(turnoNuevoId, { id: turnoNuevoId, estado: 'disponible', version: 0, reservadoPor: null, proveedorId: proveedor });
+    repositorioTurnos.turnos.set(turnoActualId, {
+      id: turnoActualId,
+      estado: 'reservado',
+      version: 2,
+      reservadoPor: reservante,
+      proveedorId: proveedor,
+    });
+    repositorioTurnos.turnos.set(turnoNuevoId, {
+      id: turnoNuevoId,
+      estado: 'disponible',
+      version: 0,
+      reservadoPor: null,
+      proveedorId: proveedor,
+    });
 
     const respuesta = await POST(crearRequest({ turnoActualId, turnoNuevoId }));
 
     expect(respuesta.status).toBe(200);
     const cuerpo = await respuesta.json();
-    expect(cuerpo.turnoCancelado).toEqual({ id: turnoActualId, estado: 'cancelado', reservadoPor: reservante, version: 3 });
-    expect(cuerpo.turnoReservado).toEqual({ id: turnoNuevoId, estado: 'reservado', reservadoPor: reservante, version: 1 });
+    expect(cuerpo.turnoCancelado).toEqual({
+      id: turnoActualId,
+      estado: 'cancelado',
+      reservadoPor: reservante,
+      version: 3,
+    });
+    expect(cuerpo.turnoReservado).toEqual({
+      id: turnoNuevoId,
+      estado: 'reservado',
+      reservadoPor: reservante,
+      version: 1,
+    });
   });
 
   it('AC ("todo o nada"): si el turno nuevo ya fue tomado, el turno actual SIGUE reservado (nada quedó a medio camino)', async () => {
     autenticarComo(reservante);
-    repositorioTurnos.turnos.set(turnoActualId, { id: turnoActualId, estado: 'reservado', version: 2, reservadoPor: reservante, proveedorId: proveedor });
+    repositorioTurnos.turnos.set(turnoActualId, {
+      id: turnoActualId,
+      estado: 'reservado',
+      version: 2,
+      reservadoPor: reservante,
+      proveedorId: proveedor,
+    });
     // El turno nuevo ya fue reservado por otro usuario antes de esta request.
-    repositorioTurnos.turnos.set(turnoNuevoId, { id: turnoNuevoId, estado: 'reservado', version: 1, reservadoPor: otroReservante, proveedorId: proveedor });
+    repositorioTurnos.turnos.set(turnoNuevoId, {
+      id: turnoNuevoId,
+      estado: 'reservado',
+      version: 1,
+      reservadoPor: otroReservante,
+      proveedorId: proveedor,
+    });
 
     const respuesta = await POST(crearRequest({ turnoActualId, turnoNuevoId }));
 
@@ -190,8 +247,20 @@ describe('POST /api/turnos/reprogramar (Reprogramación de turno propio — todo
 
   it('rechaza con 403 / PEA-SIS-002 si quien invoca no es el reservante del turno actual', async () => {
     autenticarComo(otroReservante);
-    repositorioTurnos.turnos.set(turnoActualId, { id: turnoActualId, estado: 'reservado', version: 2, reservadoPor: reservante, proveedorId: proveedor });
-    repositorioTurnos.turnos.set(turnoNuevoId, { id: turnoNuevoId, estado: 'disponible', version: 0, reservadoPor: null, proveedorId: proveedor });
+    repositorioTurnos.turnos.set(turnoActualId, {
+      id: turnoActualId,
+      estado: 'reservado',
+      version: 2,
+      reservadoPor: reservante,
+      proveedorId: proveedor,
+    });
+    repositorioTurnos.turnos.set(turnoNuevoId, {
+      id: turnoNuevoId,
+      estado: 'disponible',
+      version: 0,
+      reservadoPor: null,
+      proveedorId: proveedor,
+    });
 
     const respuesta = await POST(crearRequest({ turnoActualId, turnoNuevoId }));
 
@@ -200,9 +269,17 @@ describe('POST /api/turnos/reprogramar (Reprogramación de turno propio — todo
 
   it('rechaza con 404 / PEA-MUN-003 si el turno actual no existe', async () => {
     autenticarComo(reservante);
-    repositorioTurnos.turnos.set(turnoNuevoId, { id: turnoNuevoId, estado: 'disponible', version: 0, reservadoPor: null, proveedorId: proveedor });
+    repositorioTurnos.turnos.set(turnoNuevoId, {
+      id: turnoNuevoId,
+      estado: 'disponible',
+      version: 0,
+      reservadoPor: null,
+      proveedorId: proveedor,
+    });
 
-    const respuesta = await POST(crearRequest({ turnoActualId: '99999999-9999-4999-8999-999999999999', turnoNuevoId }));
+    const respuesta = await POST(
+      crearRequest({ turnoActualId: '99999999-9999-4999-8999-999999999999', turnoNuevoId }),
+    );
 
     expect(respuesta.status).toBe(404);
     const cuerpo = await respuesta.json();

@@ -4,8 +4,12 @@ import { Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import clsx from 'clsx';
-import { TIPOS_REPORTE_SOPORTADOS, type TipoReporte } from '@aplicacion/dtos/reportes/CrearReporteDto';
+import {
+  TIPOS_REPORTE_SOPORTADOS,
+  type TipoReporte,
+} from '@aplicacion/dtos/reportes/CrearReporteDto';
 import { FormularioReporteWizard } from '@presentacion/componentes/reportes/FormularioReporteWizard';
+import { EncabezadoIlustrado } from '@presentacion/componentes/estado/EncabezadoIlustrado';
 
 function esTipoSoportado(valor: string | null): valor is TipoReporte {
   return TIPOS_REPORTE_SOPORTADOS.includes(valor as TipoReporte);
@@ -15,6 +19,21 @@ const ETIQUETAS_CATEGORIA: Record<TipoReporte, string> = {
   perdido: 'Perdí a mi mascota',
   encontrado: 'Encontré una mascota',
   problematica: 'Reportar problemática',
+};
+
+const MASCOTA_POR_CATEGORIA: Record<TipoReporte, { imagenSrc: string; alt: string }> = {
+  perdido: {
+    imagenSrc: '/animales/Reportar-mascota -perdida.png',
+    alt: 'Mascota sosteniendo un cartel de mascota perdida',
+  },
+  encontrado: {
+    imagenSrc: '/animales/Crear-alerta.png',
+    alt: 'Mascota creando una alerta desde el celular',
+  },
+  problematica: {
+    imagenSrc: '/animales/Animal sueltoRiesgoSanitario.png',
+    alt: 'Mascota alertando sobre un riesgo sanitario',
+  },
 };
 
 /**
@@ -32,10 +51,14 @@ function ContenidoPaginaNuevoReporte() {
 
   return (
     <>
-      <nav
-        aria-label="Categoría del reporte"
-        className="mx-auto flex max-w-md gap-2 px-6 pt-10"
-      >
+      <div className="mx-auto max-w-md px-6 pt-10">
+        <EncabezadoIlustrado
+          imagenSrc={MASCOTA_POR_CATEGORIA[tipo].imagenSrc}
+          alt={MASCOTA_POR_CATEGORIA[tipo].alt}
+          titulo={ETIQUETAS_CATEGORIA[tipo]}
+        />
+      </div>
+      <nav aria-label="Categoría del reporte" className="mx-auto flex max-w-md gap-2 px-6 pt-4">
         {TIPOS_REPORTE_SOPORTADOS.map((valor) => (
           <Link
             key={valor}
@@ -44,8 +67,8 @@ function ContenidoPaginaNuevoReporte() {
             className={clsx(
               'flex-1 rounded-md border px-2 py-2 text-center text-xs font-medium',
               valor === tipo
-                ? 'border-blue-500 bg-blue-500 text-slate-50'
-                : 'border-slate-700 bg-slate-800 text-slate-300',
+                ? 'border-accent bg-accent text-base'
+                : 'border-surface2 bg-surface1 text-text-muted',
             )}
           >
             {ETIQUETAS_CATEGORIA[valor]}

@@ -72,7 +72,10 @@ export function LineaTiempoEstadoReporte({ reporteId }: LineaTiempoEstadoReporte
         const datos = (await respuesta.json()) as HistorialEstadoItemApi[];
         if (!cancelado) setItems(datos);
       } catch {
-        if (!cancelado) setError('No pudimos conectarnos con el servidor. Revisá tu conexión e intentá de nuevo.');
+        if (!cancelado)
+          setError(
+            'No pudimos conectarnos con el servidor. Revisá tu conexión e intentá de nuevo.',
+          );
       } finally {
         if (!cancelado) setCargando(false);
       }
@@ -85,12 +88,12 @@ export function LineaTiempoEstadoReporte({ reporteId }: LineaTiempoEstadoReporte
   }, [reporteId]);
 
   if (cargando) {
-    return <p className="text-sm text-slate-400">Cargando historial…</p>;
+    return <p className="text-sm text-text-muted">Cargando historial…</p>;
   }
 
   if (error) {
     return (
-      <p className="flex items-center gap-1.5 text-sm text-red-500">
+      <p className="flex items-center gap-1.5 text-sm text-danger">
         <span aria-hidden="true">⚠️</span>
         {error}
       </p>
@@ -99,8 +102,10 @@ export function LineaTiempoEstadoReporte({ reporteId }: LineaTiempoEstadoReporte
 
   if (items.length === 0) {
     return (
-      <div className="rounded-md border border-dashed border-slate-700 p-8 text-center">
-        <p className="text-sm text-slate-400">Este reporte todavía no tiene cambios de estado registrados.</p>
+      <div className="rounded-md border border-dashed border-surface2 p-8 text-center">
+        <p className="text-sm text-text-muted">
+          Este reporte todavía no tiene cambios de estado registrados.
+        </p>
       </div>
     );
   }
@@ -108,17 +113,22 @@ export function LineaTiempoEstadoReporte({ reporteId }: LineaTiempoEstadoReporte
   return (
     <ol className="flex flex-col gap-4" aria-label={`Historial de estado del reporte ${reporteId}`}>
       {items.map((item) => (
-        <li key={item.id} className="flex gap-3 rounded-md border border-slate-700 bg-slate-800/50 p-4">
+        <li
+          key={item.id}
+          className="flex gap-3 rounded-md border border-surface2 bg-surface1/50 p-4"
+        >
           <span aria-hidden="true" className="text-lg leading-none">
             {iconoEstado(item.estadoNuevo)}
           </span>
           <div className="flex flex-col gap-1">
-            <p className="text-sm text-slate-200">
-              <span className="text-slate-400">{etiquetaEstado(item.estadoAnterior)}</span>
+            <p className="text-sm text-text-primary">
+              <span className="text-text-muted">{etiquetaEstado(item.estadoAnterior)}</span>
               {' → '}
               <span className="font-medium">{etiquetaEstado(item.estadoNuevo)}</span>
             </p>
-            <p className="font-mono text-xs text-slate-500">{formatearFecha(item.registradoEn)}</p>
+            <p className="font-mono text-xs text-text-primary0">
+              {formatearFecha(item.registradoEn)}
+            </p>
           </div>
         </li>
       ))}

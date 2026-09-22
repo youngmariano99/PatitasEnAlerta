@@ -3,10 +3,22 @@
  */
 import { NextRequest } from 'next/server';
 import { container } from '@aplicacion/contenedor-di';
-import type { DatosNuevoEvento, IRepositorioEventos, PaginaEventos } from '@dominio/puertos/IRepositorioEventos';
+import type {
+  DatosNuevoEvento,
+  IRepositorioEventos,
+  PaginaEventos,
+} from '@dominio/puertos/IRepositorioEventos';
 import type { IRepositorioPerfil, ResumenPerfilPropio } from '@dominio/puertos/IRepositorioPerfil';
-import type { DatosNuevoTurno, IRepositorioTurnos, TurnoGenerado } from '@dominio/puertos/IRepositorioTurnos';
-import { TurneraMunicipio, type FuenteDisponibilidadEvento, type ProveedorTurnera } from '@dominio/estrategias/ProveedorTurnera';
+import type {
+  DatosNuevoTurno,
+  IRepositorioTurnos,
+  TurnoGenerado,
+} from '@dominio/puertos/IRepositorioTurnos';
+import {
+  TurneraMunicipio,
+  type FuenteDisponibilidadEvento,
+  type ProveedorTurnera,
+} from '@dominio/estrategias/ProveedorTurnera';
 import { Evento } from '@dominio/entidades/Evento';
 
 const getUserMock = jest.fn();
@@ -25,7 +37,11 @@ class RepositorioEventosFalso implements IRepositorioEventos {
 
   async crear(datos: DatosNuevoEvento): Promise<Evento> {
     this.creados.push(datos);
-    return Evento.reconstruir(`evento-${this.creados.length}`, datos, new Date('2026-09-01T09:00:00.000Z'));
+    return Evento.reconstruir(
+      `evento-${this.creados.length}`,
+      datos,
+      new Date('2026-09-01T09:00:00.000Z'),
+    );
   }
 
   async listar(): Promise<PaginaEventos> {
@@ -37,7 +53,13 @@ class RepositorioPerfilFalso implements IRepositorioPerfil {
   public rol = 'municipio';
 
   async obtenerPerfilPropio(usuarioId: string): Promise<ResumenPerfilPropio | null> {
-    return { id: usuarioId, email: 'municipio@ejemplo.test', rol: this.rol, estadoVerificacion: 'verificado', verificadoEn: null };
+    return {
+      id: usuarioId,
+      email: 'municipio@ejemplo.test',
+      rol: this.rol,
+      estadoVerificacion: 'verificado',
+      verificadoEn: null,
+    };
   }
 }
 
@@ -87,7 +109,16 @@ class RepositorioTurnosFalso implements IRepositorioTurnos {
     return { totalConcluidos: 0, totalNoShow: 0, tasa: 0 };
   }
 
-  async listarPropios(): Promise<{ items: never[]; total: number; pagina: number; porPagina: number }> {
+  async listarPorEvento() {
+    return [];
+  }
+
+  async listarPropios(): Promise<{
+    items: never[];
+    total: number;
+    pagina: number;
+    porPagina: number;
+  }> {
     return { items: [], total: 0, pagina: 1, porPagina: 50 };
   }
 
@@ -102,7 +133,9 @@ class RepositorioTurnosFalso implements IRepositorioTurnos {
 
 function autenticarComo(usuarioId: string | null) {
   getUserMock.mockResolvedValue(
-    usuarioId ? { data: { user: { id: usuarioId } }, error: null } : { data: { user: null }, error: { message: 'sin sesión' } },
+    usuarioId
+      ? { data: { user: { id: usuarioId } }, error: null }
+      : { data: { user: null }, error: { message: 'sin sesión' } },
   );
 }
 
@@ -141,7 +174,10 @@ describe('POST /api/municipio/eventos (Alta rápida de operativos municipales)',
     container.registerInstance<IRepositorioEventos>('IRepositorioEventos', repositorioEventos);
     container.registerInstance<IRepositorioPerfil>('IRepositorioPerfil', repositorioPerfil);
     container.registerInstance<IRepositorioTurnos>('IRepositorioTurnos', repositorioTurnos);
-    container.registerInstance<ProveedorTurnera<FuenteDisponibilidadEvento>>('ProveedorTurneraMunicipio', new TurneraMunicipio());
+    container.registerInstance<ProveedorTurnera<FuenteDisponibilidadEvento>>(
+      'ProveedorTurneraMunicipio',
+      new TurneraMunicipio(),
+    );
   });
 
   it('rechaza sin sesión activa (401 / PEA-SIS-001), sin persistir nada', async () => {
@@ -156,17 +192,20 @@ describe('POST /api/municipio/eventos (Alta rápida de operativos municipales)',
   });
 
   // Paso 4 del checklist + AC explícito.
-  it.each(['dueño', 'veterinario'])('rechaza con 403 / PEA-MUN-005 para un usuario con rol %s', async (rol) => {
-    autenticarComo('usuario-1');
-    repositorioPerfil.rol = rol;
+  it.each(['dueño', 'veterinario'])(
+    'rechaza con 403 / PEA-MUN-005 para un usuario con rol %s',
+    async (rol) => {
+      autenticarComo('usuario-1');
+      repositorioPerfil.rol = rol;
 
-    const respuesta = await POST(crearRequest(eventoValido));
+      const respuesta = await POST(crearRequest(eventoValido));
 
-    expect(respuesta.status).toBe(403);
-    const cuerpo = await respuesta.json();
-    expect(cuerpo.codigo).toBe('PEA-MUN-005');
-    expect(repositorioEventos.creados).toHaveLength(0);
-  });
+      expect(respuesta.status).toBe(403);
+      const cuerpo = await respuesta.json();
+      expect(cuerpo.codigo).toBe('PEA-MUN-005');
+      expect(repositorioEventos.creados).toHaveLength(0);
+    },
+  );
 
   it('administrador también puede publicar el operativo', async () => {
     autenticarComo('admin-1');
@@ -236,10 +275,14 @@ describe('POST /api/municipio/eventos (Alta rápida de operativos municipales)',
   it('persiste requisitos cuando el municipio los declara', async () => {
     autenticarComo('municipio-1');
 
-    const respuesta = await POST(crearRequest({ ...eventoValido, requisitos: 'Traer collar/bozal y DNI del tutor.' }));
+    const respuesta = await POST(
+      crearRequest({ ...eventoValido, requisitos: 'Traer collar/bozal y DNI del tutor.' }),
+    );
 
     expect(respuesta.status).toBe(201);
-    expect(repositorioEventos.creados[0]).toMatchObject({ requisitos: 'Traer collar/bozal y DNI del tutor.' });
+    expect(repositorioEventos.creados[0]).toMatchObject({
+      requisitos: 'Traer collar/bozal y DNI del tutor.',
+    });
   });
 
   // Paso 4 del checklist: crea un evento con 10 cupos y verifica exactamente 10 filas en turnos.

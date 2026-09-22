@@ -15,7 +15,7 @@ describe('RootLayout', () => {
     const elemento = RootLayout({ children: 'contenido-de-prueba' as unknown as React.ReactNode });
 
     expect(elemento.props.lang).toBe('es');
-    expect(elemento.props.className).toBe('dark');
+    expect(elemento.props.className).not.toMatch(/(?:^|\s)dark(?:\s|$)/);
     expect(elemento.props.children.props.children).toBe('contenido-de-prueba');
     expect(metadata.title).toBe('Patitas en Alerta');
   });

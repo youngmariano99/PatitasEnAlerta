@@ -15,7 +15,10 @@ const SELECT_AUTORIZACION = {
 
 @injectable()
 export class PrismaAutorizacionesLibretaRepositorio implements IRepositorioAutorizacionesLibreta {
-  async obtenerActual(mascotaId: string, veterinarioId: string): Promise<AutorizacionLibretaPersistida | null> {
+  async obtenerActual(
+    mascotaId: string,
+    veterinarioId: string,
+  ): Promise<AutorizacionLibretaPersistida | null> {
     // Sin filtro `revocadaEn: null`: el caso de uso necesita distinguir
     // "nunca autorizado" (null acá) de "autorización revocada" (fila con
     // `revocadaEn` no nulo) para elegir entre PEA-VET-003 y PEA-VET-004 —
@@ -36,7 +39,10 @@ export class PrismaAutorizacionesLibretaRepositorio implements IRepositorioAutor
     });
   }
 
-  async revocar(mascotaId: string, veterinarioId: string): Promise<AutorizacionLibretaPersistida | null> {
+  async revocar(
+    mascotaId: string,
+    veterinarioId: string,
+  ): Promise<AutorizacionLibretaPersistida | null> {
     const actual = await prisma.autorizacionLibreta.findFirst({
       where: { mascotaId, veterinarioId, revocadaEn: null },
       select: SELECT_AUTORIZACION,
@@ -61,6 +67,16 @@ export class PrismaAutorizacionesLibretaRepositorio implements IRepositorioAutor
   async listarPorMascota(mascotaId: string): Promise<AutorizacionLibretaPersistida[]> {
     return prisma.autorizacionLibreta.findMany({
       where: { mascotaId },
+      orderBy: { otorgadaEn: 'desc' },
+      select: SELECT_AUTORIZACION,
+    });
+  }
+
+  async listarVigentesPorVeterinario(
+    veterinarioId: string,
+  ): Promise<AutorizacionLibretaPersistida[]> {
+    return prisma.autorizacionLibreta.findMany({
+      where: { veterinarioId, revocadaEn: null },
       orderBy: { otorgadaEn: 'desc' },
       select: SELECT_AUTORIZACION,
     });

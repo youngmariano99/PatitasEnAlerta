@@ -63,13 +63,22 @@ class RepositorioTurnosEnMemoria implements IRepositorioTurnos {
     return [];
   }
 
-  async listarReservadosPorProveedor(proveedorId: string, pagina: number, porPagina: number): Promise<PaginaTurnosReservadosVeterinario> {
+  async listarReservadosPorProveedor(
+    proveedorId: string,
+    pagina: number,
+    porPagina: number,
+  ): Promise<PaginaTurnosReservadosVeterinario> {
     // El propio in-memory fake filtra EXCLUSIVAMENTE por proveedorId, igual
     // que el where real de Prisma — reforzando la verificación técnica del
     // ticket a nivel repositorio, no solo a nivel RLS.
     const propios = this.turnos.filter((t) => t.proveedorId === proveedorId);
     const inicio = (pagina - 1) * porPagina;
-    return { items: propios.slice(inicio, inicio + porPagina), total: propios.length, pagina, porPagina };
+    return {
+      items: propios.slice(inicio, inicio + porPagina),
+      total: propios.length,
+      pagina,
+      porPagina,
+    };
   }
 
   async listarReservadosEnVentana(): Promise<never[]> {
@@ -83,6 +92,10 @@ class RepositorioTurnosEnMemoria implements IRepositorioTurnos {
   async calcularTasaNoShow() {
     return { totalConcluidos: 0, totalNoShow: 0, tasa: 0 };
   }
+
+  async listarPorEvento() {
+    return [];
+  }
 }
 
 function crearRequest(query = ''): NextRequest {
@@ -91,7 +104,9 @@ function crearRequest(query = ''): NextRequest {
 
 function autenticarComo(usuarioId: string | null) {
   getUserMock.mockResolvedValue(
-    usuarioId ? { data: { user: { id: usuarioId } }, error: null } : { data: { user: null }, error: { message: 'sin sesión' } },
+    usuarioId
+      ? { data: { user: { id: usuarioId } }, error: null }
+      : { data: { user: null }, error: { message: 'sin sesión' } },
   );
 }
 

@@ -8,7 +8,7 @@ import { TIPOS_COMERCIO_SOPORTADOS } from '@aplicacion/dtos/comercios/RegistrarC
 // mismo criterio que MapaReportes (app/reportes/page.tsx).
 const MapaComercios = dynamic(
   () => import('@presentacion/componentes/mapas/MapaComercios').then((mod) => mod.MapaComercios),
-  { ssr: false, loading: () => <p className="text-sm text-slate-400">Cargando mapa…</p> },
+  { ssr: false, loading: () => <p className="text-sm text-text-muted">Cargando mapa…</p> },
 );
 
 const POR_PAGINA = 10;
@@ -72,7 +72,10 @@ export function BuscadorComercios() {
   const [errorCarga, setErrorCarga] = useState<string | null>(null);
 
   useEffect(() => {
-    const temporizador = setTimeout(() => setTextoDebounced(textoBusqueda.trim()), DEBOUNCE_BUSQUEDA_MS);
+    const temporizador = setTimeout(
+      () => setTextoDebounced(textoBusqueda.trim()),
+      DEBOUNCE_BUSQUEDA_MS,
+    );
     return () => clearTimeout(temporizador);
   }, [textoBusqueda]);
 
@@ -96,7 +99,10 @@ export function BuscadorComercios() {
         const datos = (await respuesta.json()) as RespuestaListado;
         setCandidatos(datos.items);
       } catch {
-        if (!cancelado) setErrorCarga('No pudimos conectarnos con el servidor. Revisá tu conexión e intentá de nuevo.');
+        if (!cancelado)
+          setErrorCarga(
+            'No pudimos conectarnos con el servidor. Revisá tu conexión e intentá de nuevo.',
+          );
       } finally {
         if (!cancelado) setCargando(false);
       }
@@ -113,7 +119,8 @@ export function BuscadorComercios() {
   }, [tipoComercio, textoDebounced]);
 
   const filtrados = useMemo(
-    () => (tipoComercio ? candidatos.filter((item) => item.tipoComercio === tipoComercio) : candidatos),
+    () =>
+      tipoComercio ? candidatos.filter((item) => item.tipoComercio === tipoComercio) : candidatos,
     [candidatos, tipoComercio],
   );
   const totalPaginas = Math.max(1, Math.ceil(filtrados.length / POR_PAGINA));
@@ -127,13 +134,15 @@ export function BuscadorComercios() {
     latitud: item.latitud,
     longitud: item.longitud,
   }));
-  const centroMapa: [number, number] = items[0] ? [items[0].latitud, items[0].longitud] : CENTRO_POR_DEFECTO;
+  const centroMapa: [number, number] = items[0]
+    ? [items[0].latitud, items[0].longitud]
+    : CENTRO_POR_DEFECTO;
 
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-end gap-3">
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="buscador-comercios-texto" className="text-xs font-medium text-slate-400">
+          <label htmlFor="buscador-comercios-texto" className="text-xs font-medium text-text-muted">
             Buscar
           </label>
           <input
@@ -142,19 +151,19 @@ export function BuscadorComercios() {
             placeholder="Nombre o tipo de comercio…"
             value={textoBusqueda}
             onChange={(evento) => setTextoBusqueda(evento.target.value)}
-            className="h-11 min-h-[44px] w-64 rounded-md border border-slate-700 bg-slate-800 px-3 text-[15px] text-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="h-11 min-h-[44px] w-64 rounded-md border border-surface2 bg-surface1 px-3 text-[15px] text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
           />
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="buscador-comercios-tipo" className="text-xs font-medium text-slate-400">
+          <label htmlFor="buscador-comercios-tipo" className="text-xs font-medium text-text-muted">
             Tipo
           </label>
           <select
             id="buscador-comercios-tipo"
             value={tipoComercio}
             onChange={(evento) => setTipoComercio(evento.target.value)}
-            className="h-11 min-h-[44px] rounded-md border border-slate-700 bg-slate-800 px-3 text-[15px] text-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="h-11 min-h-[44px] rounded-md border border-surface2 bg-surface1 px-3 text-[15px] text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
           >
             <option value="">Todos</option>
             {TIPOS_COMERCIO_SOPORTADOS.map((valor) => (
@@ -167,27 +176,29 @@ export function BuscadorComercios() {
       </div>
 
       {errorCarga ? (
-        <p className="mb-4 flex items-center gap-1.5 text-sm text-red-500">
+        <p className="mb-4 flex items-center gap-1.5 text-sm text-danger">
           <span aria-hidden="true">⚠️</span>
           {errorCarga}
         </p>
       ) : null}
 
-      {cargando ? <p className="text-sm text-slate-400">Cargando…</p> : null}
+      {cargando ? <p className="text-sm text-text-muted">Cargando…</p> : null}
 
       {!cargando && !errorCarga && items.length === 0 ? (
-        <div className="rounded-md border border-dashed border-slate-700 p-8 text-center">
-          <p className="text-sm font-medium text-slate-50">No encontramos comercios con estos filtros.</p>
-          <p className="text-sm text-slate-400">Probá con otro texto o tipo de comercio.</p>
+        <div className="rounded-md border border-dashed border-surface2 p-8 text-center">
+          <p className="text-sm font-medium text-text-primary">
+            No encontramos comercios con estos filtros.
+          </p>
+          <p className="text-sm text-text-muted">Probá con otro texto o tipo de comercio.</p>
         </div>
       ) : null}
 
       {!cargando && !errorCarga && items.length > 0 ? (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <div className="overflow-x-auto rounded-md border border-slate-700">
+          <div className="overflow-x-auto rounded-md border border-surface2">
             <table className="w-full min-w-[420px] border-collapse text-left text-sm">
               <thead>
-                <tr className="border-b border-slate-700 bg-slate-800 text-xs uppercase tracking-wide text-slate-400">
+                <tr className="border-b border-surface2 bg-surface1 text-xs uppercase tracking-wide text-text-muted">
                   <th scope="col" className="px-4 py-3 font-medium">
                     Nombre
                   </th>
@@ -201,10 +212,12 @@ export function BuscadorComercios() {
               </thead>
               <tbody>
                 {items.map((item) => (
-                  <tr key={item.id} className="border-b border-slate-800 last:border-b-0">
-                    <td className="px-4 py-3 text-slate-50">{item.nombreComercio}</td>
-                    <td className="px-4 py-3 text-slate-300">{ETIQUETAS_TIPO[item.tipoComercio] ?? item.tipoComercio}</td>
-                    <td className="px-4 py-3 text-slate-300">{item.direccion}</td>
+                  <tr key={item.id} className="border-b border-surface2 last:border-b-0">
+                    <td className="px-4 py-3 text-text-primary">{item.nombreComercio}</td>
+                    <td className="px-4 py-3 text-text-muted">
+                      {ETIQUETAS_TIPO[item.tipoComercio] ?? item.tipoComercio}
+                    </td>
+                    <td className="px-4 py-3 text-text-muted">{item.direccion}</td>
                   </tr>
                 ))}
               </tbody>
@@ -216,12 +229,12 @@ export function BuscadorComercios() {
       ) : null}
 
       {filtrados.length > POR_PAGINA ? (
-        <div className="mt-6 flex items-center justify-between text-sm text-slate-400">
+        <div className="mt-6 flex items-center justify-between text-sm text-text-muted">
           <button
             type="button"
             onClick={() => setPagina((actual) => actual - 1)}
             disabled={pagina <= 1 || cargando}
-            className="h-11 min-h-[44px] rounded-md border border-slate-600 px-4 disabled:cursor-not-allowed disabled:opacity-50"
+            className="h-11 min-h-[44px] rounded-md border border-surface2 px-4 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Anterior
           </button>
@@ -232,7 +245,7 @@ export function BuscadorComercios() {
             type="button"
             onClick={() => setPagina((actual) => actual + 1)}
             disabled={pagina >= totalPaginas || cargando}
-            className="h-11 min-h-[44px] rounded-md border border-slate-600 px-4 disabled:cursor-not-allowed disabled:opacity-50"
+            className="h-11 min-h-[44px] rounded-md border border-surface2 px-4 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Siguiente
           </button>

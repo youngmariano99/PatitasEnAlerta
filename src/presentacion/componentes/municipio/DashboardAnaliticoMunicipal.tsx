@@ -2,13 +2,19 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
-import { TIPOS_REPORTE_SOPORTADOS, type TipoReporte } from '@aplicacion/dtos/reportes/CrearReporteDto';
+import {
+  TIPOS_REPORTE_SOPORTADOS,
+  type TipoReporte,
+} from '@aplicacion/dtos/reportes/CrearReporteDto';
 
 // Leaflet toca `window` al inicializarse — dynamic import con ssr:false,
 // mismo criterio que MapaReportes/SelectorUbicacionMapa.
 const MapaCalorMunicipal = dynamic(
-  () => import('@presentacion/componentes/mapas/MapaCalorMunicipal').then((mod) => mod.MapaCalorMunicipal),
-  { ssr: false, loading: () => <p className="text-sm text-slate-400">Cargando mapa de calor…</p> },
+  () =>
+    import('@presentacion/componentes/mapas/MapaCalorMunicipal').then(
+      (mod) => mod.MapaCalorMunicipal,
+    ),
+  { ssr: false, loading: () => <p className="text-sm text-text-muted">Cargando mapa de calor…</p> },
 );
 
 const CENTRO_POR_DEFECTO: [number, number] = [-37.9989, -61.3565];
@@ -45,7 +51,11 @@ interface RespuestaError {
   mensaje: string;
 }
 
-function sumarPor<T>(items: T[], clave: (item: T) => string, valor: (item: T) => number): Record<string, number> {
+function sumarPor<T>(
+  items: T[],
+  clave: (item: T) => string,
+  valor: (item: T) => number,
+): Record<string, number> {
   const acumulado: Record<string, number> = {};
   for (const item of items) {
     const k = clave(item);
@@ -64,19 +74,24 @@ function BarraDesglose({ titulo, datos }: BarraDesgloseProps) {
   const maximo = Math.max(1, ...datos.map((d) => d.total));
 
   return (
-    <div className="rounded-md border border-slate-700 bg-slate-800/50 p-5">
-      <h3 className="mb-3 text-sm font-semibold text-slate-50">{titulo}</h3>
+    <div className="rounded-md border border-surface2 bg-surface1/50 p-5">
+      <h3 className="mb-3 text-sm font-semibold text-text-primary">{titulo}</h3>
       {datos.length === 0 ? (
-        <p className="text-sm text-slate-400">Sin datos para este período.</p>
+        <p className="text-sm text-text-muted">Sin datos para este período.</p>
       ) : (
         <div className="flex flex-col gap-2">
           {datos.map((d) => (
             <div key={d.etiqueta} className="flex items-center gap-3">
-              <span className="w-28 shrink-0 text-xs text-slate-300">{d.etiqueta}</span>
-              <div className="h-3 flex-1 overflow-hidden rounded-full bg-slate-700">
-                <div className="h-full rounded-full bg-blue-500" style={{ width: `${(d.total / maximo) * 100}%` }} />
+              <span className="w-28 shrink-0 text-xs text-text-muted">{d.etiqueta}</span>
+              <div className="h-3 flex-1 overflow-hidden rounded-full bg-surface2">
+                <div
+                  className="h-full rounded-full bg-accent"
+                  style={{ width: `${(d.total / maximo) * 100}%` }}
+                />
               </div>
-              <span className="w-10 shrink-0 text-right font-mono text-xs text-slate-400">{d.total}</span>
+              <span className="w-10 shrink-0 text-right font-mono text-xs text-text-muted">
+                {d.total}
+              </span>
             </div>
           ))}
         </div>
@@ -168,13 +183,13 @@ export function DashboardAnaliticoMunicipal() {
   return (
     <section className="mt-12">
       <h2 className="mb-1 text-lg font-semibold">Dashboard analítico</h2>
-      <p className="mb-6 text-sm text-slate-400">
+      <p className="mb-6 text-sm text-text-muted">
         Métricas agregadas de reportes y turnos, actualizadas periódicamente (no en tiempo real).
       </p>
 
       <div className="mb-6 flex flex-wrap items-end gap-3">
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="dashboard-periodo-desde" className="text-xs font-medium text-slate-400">
+          <label htmlFor="dashboard-periodo-desde" className="text-xs font-medium text-text-muted">
             Desde
           </label>
           <input
@@ -182,11 +197,11 @@ export function DashboardAnaliticoMunicipal() {
             type="date"
             value={periodoDesde}
             onChange={(evento) => setPeriodoDesde(evento.target.value)}
-            className="h-11 min-h-[44px] rounded-md border border-slate-700 bg-slate-800 px-3 text-[15px] text-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="h-11 min-h-[44px] rounded-md border border-surface2 bg-surface1 px-3 text-[15px] text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
           />
         </div>
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="dashboard-periodo-hasta" className="text-xs font-medium text-slate-400">
+          <label htmlFor="dashboard-periodo-hasta" className="text-xs font-medium text-text-muted">
             Hasta
           </label>
           <input
@@ -194,18 +209,18 @@ export function DashboardAnaliticoMunicipal() {
             type="date"
             value={periodoHasta}
             onChange={(evento) => setPeriodoHasta(evento.target.value)}
-            className="h-11 min-h-[44px] rounded-md border border-slate-700 bg-slate-800 px-3 text-[15px] text-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="h-11 min-h-[44px] rounded-md border border-surface2 bg-surface1 px-3 text-[15px] text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
           />
         </div>
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="dashboard-tipo" className="text-xs font-medium text-slate-400">
+          <label htmlFor="dashboard-tipo" className="text-xs font-medium text-text-muted">
             Tipo de reporte
           </label>
           <select
             id="dashboard-tipo"
             value={tipoReporte}
             onChange={(evento) => setTipoReporte(evento.target.value as TipoReporte | '')}
-            className="h-11 min-h-[44px] rounded-md border border-slate-700 bg-slate-800 px-3 text-[15px] text-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="h-11 min-h-[44px] rounded-md border border-surface2 bg-surface1 px-3 text-[15px] text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
           >
             <option value="">Todos</option>
             {TIPOS_REPORTE_SOPORTADOS.map((valor) => (
@@ -219,34 +234,36 @@ export function DashboardAnaliticoMunicipal() {
         {periodoDesde && periodoHasta ? (
           <a
             href={`/api/municipio/dashboard/exportar?periodoDesde=${new Date(periodoDesde).toISOString()}&periodoHasta=${new Date(periodoHasta).toISOString()}`}
-            className="inline-flex h-11 min-h-[44px] items-center rounded-md border border-slate-600 px-4 text-[15px] font-medium text-slate-300"
+            className="inline-flex h-11 min-h-[44px] items-center rounded-md border border-surface2 px-4 text-[15px] font-medium text-text-muted"
           >
             Exportar CSV
           </a>
         ) : (
-          <span className="text-xs text-slate-500">Elegí &quot;Desde&quot; y &quot;Hasta&quot; para exportar el resumen a CSV.</span>
+          <span className="text-xs text-text-primary0">
+            Elegí &quot;Desde&quot; y &quot;Hasta&quot; para exportar el resumen a CSV.
+          </span>
         )}
       </div>
 
       {error ? (
-        <p className="mb-4 flex items-center gap-1.5 text-sm text-red-500">
+        <p className="mb-4 flex items-center gap-1.5 text-sm text-danger">
           <span aria-hidden="true">⚠️</span>
           {error}
         </p>
       ) : null}
 
-      {cargando ? <p className="text-sm text-slate-400">Cargando métricas…</p> : null}
+      {cargando ? <p className="text-sm text-text-muted">Cargando métricas…</p> : null}
 
       {!cargando && !error ? (
         <div className="flex flex-col gap-6">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="rounded-md border border-slate-700 bg-slate-800/50 p-5">
-              <p className="text-xs font-medium text-slate-400">Reportes en el período</p>
-              <p className="font-mono text-3xl font-semibold text-slate-50">{totalReportes}</p>
+            <div className="rounded-md border border-surface2 bg-surface1/50 p-5">
+              <p className="text-xs font-medium text-text-muted">Reportes en el período</p>
+              <p className="font-mono text-3xl font-semibold text-text-primary">{totalReportes}</p>
             </div>
-            <div className="rounded-md border border-slate-700 bg-slate-800/50 p-5">
-              <p className="text-xs font-medium text-slate-400">Turnos en el período</p>
-              <p className="font-mono text-3xl font-semibold text-slate-50">{totalTurnos}</p>
+            <div className="rounded-md border border-surface2 bg-surface1/50 p-5">
+              <p className="text-xs font-medium text-text-muted">Turnos en el período</p>
+              <p className="font-mono text-3xl font-semibold text-text-primary">{totalTurnos}</p>
             </div>
           </div>
 
@@ -260,20 +277,30 @@ export function DashboardAnaliticoMunicipal() {
             />
             <BarraDesglose
               titulo="Reportes por estado"
-              datos={Object.entries(reportesPorEstado).map(([etiqueta, total]) => ({ etiqueta, total }))}
+              datos={Object.entries(reportesPorEstado).map(([etiqueta, total]) => ({
+                etiqueta,
+                total,
+              }))}
             />
           </div>
 
           <BarraDesglose
             titulo="Turnos por proveedor"
-            datos={Object.entries(turnosPorProveedor).map(([etiqueta, total]) => ({ etiqueta, total }))}
+            datos={Object.entries(turnosPorProveedor).map(([etiqueta, total]) => ({
+              etiqueta,
+              total,
+            }))}
           />
 
           <div>
-            <h3 className="mb-3 text-sm font-semibold text-slate-50">Mapa de calor — densidad de reportes por zona</h3>
+            <h3 className="mb-3 text-sm font-semibold text-text-primary">
+              Mapa de calor — densidad de reportes por zona
+            </h3>
             {puntosCalor.length === 0 ? (
-              <div className="rounded-md border border-dashed border-slate-700 p-8 text-center">
-                <p className="text-sm text-slate-400">No hay reportes para graficar en este período.</p>
+              <div className="rounded-md border border-dashed border-surface2 p-8 text-center">
+                <p className="text-sm text-text-muted">
+                  No hay reportes para graficar en este período.
+                </p>
               </div>
             ) : (
               <MapaCalorMunicipal puntos={puntosCalor} centro={CENTRO_POR_DEFECTO} />

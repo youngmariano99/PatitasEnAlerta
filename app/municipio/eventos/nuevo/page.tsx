@@ -4,13 +4,20 @@ import { useState, type FormEvent } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { CampoTexto } from '@presentacion/componentes/formularios/CampoTexto';
-import { TIPOS_EVENTO_SOPORTADOS, type TipoEvento } from '@aplicacion/dtos/municipio/CrearEventoDto';
+import {
+  TIPOS_EVENTO_SOPORTADOS,
+  type TipoEvento,
+} from '@aplicacion/dtos/municipio/CrearEventoDto';
+import { EncabezadoIlustrado } from '@presentacion/componentes/estado/EncabezadoIlustrado';
 
 // Leaflet toca `window` al inicializarse — dynamic import con ssr:false,
 // mismo criterio que app/reportes/nuevo (SelectorUbicacionMapa).
 const SelectorUbicacionMapa = dynamic(
-  () => import('@presentacion/componentes/mapas/SelectorUbicacionMapa').then((mod) => mod.SelectorUbicacionMapa),
-  { ssr: false, loading: () => <p className="text-sm text-slate-400">Cargando mapa…</p> },
+  () =>
+    import('@presentacion/componentes/mapas/SelectorUbicacionMapa').then(
+      (mod) => mod.SelectorUbicacionMapa,
+    ),
+  { ssr: false, loading: () => <p className="text-sm text-text-muted">Cargando mapa…</p> },
 );
 
 // Coordenadas de Coronel Pringles (docs/SCHEMA.md) — centro por defecto del
@@ -56,7 +63,11 @@ export default function PaginaNuevoEvento() {
   const [errorGeneral, setErrorGeneral] = useState<string | null>(null);
 
   const camposCompletos =
-    titulo.trim().length > 0 && tipo !== '' && direccion.trim().length > 0 && fecha.length > 0 && Number(cuposTotales) > 0;
+    titulo.trim().length > 0 &&
+    tipo !== '' &&
+    direccion.trim().length > 0 &&
+    fecha.length > 0 &&
+    Number(cuposTotales) > 0;
 
   async function manejarEnvio(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
@@ -100,17 +111,23 @@ export default function PaginaNuevoEvento() {
       }
       setEnviando(false);
     } catch {
-      setErrorGeneral('No pudimos conectarnos con el servidor. Revisá tu conexión e intentá de nuevo.');
+      setErrorGeneral(
+        'No pudimos conectarnos con el servidor. Revisá tu conexión e intentá de nuevo.',
+      );
       setEnviando(false);
     }
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-12 text-slate-50">
-      <h1 className="mb-1 text-xl font-semibold">Nuevo operativo</h1>
-      <p className="mb-6 text-sm text-slate-400">
-        Alta rápida: en cuanto confirmes, el operativo queda visible en el calendario público.
-      </p>
+    <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-12 text-text-primary">
+      <div className="mb-6">
+        <EncabezadoIlustrado
+          imagenSrc="/animales/Datos y turnos del municipio.png"
+          alt="Mascota organizando un calendario de turnos"
+          titulo="Nuevo operativo"
+          descripcion="Alta rápida: en cuanto confirmes, el operativo queda visible en el calendario público."
+        />
+      </div>
 
       <form onSubmit={manejarEnvio} noValidate className="flex flex-col gap-4">
         <CampoTexto
@@ -123,7 +140,7 @@ export default function PaginaNuevoEvento() {
         />
 
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="tipo" className="text-sm font-medium text-slate-50">
+          <label htmlFor="tipo" className="text-sm font-medium text-text-primary">
             Tipo de operativo
           </label>
           <select
@@ -131,7 +148,7 @@ export default function PaginaNuevoEvento() {
             value={tipo}
             onChange={(evento) => setTipo(evento.target.value as TipoEvento | '')}
             required
-            className="h-11 min-h-[44px] rounded-md border border-slate-700 bg-slate-800 px-3 text-[15px] text-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="h-11 min-h-[44px] rounded-md border border-surface2 bg-surface1 px-3 text-[15px] text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
           >
             <option value="">Elegí un tipo…</option>
             {TIPOS_EVENTO_SOPORTADOS.map((valor) => (
@@ -152,7 +169,7 @@ export default function PaginaNuevoEvento() {
         />
 
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-slate-50">Ubicación en el mapa</label>
+          <label className="text-sm font-medium text-text-primary">Ubicación en el mapa</label>
           <SelectorUbicacionMapa
             centro={posicion ?? CENTRO_POR_DEFECTO}
             posicion={posicion}
@@ -162,12 +179,12 @@ export default function PaginaNuevoEvento() {
             }}
           />
           {errorUbicacion ? (
-            <p className="flex items-center gap-1.5 text-sm text-red-500">
+            <p className="flex items-center gap-1.5 text-sm text-danger">
               <span aria-hidden="true">⚠️</span>
               {errorUbicacion}
             </p>
           ) : (
-            <p className="text-sm text-slate-400">Tocá el mapa para marcar el punto exacto.</p>
+            <p className="text-sm text-text-muted">Tocá el mapa para marcar el punto exacto.</p>
           )}
         </div>
 
@@ -195,7 +212,7 @@ export default function PaginaNuevoEvento() {
         />
 
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="requisitos" className="text-sm font-medium text-slate-50">
+          <label htmlFor="requisitos" className="text-sm font-medium text-text-primary">
             Requisitos (opcional)
           </label>
           <textarea
@@ -204,12 +221,12 @@ export default function PaginaNuevoEvento() {
             placeholder="Traer a la mascota con collar/bozal y DNI del tutor."
             value={requisitos}
             onChange={(evento) => setRequisitos(evento.target.value)}
-            className="rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-[15px] text-slate-50 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="rounded-md border border-surface2 bg-surface1 px-3 py-2 text-[15px] text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-accent"
           />
         </div>
 
         {errorGeneral ? (
-          <p className="flex items-center gap-1.5 text-sm text-red-500">
+          <p className="flex items-center gap-1.5 text-sm text-danger">
             <span aria-hidden="true">⚠️</span>
             {errorGeneral}
           </p>
@@ -218,7 +235,7 @@ export default function PaginaNuevoEvento() {
         <button
           type="submit"
           disabled={enviando || !camposCompletos}
-          className="mt-2 h-11 min-h-[44px] rounded-md bg-blue-500 text-[15px] font-medium text-slate-50 transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
+          className="mt-2 h-11 min-h-[44px] rounded-md bg-accent text-[15px] font-medium text-text-primary transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
         >
           {enviando ? 'Publicando…' : 'Publicar operativo'}
         </button>

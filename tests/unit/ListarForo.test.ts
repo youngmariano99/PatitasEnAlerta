@@ -2,7 +2,10 @@
  * @jest-environment node
  */
 import { ListarForo } from '@aplicacion/casos-de-uso/foros-cursos/ListarForo';
-import type { IRepositorioTemasForo, PaginaTemasForo } from '@dominio/puertos/IRepositorioTemasForo';
+import type {
+  IRepositorioTemasForo,
+  PaginaTemasForo,
+} from '@dominio/puertos/IRepositorioTemasForo';
 
 function crearFakes() {
   const pagina: PaginaTemasForo = { items: [], total: 0, pagina: 1, porPagina: 50 };
@@ -13,6 +16,7 @@ function crearFakes() {
     moderar: jest.fn(),
     listar: jest.fn().mockResolvedValue(pagina),
     listarRespuestas: jest.fn(),
+    crearRespuesta: jest.fn(),
   };
   return { repositorioTemas };
 }
@@ -48,7 +52,15 @@ describe('ListarForo', () => {
   it('devuelve la página tal como la entrega el repositorio', async () => {
     const { repositorioTemas } = crearFakes();
     const paginaConDatos: PaginaTemasForo = {
-      items: [{ id: 'tema-1', creadoPor: 'user-1', titulo: 'Título', contenido: 'Contenido', createdAt: new Date('2026-09-15T10:00:00.000Z') }],
+      items: [
+        {
+          id: 'tema-1',
+          creadoPor: 'user-1',
+          titulo: 'Título',
+          contenido: 'Contenido',
+          createdAt: new Date('2026-09-15T10:00:00.000Z'),
+        },
+      ],
       total: 1,
       pagina: 1,
       porPagina: 50,

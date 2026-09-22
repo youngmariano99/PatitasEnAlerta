@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { PanelReportesMunicipio } from '@presentacion/componentes/municipio/PanelReportesMunicipio';
 import { DashboardAnaliticoMunicipal } from '@presentacion/componentes/municipio/DashboardAnaliticoMunicipal';
+import { EncabezadoIlustrado } from '@presentacion/componentes/estado/EncabezadoIlustrado';
 
 interface PerfilApi {
   rol: string;
@@ -49,7 +50,10 @@ export default function PaginaDashboardMunicipio() {
         const perfil = (await respuesta.json()) as PerfilApi;
         if (!cancelado) setRol(perfil.rol);
       } catch {
-        if (!cancelado) setError('No pudimos conectarnos con el servidor. Revisá tu conexión e intentá de nuevo.');
+        if (!cancelado)
+          setError(
+            'No pudimos conectarnos con el servidor. Revisá tu conexión e intentá de nuevo.',
+          );
       } finally {
         if (!cancelado) setCargando(false);
       }
@@ -62,16 +66,20 @@ export default function PaginaDashboardMunicipio() {
   }, []);
 
   return (
-    <main className="mx-auto max-w-6xl px-6 py-12 text-slate-50">
-      <h1 className="mb-1 text-xl font-semibold">Panel municipal de reportes</h1>
-      <p className="mb-6 text-sm text-slate-400">
-        Reportes activos de la comunidad, con filtros combinados y cambio de estado.
-      </p>
+    <main className="mx-auto max-w-6xl px-6 py-12 text-text-primary">
+      <div className="mb-6">
+        <EncabezadoIlustrado
+          imagenSrc="/animales/Inicio-Dashboard.png"
+          alt="Mascota revisando el dashboard municipal"
+          titulo="Panel municipal de reportes"
+          descripcion="Reportes activos de la comunidad, con filtros combinados y cambio de estado."
+        />
+      </div>
 
-      {cargando ? <p className="text-sm text-slate-400">Cargando…</p> : null}
+      {cargando ? <p className="text-sm text-text-muted">Cargando…</p> : null}
 
       {error ? (
-        <p className="flex items-center gap-1.5 text-sm text-red-500">
+        <p className="flex items-center gap-1.5 text-sm text-danger">
           <span aria-hidden="true">⚠️</span>
           {error}
         </p>

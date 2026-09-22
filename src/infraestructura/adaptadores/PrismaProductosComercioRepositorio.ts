@@ -54,7 +54,11 @@ export class PrismaProductosComercioRepositorio implements IRepositorioProductos
     });
   }
 
-  async actualizar(id: string, comercioId: string, datos: DatosProductoComercio): Promise<ProductoComercio | null> {
+  async actualizar(
+    id: string,
+    comercioId: string,
+    datos: DatosProductoComercio,
+  ): Promise<ProductoComercio | null> {
     const resultado = await prisma.productoComercio.updateMany({
       where: { id, comercioId, deletedAt: null },
       data: datos,
@@ -76,5 +80,14 @@ export class PrismaProductosComercioRepositorio implements IRepositorioProductos
       data: { deletedAt: new Date() },
     });
     return resultado.count > 0;
+  }
+
+  async listarPorComercio(comercioId: string): Promise<ProductoComercio[]> {
+    const filas = await prisma.productoComercio.findMany({
+      where: { comercioId, deletedAt: null },
+      orderBy: { createdAt: 'desc' },
+      select: SELECT_PRODUCTO,
+    });
+    return filas.map(aProductoComercio);
   }
 }

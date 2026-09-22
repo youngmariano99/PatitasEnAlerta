@@ -13,8 +13,15 @@
  */
 import { NextRequest } from 'next/server';
 import { container } from '@aplicacion/contenedor-di';
-import type { DatosNuevoPedido, IRepositorioPedidosProducto, PedidoCreado } from '@dominio/puertos/IRepositorioPedidosProducto';
-import type { IRepositorioProductosVeterinario, ProductoActual } from '@dominio/puertos/IRepositorioProductosVeterinario';
+import type {
+  DatosNuevoPedido,
+  IRepositorioPedidosProducto,
+  PedidoCreado,
+} from '@dominio/puertos/IRepositorioPedidosProducto';
+import type {
+  IRepositorioProductosVeterinario,
+  ProductoActual,
+} from '@dominio/puertos/IRepositorioProductosVeterinario';
 import type { IRepositorioPerfil, ResumenPerfilPropio } from '@dominio/puertos/IRepositorioPerfil';
 
 const productoId = '11111111-1111-1111-1111-111111111111';
@@ -28,18 +35,24 @@ const compradorB = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 // usuarios distintos al mismo tiempo — mismo criterio que
 // tests/integration/turnos.reservar.test.ts.
 jest.mock('@supabase/ssr', () => ({
-  createServerClient: jest.fn((_url: string, _key: string, opciones: { cookies: { getAll: () => Array<{ name: string; value: string }> } }) => {
-    const cookies = opciones.cookies.getAll();
-    const usuarioSimulado = cookies.find((c) => c.name === 'usuario-simulado')?.value;
-    return {
-      auth: {
-        getUser: async () =>
-          usuarioSimulado
-            ? { data: { user: { id: usuarioSimulado } }, error: null }
-            : { data: { user: null }, error: { message: 'sin sesión' } },
-      },
-    };
-  }),
+  createServerClient: jest.fn(
+    (
+      _url: string,
+      _key: string,
+      opciones: { cookies: { getAll: () => Array<{ name: string; value: string }> } },
+    ) => {
+      const cookies = opciones.cookies.getAll();
+      const usuarioSimulado = cookies.find((c) => c.name === 'usuario-simulado')?.value;
+      return {
+        auth: {
+          getUser: async () =>
+            usuarioSimulado
+              ? { data: { user: { id: usuarioSimulado } }, error: null }
+              : { data: { user: null }, error: { message: 'sin sesión' } },
+        },
+      };
+    },
+  ),
 }));
 
 // Importa el route handler DESPUÉS del mock de '@supabase/ssr' (mismo
@@ -108,11 +121,29 @@ class RepositorioPedidosConcurrencia implements IRepositorioPedidosProducto {
   get stockRestante(): number {
     return this.stock;
   }
+
+  async listarPorComprador(): Promise<never> {
+    throw new Error('no usado en este test');
+  }
+
+  async listarPorVeterinario(): Promise<never> {
+    throw new Error('no usado en este test');
+  }
+
+  async actualizarEstado(): Promise<null> {
+    return null;
+  }
 }
 
 class RepositorioPerfilFalso implements IRepositorioPerfil {
   async obtenerPerfilPropio(usuarioId: string): Promise<ResumenPerfilPropio | null> {
-    return { id: usuarioId, email: 'dueno@ejemplo.test', rol: 'dueño', estadoVerificacion: 'no_requerido', verificadoEn: null };
+    return {
+      id: usuarioId,
+      email: 'dueno@ejemplo.test',
+      rol: 'dueño',
+      estadoVerificacion: 'no_requerido',
+      verificadoEn: null,
+    };
   }
 }
 
@@ -137,9 +168,18 @@ describe('POST /api/veterinarios/productos/[id]/pedidos (GenerarPedidoCommand �
     // el doble de lo disponible, garantizando que solo UNO puede ganar.
     repositorioPedidos = new RepositorioPedidosConcurrencia(3);
     container.reset();
-    container.registerInstance<IRepositorioProductosVeterinario>('IRepositorioProductosVeterinario', repositorioProductos);
-    container.registerInstance<IRepositorioPedidosProducto>('IRepositorioPedidosProducto', repositorioPedidos);
-    container.registerInstance<IRepositorioPerfil>('IRepositorioPerfil', new RepositorioPerfilFalso());
+    container.registerInstance<IRepositorioProductosVeterinario>(
+      'IRepositorioProductosVeterinario',
+      repositorioProductos,
+    );
+    container.registerInstance<IRepositorioPedidosProducto>(
+      'IRepositorioPedidosProducto',
+      repositorioPedidos,
+    );
+    container.registerInstance<IRepositorioPerfil>(
+      'IRepositorioPerfil',
+      new RepositorioPerfilFalso(),
+    );
   });
 
   it('Verificación técnica / AC: dos pedidos concurrentes reales (Promise.all) sobre el último stock disponible — solo uno tiene éxito', async () => {
@@ -172,7 +212,9 @@ describe('POST /api/veterinarios/productos/[id]/pedidos (GenerarPedidoCommand �
   });
 
   it('AC: un producto sin stock suficiente responde 409 / PEA-VETADV-001 en un pedido secuencial', async () => {
-    const respuesta = await POST(crearRequest(compradorA, { cantidad: 10 }), { params: { id: productoId } });
+    const respuesta = await POST(crearRequest(compradorA, { cantidad: 10 }), {
+      params: { id: productoId },
+    });
 
     expect(respuesta.status).toBe(409);
     const cuerpo = await respuesta.json();
@@ -180,11 +222,18 @@ describe('POST /api/veterinarios/productos/[id]/pedidos (GenerarPedidoCommand �
   });
 
   it('genera el pedido con éxito (201) cuando hay stock suficiente', async () => {
-    const respuesta = await POST(crearRequest(compradorA, { cantidad: 2 }), { params: { id: productoId } });
+    const respuesta = await POST(crearRequest(compradorA, { cantidad: 2 }), {
+      params: { id: productoId },
+    });
 
     expect(respuesta.status).toBe(201);
     const cuerpo = await respuesta.json();
-    expect(cuerpo).toMatchObject({ productoId, compradorId: compradorA, cantidad: 2, estado: 'pendiente' });
+    expect(cuerpo).toMatchObject({
+      productoId,
+      compradorId: compradorA,
+      cantidad: 2,
+      estado: 'pendiente',
+    });
     expect(repositorioPedidos.stockRestante).toBe(1);
   });
 

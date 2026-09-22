@@ -31,6 +31,14 @@ export class PrismaHistorialesCompartidosRepositorio implements IRepositorioHist
     });
   }
 
+  async listarPorOrigen(veterinarioOrigenId: string): Promise<HistorialCompartido[]> {
+    return prisma.historialCompartido.findMany({
+      where: { veterinarioOrigenId },
+      select: SELECT_HISTORIAL,
+      orderBy: { autorizadoEn: 'desc' },
+    });
+  }
+
   async revocar(id: string, veterinarioOrigenId: string): Promise<HistorialCompartido | null> {
     const actual = await prisma.historialCompartido.findFirst({
       where: { id, veterinarioOrigenId, revocadoEn: null },

@@ -22,9 +22,20 @@ export class ProductoNoDisponibleError extends ErrorDominio {
   }
 }
 
+/** El pedido no existe, no pertenece a un producto del veterinario que invoca, o ya no está en `pendiente` (máquina de estados terminal). */
+export class PedidoNoTransicionableError extends ErrorDominio {
+  constructor() {
+    super('PEA-VETADV-004', 'Este pedido ya no se puede cancelar en su estado actual.', 409);
+  }
+}
+
 export class TurnoAunNoConcluidoError extends ErrorDominio {
   constructor() {
-    super('PEA-VETADV-005', 'Todavía no terminó ese turno — vas a poder marcar la asistencia una vez que concluya.', 409);
+    super(
+      'PEA-VETADV-005',
+      'Todavía no terminó ese turno — vas a poder marcar la asistencia una vez que concluya.',
+      409,
+    );
   }
 }
 

@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { ZodError } from 'zod';
 import { container } from '@aplicacion/contenedor-di';
 import { RegistrarMascota } from '@aplicacion/casos-de-uso/mascotas/RegistrarMascota';
+import { ListarMascotasPropias } from '@aplicacion/casos-de-uso/mascotas/ListarMascotasPropias';
 import type { ComandoRegistrarMascota } from '@aplicacion/dtos/mascotas/RegistrarMascotaDto';
 import { ErrorDominio } from '@dominio/errores/ErrorDominio';
 import { PayloadInvalidoError } from '@dominio/errores/erroresAutenticacion';
@@ -12,6 +13,36 @@ import { logger } from '@infraestructura/logging/logger';
 
 function respuestaDeError(codigo: string, mensaje: string, statusHttp: number) {
   return NextResponse.json({ codigo, mensaje }, { status: statusHttp });
+}
+
+/**
+ * Listado de las mascotas propias del dueño autenticado (Módulo 1: "listar
+ * mascotas"). Sin paginación: es la lista personal de un dueño, no un
+ * listado comunitario — se acota únicamente por `dueñoId` de la sesión.
+ */
+export async function GET(request: NextRequest) {
+  const usuarioAutenticado = await obtenerUsuarioAutenticado(request);
+  if (!usuarioAutenticado) {
+    const error = new NoAutenticadoError();
+    return respuestaDeError(error.codigo, error.message, error.statusHttp);
+  }
+
+  try {
+    const casoDeUso = container.resolve(ListarMascotasPropias);
+    const resultado = await casoDeUso.ejecutar(usuarioAutenticado.id);
+    return NextResponse.json(resultado, { status: 200 });
+  } catch (error) {
+    if (error instanceof ErrorDominio) {
+      return respuestaDeError(error.codigo, error.message, error.statusHttp);
+    }
+
+    logger.error({ err: error }, 'Error no controlado en GET /api/mascotas');
+    return respuestaDeError(
+      'PEA-SIS-003',
+      'Algo salió mal de nuestro lado. Ya estamos al tanto, probá de nuevo en unos minutos.',
+      500,
+    );
+  }
 }
 
 /**
@@ -65,8 +96,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(resultado, { status: 201 });
   } catch (error) {
     if (error instanceof ZodError) {
-      const esFaltaDeFoto = error.errors.some((issue) => issue.path[0] === 'fotoUrl' && issue.code === 'invalid_type');
-      const errorNegocio = esFaltaDeFoto ? new FotoObligatoriaError() : new PayloadInvalidoError(error.errors[0]?.message);
+      const esFaltaDeFoto = error.errors.some(
+        (issue) => issue.path[0] === 'fotoUrl' && issue.code === 'invalid_type',
+      );
+      const errorNegocio = esFaltaDeFoto
+        ? new FotoObligatoriaError()
+        : new PayloadInvalidoError(error.errors[0]?.message);
       return respuestaDeError(errorNegocio.codigo, errorNegocio.message, errorNegocio.statusHttp);
     }
     if (error instanceof ErrorDominio) {

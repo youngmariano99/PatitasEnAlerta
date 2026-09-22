@@ -31,14 +31,18 @@ function formatearFecha(iso: string): string {
  */
 export function MapaEventos({ eventos, centro }: MapaEventosProps) {
   return (
-    <div className="overflow-hidden rounded-md border border-slate-700">
+    <div className="overflow-hidden rounded-md border border-surface2">
       <MapContainer center={centro} zoom={13} style={{ height: 420, width: '100%' }}>
         <TileLayer
           attribution='&copy; colaboradores de <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         {eventos.map((evento) => (
-          <Marker key={evento.id} position={[evento.latitud, evento.longitud]} icon={obtenerIconoEvento(evento.tipo)}>
+          <Marker
+            key={evento.id}
+            position={[evento.latitud, evento.longitud]}
+            icon={obtenerIconoEvento(evento.tipo)}
+          >
             <Popup>
               <span className="font-medium">{evento.titulo}</span>
               <br />

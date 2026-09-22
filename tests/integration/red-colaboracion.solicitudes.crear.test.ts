@@ -3,7 +3,10 @@
  */
 import { NextRequest } from 'next/server';
 import { container } from '@aplicacion/contenedor-di';
-import type { DatosNuevaSolicitudRecurso, IRepositorioSolicitudesRecurso } from '@dominio/puertos/IRepositorioSolicitudesRecurso';
+import type {
+  DatosNuevaSolicitudRecurso,
+  IRepositorioSolicitudesRecurso,
+} from '@dominio/puertos/IRepositorioSolicitudesRecurso';
 import type { IRepositorioPerfil, ResumenPerfilPropio } from '@dominio/puertos/IRepositorioPerfil';
 import { SolicitudRecurso } from '@dominio/entidades/SolicitudRecurso';
 
@@ -37,19 +40,31 @@ class RepositorioSolicitudesFalso implements IRepositorioSolicitudesRecurso {
   async listarAsistenciaVeterinariaAbiertas(): Promise<never> {
     throw new Error('no usado en este test');
   }
+
+  async listarAbiertas(): Promise<never> {
+    throw new Error('no usado en este test');
+  }
 }
 
 class RepositorioPerfilFalso implements IRepositorioPerfil {
   public rol = 'organizacion';
 
   async obtenerPerfilPropio(usuarioId: string): Promise<ResumenPerfilPropio | null> {
-    return { id: usuarioId, email: 'ong@ejemplo.test', rol: this.rol, estadoVerificacion: 'verificado', verificadoEn: null };
+    return {
+      id: usuarioId,
+      email: 'ong@ejemplo.test',
+      rol: this.rol,
+      estadoVerificacion: 'verificado',
+      verificadoEn: null,
+    };
   }
 }
 
 function autenticarComo(usuarioId: string | null) {
   getUserMock.mockResolvedValue(
-    usuarioId ? { data: { user: { id: usuarioId } }, error: null } : { data: { user: null }, error: { message: 'sin sesión' } },
+    usuarioId
+      ? { data: { user: { id: usuarioId } }, error: null }
+      : { data: { user: null }, error: { message: 'sin sesión' } },
   );
 }
 
@@ -75,7 +90,10 @@ describe('POST /api/red-colaboracion/solicitudes (Publicación de solicitudes de
     repositorioSolicitudes = new RepositorioSolicitudesFalso();
     repositorioPerfil = new RepositorioPerfilFalso();
     container.reset();
-    container.registerInstance<IRepositorioSolicitudesRecurso>('IRepositorioSolicitudesRecurso', repositorioSolicitudes);
+    container.registerInstance<IRepositorioSolicitudesRecurso>(
+      'IRepositorioSolicitudesRecurso',
+      repositorioSolicitudes,
+    );
     container.registerInstance<IRepositorioPerfil>('IRepositorioPerfil', repositorioPerfil);
   });
 

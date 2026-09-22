@@ -19,7 +19,10 @@ function crearFakes() {
     listarReservadosPorProveedor: jest.fn(),
     listarReservadosEnVentana: jest.fn(),
     actualizarAsistio: jest.fn(),
-    calcularTasaNoShow: jest.fn().mockResolvedValue({ totalConcluidos: 10, totalNoShow: 4, tasa: 0.4 }),
+    calcularTasaNoShow: jest
+      .fn()
+      .mockResolvedValue({ totalConcluidos: 10, totalNoShow: 4, tasa: 0.4 }),
+    listarPorEvento: jest.fn(),
   };
   return { repositorioTurnos };
 }
