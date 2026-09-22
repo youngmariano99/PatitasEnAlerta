@@ -10,6 +10,7 @@ import {
   BadgeVerificacion,
   type EstadoVerificacion,
 } from '@presentacion/componentes/auth/BadgeVerificacion';
+import { ENLACES_POR_ROL, ETIQUETA_ROL } from '@presentacion/config/enlacesPorRol';
 
 interface PerfilPropio {
   id: string;
@@ -22,81 +23,6 @@ interface RespuestaError {
   codigo: string;
   mensaje: string;
 }
-
-interface EnlaceRapido {
-  href: string;
-  etiqueta: string;
-}
-
-const ENLACES_POR_ROL: Record<string, EnlaceRapido[]> = {
-  dueño: [
-    { href: '/mascotas', etiqueta: 'Mis mascotas' },
-    { href: '/reportes/nuevo', etiqueta: 'Reportar una mascota' },
-    { href: '/turnos/reservar', etiqueta: 'Reservar un turno' },
-    { href: '/turnos/mis-turnos', etiqueta: 'Mis turnos' },
-    { href: '/adopciones', etiqueta: 'Vitrina de adopción' },
-    { href: '/adopciones/compatibilidad', etiqueta: 'Compatibilidad de adopción' },
-    { href: '/tienda-veterinaria', etiqueta: 'Tienda veterinaria' },
-    { href: '/mis-pedidos', etiqueta: 'Mis pedidos' },
-    { href: '/cursos', etiqueta: 'Cursos de tenencia responsable' },
-    { href: '/foro', etiqueta: 'Foro de bienestar animal' },
-  ],
-  veterinario: [
-    { href: '/veterinario/agenda', etiqueta: 'Mi agenda' },
-    { href: '/veterinario/turnos', etiqueta: 'Mis turnos' },
-    { href: '/veterinario/pacientes', etiqueta: 'Mis pacientes' },
-    { href: '/veterinario/productos', etiqueta: 'Mi catálogo de productos' },
-    { href: '/veterinario/pedidos', etiqueta: 'Pedidos recibidos' },
-    { href: '/veterinario/historiales-compartidos', etiqueta: 'Historiales compartidos' },
-    { href: '/reportes', etiqueta: 'Reportes de la comunidad' },
-    { href: '/red-colaboracion/solicitudes', etiqueta: 'Solicitudes de la Red de Colaboración' },
-    { href: '/cursos', etiqueta: 'Cursos de tenencia responsable' },
-    { href: '/foro', etiqueta: 'Foro de bienestar animal' },
-  ],
-  municipio: [
-    { href: '/municipio/dashboard', etiqueta: 'Panel de reportes' },
-    { href: '/municipio/eventos', etiqueta: 'Calendario de operativos' },
-    { href: '/municipio/turnera', etiqueta: 'Turnera municipal' },
-    { href: '/municipio/adopciones', etiqueta: 'Vitrina de adopción' },
-    { href: '/cursos', etiqueta: 'Cursos de tenencia responsable' },
-    { href: '/foro', etiqueta: 'Foro de bienestar animal' },
-  ],
-  administrador: [
-    { href: '/admin/verificaciones', etiqueta: 'Cola de verificaciones' },
-    { href: '/admin/auditoria', etiqueta: 'Historial de auditoría' },
-    { href: '/foro', etiqueta: 'Foro de bienestar animal' },
-  ],
-  comerciante: [
-    { href: '/comercios/panel', etiqueta: 'Mi comercio' },
-    { href: '/cursos', etiqueta: 'Cursos de tenencia responsable' },
-    { href: '/foro', etiqueta: 'Foro de bienestar animal' },
-  ],
-  organizacion: [
-    { href: '/red-colaboracion/solicitudes', etiqueta: 'Solicitudes de recurso' },
-    { href: '/red-colaboracion/directorio', etiqueta: 'Directorio de aliados' },
-    { href: '/red-colaboracion/buscar', etiqueta: 'Buscar reportes similares' },
-    { href: '/red-colaboracion/metricas', etiqueta: 'Mis métricas' },
-    { href: '/cursos', etiqueta: 'Cursos de tenencia responsable' },
-    { href: '/foro', etiqueta: 'Foro de bienestar animal' },
-  ],
-  rescatista: [
-    { href: '/red-colaboracion/solicitudes', etiqueta: 'Solicitudes de recurso' },
-    { href: '/red-colaboracion/directorio', etiqueta: 'Directorio de aliados' },
-    { href: '/red-colaboracion/metricas', etiqueta: 'Mis métricas' },
-    { href: '/cursos', etiqueta: 'Cursos de tenencia responsable' },
-    { href: '/foro', etiqueta: 'Foro de bienestar animal' },
-  ],
-};
-
-const ETIQUETA_ROL: Record<string, string> = {
-  dueño: 'Dueño de mascota',
-  veterinario: 'Veterinario/a',
-  municipio: 'Cuenta municipal',
-  administrador: 'Administrador de plataforma',
-  comerciante: 'Comerciante',
-  organizacion: 'Organización/ONG',
-  rescatista: 'Rescatista',
-};
 
 export default function PaginaPanel() {
   const [perfil, setPerfil] = useState<PerfilPropio | null>(null);

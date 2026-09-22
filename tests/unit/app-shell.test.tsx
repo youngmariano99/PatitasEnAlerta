@@ -16,7 +16,9 @@ describe('RootLayout', () => {
 
     expect(elemento.props.lang).toBe('es');
     expect(elemento.props.className).not.toMatch(/(?:^|\s)dark(?:\s|$)/);
-    expect(elemento.props.children.props.children).toBe('contenido-de-prueba');
+    // <body><ShellNavegacion>{children}</ShellNavegacion></body> — el shell
+    // de navegación (Fase A del sprint de navegación) envuelve a `children`.
+    expect(elemento.props.children.props.children.props.children).toBe('contenido-de-prueba');
     expect(metadata.title).toBe('Patitas en Alerta');
   });
 });

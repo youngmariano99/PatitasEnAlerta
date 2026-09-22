@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Lexend, Atkinson_Hyperlegible, Roboto_Mono } from 'next/font/google';
+import { ShellNavegacion } from '@presentacion/componentes/shell/ShellNavegacion';
 import './globals.css';
 
 const lexend = Lexend({
@@ -32,7 +33,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       lang="es"
       className={`${lexend.variable} ${atkinsonHyperlegible.variable} ${robotoMono.variable}`}
     >
-      <body>{children}</body>
+      <body>
+        <ShellNavegacion>{children}</ShellNavegacion>
+      </body>
     </html>
   );
 }
