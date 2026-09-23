@@ -19,13 +19,17 @@ export function EncabezadoIlustrado({
   descripcion,
 }: EncabezadoIlustradoProps) {
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-4">
+      {/* Mismo criterio que EstadoIlustrado.tsx: ancho fijo + `h-auto`, nunca
+          una caja cuadrada forzada — las ilustraciones de public/animales/
+          no son todas cuadradas (algunas son escenas rectangulares, otras
+          recortes de un solo personaje) y forzarlas a 56×56 las aplastaba. */}
       <Image
         src={imagenSrc}
         alt={alt}
-        width={56}
-        height={56}
-        className="h-14 w-14 shrink-0"
+        width={220}
+        height={220}
+        className="h-auto w-20 shrink-0 sm:w-24"
         priority={false}
       />
       <div className="flex flex-col gap-0.5">
