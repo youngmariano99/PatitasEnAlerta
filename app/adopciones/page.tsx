@@ -2,6 +2,9 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
+import { Badge } from '@presentacion/componentes/ui/Badge';
+import { ImagenConFallback } from '@presentacion/componentes/ui/ImagenConFallback';
+import { EstadoIlustrado } from '@presentacion/componentes/estado/EstadoIlustrado';
 
 const POR_PAGINA = 50;
 
@@ -99,15 +102,12 @@ export default function PaginaAdopciones() {
       {cargando ? <p className="text-sm text-text-muted">Cargando…</p> : null}
 
       {!cargando && !errorCarga && items.length === 0 ? (
-        <div className="rounded-md border border-dashed border-surface2 p-8 text-center">
-          <p className="mb-1 text-sm font-medium text-text-primary">
-            Por ahora no hay animales disponibles para adopción.
-          </p>
-          <p className="text-sm text-text-muted">
-            Volvé a consultar más adelante — el municipio publica nuevas fichas a medida que rescata
-            animales.
-          </p>
-        </div>
+        <EstadoIlustrado
+          imagenSrc="/animales/ONGs y rescatistas.png"
+          alt="Mascotas abrazadas esperando un hogar"
+          titulo="Por ahora no hay animales disponibles para adopción."
+          descripcion="Volvé a consultar más adelante — el municipio publica nuevas fichas a medida que rescata animales."
+        />
       ) : null}
 
       {!cargando && !errorCarga && items.length > 0 ? (
@@ -115,18 +115,19 @@ export default function PaginaAdopciones() {
           {items.map((ficha) => (
             <article
               key={ficha.id}
-              className="overflow-hidden rounded-md border border-surface2 bg-surface1/50"
+              className="overflow-hidden rounded-lg border border-surface2 bg-surface1 shadow-sm transition-colors hover:border-accent"
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <ImagenConFallback
                 src={ficha.fotoUrl}
                 alt={ficha.nombreAnimal}
-                className="h-48 w-full object-cover"
+                className="h-48 w-full"
+                sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
               />
               <div className="flex flex-col gap-1.5 p-4">
-                <p className="font-medium text-text-primary">
-                  {ficha.nombreAnimal} <span className="text-text-muted">· {ficha.especie}</span>
-                </p>
+                <div className="flex items-center justify-between gap-2">
+                  <p className="font-medium text-text-primary">{ficha.nombreAnimal}</p>
+                  <Badge tono="neutro">{ficha.especie}</Badge>
+                </div>
                 <p className="text-sm text-text-muted">
                   {[
                     ficha.edadAproximada !== null ? `${ficha.edadAproximada} años` : null,

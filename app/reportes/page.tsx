@@ -10,6 +10,8 @@ import {
 } from '@aplicacion/dtos/reportes/CrearReporteDto';
 import { ESTADOS_REPORTE_SOPORTADOS, type EstadoReporte } from '@dominio/entidades/Reporte';
 import { EncabezadoIlustrado } from '@presentacion/componentes/estado/EncabezadoIlustrado';
+import { Badge } from '@presentacion/componentes/ui/Badge';
+import { Boton } from '@presentacion/componentes/ui/Boton';
 
 // Leaflet toca `window` al inicializarse — dynamic import con ssr:false,
 // mismo criterio que SelectorUbicacionMapa (app/reportes/nuevo).
@@ -34,6 +36,12 @@ const ETIQUETAS_ESTADO: Record<EstadoReporte, { texto: string; icono: string }> 
   en_atencion: { texto: 'En atención', icono: '🔍' },
   resuelto: { texto: 'Resuelto', icono: '✅' },
   cerrado: { texto: 'Cerrado', icono: '⏹️' },
+};
+
+const TONO_POR_TIPO: Record<TipoReporte, 'peligro' | 'exito' | 'alerta'> = {
+  perdido: 'peligro',
+  encontrado: 'exito',
+  problematica: 'alerta',
 };
 
 interface ReporteApi {
@@ -86,7 +94,7 @@ function badgeEstado(estado: string) {
  * cambiarla nunca dispara un refetch ni resetea el filtro.
  */
 export default function PaginaReportes() {
-  const [vista, setVista] = useState<Vista>('tabla');
+  const [vista, setVista] = useState<Vista>('mapa');
   const [tipo, setTipo] = useState<TipoReporte | ''>('');
   const [estado, setEstado] = useState<EstadoReporte | ''>('');
   const [cercaDeMi, setCercaDeMi] = useState(false);
@@ -242,7 +250,7 @@ export default function PaginaReportes() {
               : 'border-surface2 bg-surface1 text-text-muted',
           )}
         >
-          <span aria-hidden="true">📍</span> Cerca de mí
+          <span aria-hidden="true">📍</span> Cerca de mí ({RADIO_CERCA_DE_MI_KM} km)
         </button>
 
         {hayFiltrosActivos ? (
@@ -336,9 +344,6 @@ export default function PaginaReportes() {
             <thead>
               <tr className="border-b border-surface2 bg-surface1 text-xs uppercase tracking-wide text-text-muted">
                 <th scope="col" className="px-4 py-3 font-medium">
-                  ID
-                </th>
-                <th scope="col" className="px-4 py-3 font-medium">
                   Tipo
                 </th>
                 <th scope="col" className="px-4 py-3 font-medium">
@@ -358,11 +363,12 @@ export default function PaginaReportes() {
             <tbody>
               {items.map((item) => (
                 <tr key={item.id} className="border-b border-surface2 last:border-b-0">
-                  <td className="px-4 py-3 font-mono text-xs text-text-muted">{item.id}</td>
-                  <td className="px-4 py-3 text-text-muted">
-                    {ETIQUETAS_TIPO[item.tipo as TipoReporte] ?? item.tipo}
+                  <td className="px-4 py-3">
+                    <Badge tono={TONO_POR_TIPO[item.tipo as TipoReporte] ?? 'neutro'}>
+                      {ETIQUETAS_TIPO[item.tipo as TipoReporte] ?? item.tipo}
+                    </Badge>
                     {item.especie ? (
-                      <span className="text-text-primary"> · {item.especie}</span>
+                      <span className="ml-1.5 text-text-muted">· {item.especie}</span>
                     ) : null}
                   </td>
                   <td className="px-4 py-3 text-text-muted">{badgeEstado(item.estado)}</td>
@@ -376,11 +382,8 @@ export default function PaginaReportes() {
                     {formatearFecha(item.createdAt)}
                   </td>
                   <td className="px-4 py-3">
-                    <Link
-                      href={`/reportes/${item.id}`}
-                      className="text-accent underline underline-offset-2"
-                    >
-                      Ver historial
+                    <Link href={`/reportes/${item.id}`}>
+                      <Boton variante="texto">Ver historial</Boton>
                     </Link>
                   </td>
                 </tr>

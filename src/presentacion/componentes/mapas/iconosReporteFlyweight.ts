@@ -1,7 +1,7 @@
 import L from 'leaflet';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { CheckCircle2, PawPrint, TriangleAlert, type LucideIcon } from 'lucide-react';
+import { PawPrint, TriangleAlert, type LucideIcon } from 'lucide-react';
 
 /**
  * Flyweight (GoF): un único ícono compartido por cada `tipo` de reporte — a
@@ -16,12 +16,16 @@ import { CheckCircle2, PawPrint, TriangleAlert, type LucideIcon } from 'lucide-r
  * mascota perdida o encontrada?"), el `estado` puntual (reportado/en
  * revisión/resuelto/etc.) sigue visible como texto en el popup — nunca solo
  * color, siempre acompañado de ícono + texto (`docs/DISENO.md`).
+ *
+ * `perdido`/`encontrado` comparten la misma silueta (`PawPrint`) — la
+ * distinción es el color (rojo/verde), como en la referencia visual del
+ * usuario; `problematica` usa un ícono distinto porque no es una mascota.
  */
 const CACHE_ICONOS = new Map<string, L.DivIcon>();
 
 const ICONO_POR_TIPO: Record<string, LucideIcon> = {
   perdido: PawPrint,
-  encontrado: CheckCircle2,
+  encontrado: PawPrint,
   problematica: TriangleAlert,
 };
 

@@ -5,9 +5,10 @@ import Link from 'next/link';
 import clsx from 'clsx';
 import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { PawPrint, CheckCircle2, CalendarDays } from 'lucide-react';
+import { PawPrint, CalendarDays } from 'lucide-react';
 import { obtenerIconoReporte } from '@presentacion/componentes/mapas/iconosReporteFlyweight';
 import { obtenerIconoEvento } from '@presentacion/componentes/mapas/iconosEventoFlyweight';
+import { LeyendaMapa } from '@presentacion/componentes/mapas/LeyendaMapa';
 import type { MarcadorReporte } from '@presentacion/componentes/mapas/MapaReportes';
 import type { MarcadorEvento } from '@presentacion/componentes/mapas/MapaEventos';
 
@@ -26,7 +27,7 @@ const FILTROS: Array<{ valor: Filtro; etiqueta: string; colorActivo: string }> =
 
 const REFERENCIAS = [
   { etiqueta: 'Perdidos', color: '#B3261E', icono: PawPrint },
-  { etiqueta: 'Encontrados', color: '#0F7B4D', icono: CheckCircle2 },
+  { etiqueta: 'Encontrados', color: '#0F7B4D', icono: PawPrint },
   { etiqueta: 'Operativos', color: '#0073E6', icono: CalendarDays },
 ];
 
@@ -128,22 +129,7 @@ export function MapaComunidad({ reportes, eventos, centro }: MapaComunidadProps)
         </MapContainer>
       </div>
 
-      <div
-        aria-label="Referencias del mapa"
-        className="mt-3 flex flex-wrap gap-4 text-sm text-text-muted"
-      >
-        {REFERENCIAS.map((ref) => (
-          <span key={ref.etiqueta} className="flex items-center gap-1.5">
-            <span
-              className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full"
-              style={{ backgroundColor: ref.color }}
-            >
-              <ref.icono aria-hidden="true" className="h-3 w-3 text-base" />
-            </span>
-            {ref.etiqueta}
-          </span>
-        ))}
-      </div>
+      <LeyendaMapa items={REFERENCIAS} />
     </div>
   );
 }

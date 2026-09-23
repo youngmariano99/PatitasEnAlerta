@@ -7,7 +7,7 @@
  └─ /recuperar-password
      └─ /recuperar-password/nueva  (define la nueva contraseña; requiere el enlace de un solo uso enviado por Supabase Auth)
 
-/panel                            (dashboard raíz, redirige según rol)
+/panel                            (panel del usuario logueado: sección "Lo más urgente" según rol — notificaciones sin leer, próximo turno, cola de verificaciones — más los accesos completos de ENLACES_POR_ROL)
 
 /mascotas
  ├─ /mascotas                     (mis mascotas registradas)

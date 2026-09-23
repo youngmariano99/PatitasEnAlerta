@@ -40,17 +40,33 @@ function ultimaUrlSolicitada(): string {
 }
 
 describe('PaginaReportes (app/reportes)', () => {
-  it('renderiza la tabla con columnas ID y fecha en font-mono', async () => {
+  it('el mapa es la vista por defecto', async () => {
     mockearFetch([
       { status: 200, body: { items: [reporteBase], total: 1, pagina: 1, porPagina: 50 } },
     ]);
     render(<PaginaReportes />);
 
-    const celdaId = await screen.findByText(reporteBase.id);
-    expect(celdaId).toHaveClass('font-mono');
+    expect(await screen.findByTestId('mapa-mock')).toHaveTextContent('Mapa con 1 marcador(es)');
+    expect(screen.getByRole('tab', { name: 'Mapa' })).toHaveAttribute('aria-selected', 'true');
+  });
 
-    const filas = screen.getAllByRole('row');
-    const celdaFecha = within(filas[1]!).getAllByRole('cell')[4]!;
+  it('en la tabla, cada fila muestra el tipo con un Badge (no el UUID) y la fecha en font-mono', async () => {
+    mockearFetch([
+      { status: 200, body: { items: [reporteBase], total: 1, pagina: 1, porPagina: 50 } },
+    ]);
+    const usuario = userEvent.setup();
+    render(<PaginaReportes />);
+    await screen.findByTestId('mapa-mock');
+
+    await usuario.click(screen.getByRole('tab', { name: 'Tabla' }));
+
+    const tabla = await screen.findByRole('table');
+    const celdaTipo = await within(tabla).findByText('Perdido');
+    expect(celdaTipo.closest('span')).toBeInTheDocument();
+    expect(screen.queryByText(reporteBase.id)).not.toBeInTheDocument();
+
+    const filas = within(tabla).getAllByRole('row');
+    const celdaFecha = within(filas[1]!).getAllByRole('cell')[3]!;
     expect(celdaFecha).toHaveClass('font-mono');
   });
 
@@ -75,7 +91,7 @@ describe('PaginaReportes (app/reportes)', () => {
     ]);
     const usuario = userEvent.setup();
     render(<PaginaReportes />);
-    await screen.findByText(reporteBase.id);
+    await screen.findByTestId('mapa-mock');
 
     await usuario.selectOptions(screen.getByLabelText('Tipo'), 'encontrado');
 
@@ -93,30 +109,41 @@ describe('PaginaReportes (app/reportes)', () => {
     ]);
     const usuario = userEvent.setup();
     render(<PaginaReportes />);
-    await screen.findByText(reporteBase.id);
+    await screen.findByTestId('mapa-mock');
 
     await usuario.selectOptions(screen.getByLabelText('Tipo'), 'encontrado');
 
     await waitFor(() => expect(ultimaUrlSolicitada()).toContain('tipo=encontrado'));
   });
 
-  it('alterna entre tabla y mapa sin perder el filtro de tipo activo', async () => {
+  it('alterna entre mapa y tabla sin perder el filtro de tipo activo', async () => {
     mockearFetch([
       { status: 200, body: { items: [reporteBase], total: 1, pagina: 1, porPagina: 50 } },
     ]);
     const usuario = userEvent.setup();
     render(<PaginaReportes />);
-    await screen.findByText(reporteBase.id);
+    await screen.findByTestId('mapa-mock');
 
     await usuario.selectOptions(screen.getByLabelText('Tipo'), 'perdido');
-    await usuario.click(screen.getByRole('tab', { name: 'Mapa' }));
+    await usuario.click(screen.getByRole('tab', { name: 'Tabla' }));
 
+    const tabla = await screen.findByRole('table');
+    expect(await within(tabla).findByText('Perdido')).toBeInTheDocument();
+    expect(screen.getByLabelText('Tipo')).toHaveValue('perdido');
+
+    await usuario.click(screen.getByRole('tab', { name: 'Mapa' }));
     expect(await screen.findByTestId('mapa-mock')).toHaveTextContent('Mapa con 1 marcador(es)');
     expect(screen.getByLabelText('Tipo')).toHaveValue('perdido');
+  });
 
-    await usuario.click(screen.getByRole('tab', { name: 'Tabla' }));
-    expect(await screen.findByText(reporteBase.id)).toBeInTheDocument();
-    expect(screen.getByLabelText('Tipo')).toHaveValue('perdido');
+  it('el botón "Cerca de mí" muestra el radio explícito', async () => {
+    mockearFetch([
+      { status: 200, body: { items: [reporteBase], total: 1, pagina: 1, porPagina: 50 } },
+    ]);
+    render(<PaginaReportes />);
+    await screen.findByTestId('mapa-mock');
+
+    expect(screen.getByRole('button', { name: /Cerca de mí \(10 km\)/ })).toBeInTheDocument();
   });
 
   it('muestra un mensaje de error legible si la API falla', async () => {
