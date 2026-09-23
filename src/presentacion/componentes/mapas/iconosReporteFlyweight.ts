@@ -1,33 +1,28 @@
 import L from 'leaflet';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { PawPrint, TriangleAlert, type LucideIcon } from 'lucide-react';
+import { Cat, Dog, PawPrint, TriangleAlert, type LucideIcon } from 'lucide-react';
 
 /**
- * Flyweight (GoF): un único ícono compartido por cada `tipo` de reporte — a
- * lo sumo 3 objetos (perdido/encontrado/problematica), reutilizados por los
- * hasta 50 marcadores de una página del mapa en vez de crear un `L.DivIcon`
- * nuevo por cada reporte. Estado intrínseco (compartido, cacheado acá) =
- * apariencia según tipo; estado extrínseco (no cacheado, vive en cada
+ * Flyweight (GoF): un único ícono compartido por cada combinación
+ * (tipo, estado, especie normalizada) — reutilizado por los hasta 50
+ * marcadores de una página del mapa en vez de crear un `L.DivIcon` nuevo por
+ * cada reporte. Estado intrínseco (compartido, cacheado acá) = apariencia
+ * según tipo/especie; estado extrínseco (no cacheado, vive en cada
  * `<Marker>`) = la posición lat/lon de cada reporte puntual.
  *
- * El color/ícono se definen por `tipo` (no por `estado`): es lo que un
- * vecino necesita distinguir de un vistazo en el mapa ("¿esto es una
- * mascota perdida o encontrada?"), el `estado` puntual (reportado/en
+ * El color se define por `tipo` (perdido/encontrado/problematica) — es la
+ * distinción más urgente para un vecino ("¿esto es una mascota perdida o
+ * encontrada?"). El ícono, dentro de perdido/encontrado, se afina por
+ * `especie` (perro/gato) para que además se pueda distinguir sin tener que
+ * abrir cada marcador — cualquier valor que no sea exactamente "perro" o
+ * "gato" (texto libre, `null`, datos previos a este cambio) cae al genérico
+ * `PawPrint`. `problematica` nunca usa ícono de especie (`TriangleAlert`
+ * siempre) — no es una mascota. El `estado` puntual (reportado/en
  * revisión/resuelto/etc.) sigue visible como texto en el popup — nunca solo
  * color, siempre acompañado de ícono + texto (`docs/DISENO.md`).
- *
- * `perdido`/`encontrado` comparten la misma silueta (`PawPrint`) — la
- * distinción es el color (rojo/verde), como en la referencia visual del
- * usuario; `problematica` usa un ícono distinto porque no es una mascota.
  */
 const CACHE_ICONOS = new Map<string, L.DivIcon>();
-
-const ICONO_POR_TIPO: Record<string, LucideIcon> = {
-  perdido: PawPrint,
-  encontrado: PawPrint,
-  problematica: TriangleAlert,
-};
 
 const COLOR_POR_TIPO: Record<string, string> = {
   perdido: '#B3261E', // token `danger` — mascota perdida, urgencia real
@@ -35,12 +30,35 @@ const COLOR_POR_TIPO: Record<string, string> = {
   problematica: '#C44601', // token `alert` — riesgo sanitario urbano, uso legítimo del naranja de emergencia
 };
 
-export function obtenerIconoReporte(tipo: string, estado: string): L.DivIcon {
-  const clave = `${tipo}:${estado}`;
+/**
+ * Normaliza `especie` a una clave de caché acotada — nunca una por cada
+ * valor de texto libre posible (crecimiento sin límite del Map), solo
+ * distingue perro/gato, todo lo demás colapsa a un único bucket genérico.
+ */
+function normalizarEspecie(especie: string | null | undefined): 'perro' | 'gato' | '' {
+  const valor = especie?.trim().toLowerCase();
+  if (valor === 'perro' || valor === 'gato') return valor;
+  return '';
+}
+
+function iconoPorTipoYEspecie(tipo: string, especieNormalizada: string): LucideIcon {
+  if (tipo === 'problematica') return TriangleAlert;
+  if (especieNormalizada === 'perro') return Dog;
+  if (especieNormalizada === 'gato') return Cat;
+  return PawPrint;
+}
+
+export function obtenerIconoReporte(
+  tipo: string,
+  estado: string,
+  especie?: string | null,
+): L.DivIcon {
+  const especieNormalizada = normalizarEspecie(especie);
+  const clave = `${tipo}:${estado}:${especieNormalizada}`;
   const cacheado = CACHE_ICONOS.get(clave);
   if (cacheado) return cacheado;
 
-  const IconoComponente = ICONO_POR_TIPO[tipo] ?? PawPrint;
+  const IconoComponente = iconoPorTipoYEspecie(tipo, especieNormalizada);
   // Blanco fijo (no un token del sistema de diseño): es un glyph dentro de un
   // marcador Leaflet, renderizado fuera del árbol de React vía `L.divIcon`,
   // no un elemento de UI temático — no aplica la regla de "sin colores nuevos".

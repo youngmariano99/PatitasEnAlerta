@@ -9,6 +9,7 @@ import { Boton } from '@presentacion/componentes/ui/Boton';
 import { Tarjeta } from '@presentacion/componentes/ui/Tarjeta';
 import { Badge } from '@presentacion/componentes/ui/Badge';
 import { EstadisticasComunidad } from '@presentacion/componentes/home/EstadisticasComunidad';
+import { TONO_POR_TIPO_REPORTE } from '@presentacion/config/tonosReporte';
 
 // Leaflet toca `window` al inicializarse — dynamic import con ssr:false,
 // mismo criterio que app/reportes/page.tsx.
@@ -26,6 +27,7 @@ interface ReporteApi {
   descripcion: string;
   latitud: number;
   longitud: number;
+  especie: string | null;
 }
 
 interface EventoApi {
@@ -42,12 +44,6 @@ interface RespuestaListado<T> {
   items: T[];
   total: number;
 }
-
-const TONO_POR_TIPO_REPORTE: Record<string, 'alerta' | 'exito' | 'peligro'> = {
-  perdido: 'peligro',
-  encontrado: 'exito',
-  problematica: 'alerta',
-};
 
 const ACCESOS_RAPIDOS = [
   {
@@ -126,6 +122,7 @@ export default function HomePage() {
     descripcion: r.descripcion,
     latitud: r.latitud,
     longitud: r.longitud,
+    especie: r.especie,
   }));
   const marcadoresEventos = eventos?.items ?? [];
 
@@ -223,7 +220,13 @@ export default function HomePage() {
                   <li key={reporte.id}>
                     <Link href={`/reportes/${reporte.id}`}>
                       <Tarjeta className="hover:border-accent">
-                        <Badge tono={TONO_POR_TIPO_REPORTE[reporte.tipo] ?? 'neutro'}>
+                        <Badge
+                          tono={
+                            TONO_POR_TIPO_REPORTE[
+                              reporte.tipo as keyof typeof TONO_POR_TIPO_REPORTE
+                            ] ?? 'neutro'
+                          }
+                        >
                           {reporte.tipo}
                         </Badge>
                         <p className="mt-1 text-sm text-text-primary">{reporte.descripcion}</p>

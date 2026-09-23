@@ -96,7 +96,7 @@ export function MapaComunidad({ reportes, eventos, centro }: MapaComunidadProps)
             <Marker
               key={`reporte-${reporte.id}`}
               position={[reporte.latitud, reporte.longitud]}
-              icon={obtenerIconoReporte(reporte.tipo, reporte.estado)}
+              icon={obtenerIconoReporte(reporte.tipo, reporte.estado, reporte.especie)}
             >
               <Popup>
                 <span className="font-medium capitalize">{reporte.tipo}</span> · {reporte.estado}
@@ -129,7 +129,10 @@ export function MapaComunidad({ reportes, eventos, centro }: MapaComunidadProps)
         </MapContainer>
       </div>
 
-      <LeyendaMapa items={REFERENCIAS} />
+      <LeyendaMapa
+        items={REFERENCIAS}
+        notaAdicional="El ícono también indica la especie cuando se conoce (🐕 perro / 🐈 gato)."
+      />
     </div>
   );
 }

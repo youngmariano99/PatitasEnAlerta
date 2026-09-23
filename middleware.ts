@@ -52,6 +52,7 @@ const RUTAS_API_PROTEGIDAS = [
   '/api/comercios',
   '/api/foros-cursos',
   '/api/adopcion-compatibilidad',
+  '/api/geocoding',
 ];
 
 // Excepción de método sobre RUTAS_API_PROTEGIDAS: un GET a estas rutas

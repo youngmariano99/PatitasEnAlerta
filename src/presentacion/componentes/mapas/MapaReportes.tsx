@@ -20,6 +20,7 @@ export interface MarcadorReporte {
   descripcion: string;
   latitud: number;
   longitud: number;
+  especie: string | null;
 }
 
 interface MapaReportesProps {
@@ -45,7 +46,7 @@ export function MapaReportes({ reportes, centro }: MapaReportesProps) {
             <Marker
               key={reporte.id}
               position={[reporte.latitud, reporte.longitud]}
-              icon={obtenerIconoReporte(reporte.tipo, reporte.estado)}
+              icon={obtenerIconoReporte(reporte.tipo, reporte.estado, reporte.especie)}
             >
               <Popup>
                 <span className="font-medium capitalize">{reporte.tipo}</span> · {reporte.estado}
@@ -60,7 +61,10 @@ export function MapaReportes({ reportes, centro }: MapaReportesProps) {
           ))}
         </MapContainer>
       </div>
-      <LeyendaMapa items={REFERENCIAS} />
+      <LeyendaMapa
+        items={REFERENCIAS}
+        notaAdicional="El ícono también indica la especie cuando se conoce (🐕 perro / 🐈 gato)."
+      />
     </div>
   );
 }

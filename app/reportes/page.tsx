@@ -12,6 +12,7 @@ import { ESTADOS_REPORTE_SOPORTADOS, type EstadoReporte } from '@dominio/entidad
 import { EncabezadoIlustrado } from '@presentacion/componentes/estado/EncabezadoIlustrado';
 import { Badge } from '@presentacion/componentes/ui/Badge';
 import { Boton } from '@presentacion/componentes/ui/Boton';
+import { TONO_POR_TIPO_REPORTE } from '@presentacion/config/tonosReporte';
 
 // Leaflet toca `window` al inicializarse — dynamic import con ssr:false,
 // mismo criterio que SelectorUbicacionMapa (app/reportes/nuevo).
@@ -36,12 +37,6 @@ const ETIQUETAS_ESTADO: Record<EstadoReporte, { texto: string; icono: string }> 
   en_atencion: { texto: 'En atención', icono: '🔍' },
   resuelto: { texto: 'Resuelto', icono: '✅' },
   cerrado: { texto: 'Cerrado', icono: '⏹️' },
-};
-
-const TONO_POR_TIPO: Record<TipoReporte, 'peligro' | 'exito' | 'alerta'> = {
-  perdido: 'peligro',
-  encontrado: 'exito',
-  problematica: 'alerta',
 };
 
 interface ReporteApi {
@@ -185,6 +180,7 @@ export default function PaginaReportes() {
     descripcion: item.descripcion,
     latitud: item.latitud,
     longitud: item.longitud,
+    especie: item.especie,
   }));
   const centroMapa: [number, number] =
     posicion ?? (items[0] ? [items[0].latitud, items[0].longitud] : CENTRO_POR_DEFECTO);
@@ -364,7 +360,7 @@ export default function PaginaReportes() {
               {items.map((item) => (
                 <tr key={item.id} className="border-b border-surface2 last:border-b-0">
                   <td className="px-4 py-3">
-                    <Badge tono={TONO_POR_TIPO[item.tipo as TipoReporte] ?? 'neutro'}>
+                    <Badge tono={TONO_POR_TIPO_REPORTE[item.tipo as TipoReporte] ?? 'neutro'}>
                       {ETIQUETAS_TIPO[item.tipo as TipoReporte] ?? item.tipo}
                     </Badge>
                     {item.especie ? (
