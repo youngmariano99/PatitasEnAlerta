@@ -567,8 +567,8 @@ export default function PaginaAdopcionesMunicipio() {
                     {ficha.nombreAnimal} <span className="text-text-muted">· {ficha.especie}</span>
                   </p>
                   <p className="text-sm text-text-muted">{badgeEstado(ficha.estado)}</p>
-                  <p className="font-mono text-xs text-text-primary0">{ficha.id}</p>
-                  <p className="font-mono text-xs text-text-primary0">
+                  <p className="font-mono text-xs text-text-primary">{ficha.id}</p>
+                  <p className="font-mono text-xs text-text-primary">
                     {formatearFecha(ficha.createdAt)}
                   </p>
                 </div>

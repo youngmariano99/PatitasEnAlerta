@@ -36,7 +36,7 @@ export default function PaginaSolicitudesRecurso() {
   const [error, setError] = useState<string | null>(null);
   const [ofreciendo, setOfreciendo] = useState<string | null>(null);
   const [errorOfrecer, setErrorOfrecer] = useState<string | null>(null);
-  const [ofrecidas, setOfrecidas] = useState<Set<string>>(new Set());
+  const [ofrecidas, setOfrecidas] = useState<Map<string, string>>(new Map());
 
   const [tipo, setTipo] = useState<(typeof TIPOS_SOLICITUD_RECURSO_SOPORTADOS)[number] | ''>('');
   const [descripcion, setDescripcion] = useState('');
@@ -112,7 +112,8 @@ export default function PaginaSolicitudesRecurso() {
         return;
       }
 
-      setOfrecidas((actuales) => new Set(actuales).add(solicitudId));
+      const colaboracion = (await respuesta.json()) as { id: string };
+      setOfrecidas((actuales) => new Map(actuales).set(solicitudId, colaboracion.id));
       setOfreciendo(null);
     } catch {
       setErrorOfrecer(
@@ -207,7 +208,12 @@ export default function PaginaSolicitudesRecurso() {
                   <p className="mt-1 text-sm text-text-primary">{solicitud.descripcion}</p>
                 </div>
                 {ofrecidas.has(solicitud.id) ? (
-                  <Badge tono="exito">Te ofreciste</Badge>
+                  <Link
+                    href={`/red-colaboracion/colaboraciones/${ofrecidas.get(solicitud.id)}`}
+                    className="text-sm text-accent underline underline-offset-2"
+                  >
+                    Te ofreciste — ver seguimiento
+                  </Link>
                 ) : (
                   <Boton
                     disabled={ofreciendo === solicitud.id}

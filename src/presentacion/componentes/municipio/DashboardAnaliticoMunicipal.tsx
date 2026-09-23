@@ -239,7 +239,7 @@ export function DashboardAnaliticoMunicipal() {
             Exportar CSV
           </a>
         ) : (
-          <span className="text-xs text-text-primary0">
+          <span className="text-xs text-text-primary">
             Elegí &quot;Desde&quot; y &quot;Hasta&quot; para exportar el resumen a CSV.
           </span>
         )}

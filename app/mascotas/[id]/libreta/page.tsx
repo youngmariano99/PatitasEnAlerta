@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
-import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { fetchConSesion } from '@presentacion/lib/fetchConSesion';
 import { CampoTexto } from '@presentacion/componentes/formularios/CampoTexto';
@@ -143,12 +142,6 @@ export default function PaginaLibretaSanitaria() {
           descripcion="Historial de vacunas, visitas y observaciones, y veterinarios autorizados a escribir en ella."
         />
       </div>
-      <Link
-        href={`/mascotas/${params.id}`}
-        className="mb-6 inline-block text-sm text-accent underline underline-offset-2"
-      >
-        ← Volver a la ficha de la mascota
-      </Link>
 
       <section className="mb-8">
         <h2 className="mb-3 font-display text-lg font-semibold text-text-primary">

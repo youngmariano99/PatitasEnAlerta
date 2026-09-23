@@ -139,7 +139,7 @@ export default function PaginaAdopciones() {
                   <p className="text-sm text-text-muted">{ficha.temperamento}</p>
                 ) : null}
                 {ficha.requisitosAdopcion ? (
-                  <p className="mt-1 text-xs text-text-primary0">{ficha.requisitosAdopcion}</p>
+                  <p className="mt-1 text-xs text-text-primary">{ficha.requisitosAdopcion}</p>
                 ) : null}
               </div>
             </article>
