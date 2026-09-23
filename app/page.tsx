@@ -132,7 +132,7 @@ export default function HomePage() {
   return (
     <main className="mx-auto max-w-6xl px-6 py-8 text-text-primary">
       <section className="relative mb-6 overflow-hidden rounded-lg">
-        <div className="relative h-80 w-full sm:h-96 lg:h-[440px]">
+        <div className="relative h-80 w-full sm:h-96 lg:aspect-[8/3] lg:h-auto">
           <Image
             src="/Banner_inicial.png"
             alt="Un perro y un gato con pañuelos rojos de Patitas en Alerta"
@@ -141,13 +141,14 @@ export default function HomePage() {
             sizes="100vw"
             className="object-cover"
           />
-          {/* Degradé sobre la mitad izquierda de la foto (donde hay fondo
-              despejado) para garantizar el contraste del texto — nunca
-              transparencia total, siempre un fondo casi opaco detrás. */}
-          <div className="absolute inset-0 bg-gradient-to-r from-base from-40% via-base/80 via-60% to-transparent" />
-          <div className="relative flex h-full max-w-lg flex-col justify-center gap-4 px-6 sm:px-10">
-            <h1 className="font-display text-3xl font-bold">Patitas en Alerta</h1>
-            <p className="text-text-muted">
+          {/* Degradé angosto (no toda la foto) usando el token `text-primary`
+              (Carbón Óptico, nunca negro puro) — deja ver el color real de la
+              foto en la mayor parte de la imagen, con contraste garantizado
+              solo detrás del texto. */}
+          <div className="absolute inset-0 bg-gradient-to-r from-text-primary from-5% via-text-primary/70 via-35% to-transparent to-60%" />
+          <div className="relative flex h-full max-w-md flex-col justify-center gap-4 px-6 sm:px-10">
+            <h1 className="font-display text-3xl font-bold text-base">Patitas en Alerta</h1>
+            <p className="text-base/90">
               Reportar protege. Actuar salva. Reportá una mascota perdida o encontrada, seguí los
               operativos municipales y encontrá tu próximo compañero en adopción — sin necesidad de
               crear una cuenta.
@@ -157,7 +158,14 @@ export default function HomePage() {
                 <Boton>Reportar una mascota</Boton>
               </Link>
               <Link href="/auth/registro">
-                <Boton variante="secundaria">Crear cuenta</Boton>
+                {/* Estilo inline (no className) a propósito: `variante="secundaria"`
+                    usa texto/borde `accent`, pensado para fondos claros — acá
+                    necesitamos garantía de contraste sobre el degradé oscuro,
+                    y un override por className no es fiable contra el orden
+                    interno de utilidades que genera Tailwind. */}
+                <Boton variante="secundaria" style={{ borderColor: '#F8F9FA', color: '#F8F9FA' }}>
+                  Crear cuenta
+                </Boton>
               </Link>
             </div>
           </div>
