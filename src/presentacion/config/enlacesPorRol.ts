@@ -1,3 +1,19 @@
+import {
+  BarChart3,
+  Calendar,
+  CheckCircle2,
+  ClipboardList,
+  Contact,
+  Handshake,
+  Home,
+  Megaphone,
+  Package,
+  PawPrint,
+  Stethoscope,
+  Store,
+  type LucideIcon,
+} from 'lucide-react';
+
 export interface EnlaceRapido {
   href: string;
   etiqueta: string;
@@ -81,9 +97,9 @@ export const ETIQUETA_ROL: Record<string, string> = {
   rescatista: 'Rescatista',
 };
 
-interface EnlacePrincipal extends EnlaceRapido {
-  /** Emoji del ítem en la barra inferior/sidebar — mismo criterio de iconografía que Badge.tsx (sin librería de íconos). */
-  icono: string;
+export interface EnlacePrincipal extends EnlaceRapido {
+  /** Ícono del ítem en la barra inferior/sidebar (Lucide — ver docs/DISENO.md, migración acotada al shell). */
+  icono: LucideIcon;
 }
 
 /**
@@ -93,44 +109,44 @@ interface EnlacePrincipal extends EnlaceRapido {
  */
 export const ENLACES_PRINCIPALES_POR_ROL: Record<string, EnlacePrincipal[]> = {
   dueño: [
-    { href: '/mascotas', etiqueta: 'Mascotas', icono: '🐾' },
-    { href: '/reportes/nuevo', etiqueta: 'Reportar', icono: '📣' },
-    { href: '/turnos/mis-turnos', etiqueta: 'Turnos', icono: '📅' },
-    { href: '/adopciones', etiqueta: 'Adopción', icono: '🏠' },
+    { href: '/mascotas', etiqueta: 'Mascotas', icono: PawPrint },
+    { href: '/reportes/nuevo', etiqueta: 'Reportar', icono: Megaphone },
+    { href: '/turnos/mis-turnos', etiqueta: 'Turnos', icono: Calendar },
+    { href: '/adopciones', etiqueta: 'Adopción', icono: Home },
   ],
   veterinario: [
-    { href: '/veterinario/agenda', etiqueta: 'Agenda', icono: '📅' },
-    { href: '/veterinario/turnos', etiqueta: 'Turnos', icono: '🩺' },
-    { href: '/veterinario/pacientes', etiqueta: 'Pacientes', icono: '🐾' },
-    { href: '/veterinario/pedidos', etiqueta: 'Pedidos', icono: '📦' },
+    { href: '/veterinario/agenda', etiqueta: 'Agenda', icono: Calendar },
+    { href: '/veterinario/turnos', etiqueta: 'Turnos', icono: Stethoscope },
+    { href: '/veterinario/pacientes', etiqueta: 'Pacientes', icono: PawPrint },
+    { href: '/veterinario/pedidos', etiqueta: 'Pedidos', icono: Package },
   ],
   municipio: [
-    { href: '/municipio/dashboard', etiqueta: 'Reportes', icono: '📊' },
-    { href: '/municipio/eventos', etiqueta: 'Operativos', icono: '📅' },
-    { href: '/municipio/turnera', etiqueta: 'Turnera', icono: '🩺' },
-    { href: '/municipio/adopciones', etiqueta: 'Adopción', icono: '🏠' },
+    { href: '/municipio/dashboard', etiqueta: 'Reportes', icono: BarChart3 },
+    { href: '/municipio/eventos', etiqueta: 'Operativos', icono: Calendar },
+    { href: '/municipio/turnera', etiqueta: 'Turnera', icono: Stethoscope },
+    { href: '/municipio/adopciones', etiqueta: 'Adopción', icono: Home },
   ],
   administrador: [
-    { href: '/admin/verificaciones', etiqueta: 'Verificaciones', icono: '✅' },
-    { href: '/admin/auditoria', etiqueta: 'Auditoría', icono: '📋' },
+    { href: '/admin/verificaciones', etiqueta: 'Verificaciones', icono: CheckCircle2 },
+    { href: '/admin/auditoria', etiqueta: 'Auditoría', icono: ClipboardList },
   ],
-  comerciante: [{ href: '/comercios/panel', etiqueta: 'Mi comercio', icono: '🏪' }],
+  comerciante: [{ href: '/comercios/panel', etiqueta: 'Mi comercio', icono: Store }],
   organizacion: [
-    { href: '/red-colaboracion/solicitudes', etiqueta: 'Solicitudes', icono: '🤝' },
-    { href: '/red-colaboracion/directorio', etiqueta: 'Directorio', icono: '📇' },
-    { href: '/red-colaboracion/metricas', etiqueta: 'Métricas', icono: '📊' },
+    { href: '/red-colaboracion/solicitudes', etiqueta: 'Solicitudes', icono: Handshake },
+    { href: '/red-colaboracion/directorio', etiqueta: 'Directorio', icono: Contact },
+    { href: '/red-colaboracion/metricas', etiqueta: 'Métricas', icono: BarChart3 },
   ],
   rescatista: [
-    { href: '/red-colaboracion/solicitudes', etiqueta: 'Solicitudes', icono: '🤝' },
-    { href: '/red-colaboracion/directorio', etiqueta: 'Directorio', icono: '📇' },
-    { href: '/red-colaboracion/metricas', etiqueta: 'Métricas', icono: '📊' },
+    { href: '/red-colaboracion/solicitudes', etiqueta: 'Solicitudes', icono: Handshake },
+    { href: '/red-colaboracion/directorio', etiqueta: 'Directorio', icono: Contact },
+    { href: '/red-colaboracion/metricas', etiqueta: 'Métricas', icono: BarChart3 },
   ],
 };
 
 /** Accesos públicos mostrados en la barra/sidebar cuando no hay sesión (modo invitado). */
 export const ENLACES_PUBLICOS: EnlacePrincipal[] = [
-  { href: '/', etiqueta: 'Inicio', icono: '🏠' },
-  { href: '/reportes', etiqueta: 'Reportes', icono: '📣' },
-  { href: '/adopciones', etiqueta: 'Adopción', icono: '🐾' },
-  { href: '/comercios', etiqueta: 'Comercios', icono: '🏪' },
+  { href: '/', etiqueta: 'Inicio', icono: Home },
+  { href: '/reportes', etiqueta: 'Reportes', icono: Megaphone },
+  { href: '/adopciones', etiqueta: 'Adopción', icono: PawPrint },
+  { href: '/comercios', etiqueta: 'Comercios', icono: Store },
 ];

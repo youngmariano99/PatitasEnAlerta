@@ -2,6 +2,18 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
+import {
+  AlarmClock,
+  AlertTriangle,
+  Bell,
+  CalendarCheck,
+  CalendarX,
+  CheckCircle2,
+  Handshake,
+  Info,
+  PawPrint,
+  type LucideIcon,
+} from 'lucide-react';
 import { crearClienteSupabaseNavegador } from '@infraestructura/adaptadores/ClienteSupabaseNavegador';
 
 interface NotificacionApi {
@@ -30,13 +42,13 @@ interface FilaRealtime {
   created_at: string;
 }
 
-const ETIQUETAS_TIPO: Record<string, { texto: string; icono: string }> = {
-  reporte_coincidente: { texto: 'Encontramos una coincidencia con tu reporte', icono: '🐾' },
-  turno_confirmado: { texto: 'Turno confirmado', icono: '📅' },
-  turno_cancelado: { texto: 'Turno cancelado', icono: '❌' },
-  turno_recordatorio: { texto: 'Recordatorio de turno', icono: '⏰' },
-  verificacion_resuelta: { texto: 'Tu verificación fue resuelta', icono: '✅' },
-  colaboracion_propuesta: { texto: 'Recibiste un ofrecimiento de colaboración', icono: '🤝' },
+const ETIQUETAS_TIPO: Record<string, { texto: string; icono: LucideIcon }> = {
+  reporte_coincidente: { texto: 'Encontramos una coincidencia con tu reporte', icono: PawPrint },
+  turno_confirmado: { texto: 'Turno confirmado', icono: CalendarCheck },
+  turno_cancelado: { texto: 'Turno cancelado', icono: CalendarX },
+  turno_recordatorio: { texto: 'Recordatorio de turno', icono: AlarmClock },
+  verificacion_resuelta: { texto: 'Tu verificación fue resuelta', icono: CheckCircle2 },
+  colaboracion_propuesta: { texto: 'Recibiste un ofrecimiento de colaboración', icono: Handshake },
 };
 
 /**
@@ -175,9 +187,9 @@ export function CampanaNotificaciones({ usuarioId }: CampanaNotificacionesProps)
         aria-haspopup="true"
         aria-expanded={abierto}
         aria-label={noLeidas > 0 ? `Notificaciones, ${noLeidas} sin leer` : 'Notificaciones'}
-        className="relative flex h-11 w-11 min-h-[44px] items-center justify-center rounded-full border border-surface2 bg-surface1 text-lg text-text-primary"
+        className="relative flex h-11 w-11 min-h-[44px] items-center justify-center rounded-full border border-surface2 bg-surface1 text-text-primary"
       >
-        <span aria-hidden="true">🔔</span>
+        <Bell aria-hidden="true" className="h-5 w-5" />
         {noLeidas > 0 ? (
           <span className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-accent px-1 text-xs font-medium text-text-primary">
             {noLeidas > 99 ? '99+' : noLeidas}
@@ -195,7 +207,7 @@ export function CampanaNotificaciones({ usuarioId }: CampanaNotificacionesProps)
 
           {errorCarga ? (
             <p className="flex items-center gap-1.5 px-4 py-3 text-sm text-danger">
-              <span aria-hidden="true">⚠️</span>
+              <AlertTriangle aria-hidden="true" className="h-4 w-4 shrink-0" />
               {errorCarga}
             </p>
           ) : null}
@@ -207,11 +219,12 @@ export function CampanaNotificaciones({ usuarioId }: CampanaNotificacionesProps)
           {!cargando && !errorCarga && items.length > 0 ? (
             <ul className="max-h-96 overflow-y-auto">
               {items.map((item) => {
-                const info = ETIQUETAS_TIPO[item.tipo] ?? { texto: item.tipo, icono: '•' };
+                const info = ETIQUETAS_TIPO[item.tipo] ?? { texto: item.tipo, icono: Info };
+                const IconoNotificacion = info.icono;
                 const ruta = rutaDeNotificacion(item.referenciaTabla, item.referenciaId);
                 const contenido = (
                   <div className="flex items-start gap-2">
-                    <span aria-hidden="true">{info.icono}</span>
+                    <IconoNotificacion aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0" />
                     <div className="flex-1">
                       <p
                         className={

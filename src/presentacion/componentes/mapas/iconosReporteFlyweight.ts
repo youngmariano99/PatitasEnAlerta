@@ -1,4 +1,7 @@
 import L from 'leaflet';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { MapPin, PawPrint, TriangleAlert, type LucideIcon } from 'lucide-react';
 
 /**
  * Flyweight (GoF): un único ícono compartido por cada combinación
@@ -10,10 +13,10 @@ import L from 'leaflet';
  */
 const CACHE_ICONOS = new Map<string, L.DivIcon>();
 
-const EMOJI_POR_TIPO: Record<string, string> = {
-  perdido: '🐾',
-  encontrado: '📍',
-  problematica: '⚠️',
+const ICONO_POR_TIPO: Record<string, LucideIcon> = {
+  perdido: PawPrint,
+  encontrado: MapPin,
+  problematica: TriangleAlert,
 };
 
 const COLOR_POR_ESTADO: Record<string, string> = {
@@ -29,11 +32,17 @@ export function obtenerIconoReporte(tipo: string, estado: string): L.DivIcon {
   const cacheado = CACHE_ICONOS.get(clave);
   if (cacheado) return cacheado;
 
-  const emoji = EMOJI_POR_TIPO[tipo] ?? '📌';
+  const IconoComponente = ICONO_POR_TIPO[tipo] ?? MapPin;
+  // Blanco fijo (no un token del sistema de diseño): es un glyph dentro de un
+  // marcador Leaflet, renderizado fuera del árbol de React vía `L.divIcon`,
+  // no un elemento de UI temático — no aplica la regla de "sin colores nuevos".
+  const svgMarkup = renderToStaticMarkup(
+    createElement(IconoComponente, { size: 16, color: '#fff' }),
+  );
   const color = COLOR_POR_ESTADO[estado] ?? '#5B6470';
   const icono = L.divIcon({
     className: 'icono-reporte-flyweight',
-    html: `<span style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:9999px;background:${color};font-size:14px;box-shadow:0 1px 3px rgba(0,0,0,0.4);">${emoji}</span>`,
+    html: `<span style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:9999px;background:${color};box-shadow:0 1px 3px rgba(0,0,0,0.4);">${svgMarkup}</span>`,
     iconSize: [28, 28],
     iconAnchor: [14, 14],
   });

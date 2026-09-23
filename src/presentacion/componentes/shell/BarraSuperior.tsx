@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { ArrowLeft, PawPrint } from 'lucide-react';
 import { crearClienteSupabaseNavegador } from '@infraestructura/adaptadores/ClienteSupabaseNavegador';
 import { CampanaNotificaciones } from '@presentacion/componentes/notificaciones/CampanaNotificaciones';
 import { Boton } from '@presentacion/componentes/ui/Boton';
@@ -70,16 +71,17 @@ export function BarraSuperior({ perfil }: BarraSuperiorProps) {
             type="button"
             onClick={() => (destinoFijo ? router.push(destinoFijo) : router.back())}
             aria-label="Volver"
-            className="flex h-11 w-11 min-h-touch min-w-touch shrink-0 items-center justify-center rounded-md text-lg text-text-primary hover:bg-surface1"
+            className="flex h-11 w-11 min-h-touch min-w-touch shrink-0 items-center justify-center rounded-md text-text-primary hover:bg-surface1"
           >
-            <span aria-hidden="true">←</span>
+            <ArrowLeft aria-hidden="true" className="h-5 w-5" />
           </button>
         ) : null}
         <Link
           href={perfil ? '/panel' : '/'}
-          className="truncate font-display text-base font-semibold text-text-primary"
+          className="flex min-w-0 items-center gap-1.5 font-display text-base font-semibold text-text-primary"
         >
-          🐾 Patitas en Alerta
+          <PawPrint aria-hidden="true" className="h-5 w-5 shrink-0" />
+          <span className="truncate">Patitas en Alerta</span>
         </Link>
       </div>
 
