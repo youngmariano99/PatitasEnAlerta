@@ -21,3 +21,15 @@ if (typeof globalThis.setImmediate === 'undefined') {
   globalThis.setImmediate = (fn: (...args: unknown[]) => void, ...args: unknown[]) =>
     setTimeout(fn, 0, ...args);
 }
+
+// jsdom no expone `TextEncoder`/`TextDecoder` (son globals del runtime, no
+// del DOM), y `react-dom/server` (usado por los Flyweight de íconos del mapa,
+// ver iconosReporteFlyweight.ts, para renderizar un ícono Lucide a SVG string
+// una sola vez por combinación cacheada) los requiere internamente. Node sí
+// los expone vía `node:util` — mismo criterio que el polyfill de arriba.
+if (typeof globalThis.TextEncoder === 'undefined') {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { TextEncoder, TextDecoder } = require('node:util');
+  globalThis.TextEncoder = TextEncoder;
+  globalThis.TextDecoder = TextDecoder;
+}

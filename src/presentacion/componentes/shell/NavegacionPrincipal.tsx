@@ -3,7 +3,12 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import clsx from 'clsx';
-import { ENLACES_PRINCIPALES_POR_ROL, ENLACES_PUBLICOS } from '@presentacion/config/enlacesPorRol';
+import { Menu } from 'lucide-react';
+import {
+  ENLACES_PRINCIPALES_POR_ROL,
+  ENLACES_PUBLICOS,
+  type EnlacePrincipal,
+} from '@presentacion/config/enlacesPorRol';
 import type { PerfilPropioShell } from '@presentacion/componentes/shell/BarraSuperior';
 
 interface NavegacionPrincipalProps {
@@ -25,7 +30,9 @@ interface NavegacionPrincipalProps {
 export function NavegacionPrincipal({ perfil }: NavegacionPrincipalProps) {
   const pathname = usePathname();
   const items = perfil ? (ENLACES_PRINCIPALES_POR_ROL[perfil.rol] ?? []) : ENLACES_PUBLICOS;
-  const todos = perfil ? [...items, { href: '/panel', etiqueta: 'Menú', icono: '☰' }] : items;
+  const todos: EnlacePrincipal[] = perfil
+    ? [...items, { href: '/panel', etiqueta: 'Menú', icono: Menu }]
+    : items;
 
   if (todos.length === 0) return null;
 
@@ -39,6 +46,7 @@ export function NavegacionPrincipal({ perfil }: NavegacionPrincipalProps) {
     >
       {todos.map((item) => {
         const activo = pathname === item.href;
+        const Icono = item.icono;
         return (
           <Link
             key={item.href}
@@ -50,9 +58,7 @@ export function NavegacionPrincipal({ perfil }: NavegacionPrincipalProps) {
               activo ? 'font-medium text-primary' : 'text-text-muted hover:text-text-primary',
             )}
           >
-            <span aria-hidden="true" className="text-lg md:text-base">
-              {item.icono}
-            </span>
+            <Icono aria-hidden="true" className="h-6 w-6 shrink-0 md:h-5 md:w-5" />
             <span className="truncate">{item.etiqueta}</span>
           </Link>
         );

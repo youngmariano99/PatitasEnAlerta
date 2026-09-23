@@ -35,6 +35,7 @@ import type {
 } from '@dominio/estrategias/ProveedorTurnera';
 import type { IControlDeTasa } from '@dominio/puertos/IControlDeTasa';
 import type { IControlDeTasaConReintento } from '@dominio/puertos/IControlDeTasaConReintento';
+import type { IServicioGeocodificacion } from '@dominio/puertos/IServicioGeocodificacion';
 import type { IGeneradorEmbeddings } from '@dominio/puertos/IGeneradorEmbeddings';
 import type { IRepositorioCuestionariosAdoptante } from '@dominio/puertos/IRepositorioCuestionariosAdoptante';
 import type { IRepositorioSugerenciasCompatibilidad } from '@dominio/puertos/IRepositorioSugerenciasCompatibilidad';
@@ -70,6 +71,8 @@ import { PrismaInscripcionesCursoRepositorio } from '@infraestructura/adaptadore
 import { TurneraMunicipio, TurneraVeterinario } from '@dominio/estrategias/ProveedorTurnera';
 import { UpstashControlDeTasa } from '@infraestructura/adaptadores/UpstashControlDeTasa';
 import { UpstashControlDeTasaAntiSaturacion } from '@infraestructura/adaptadores/UpstashControlDeTasaAntiSaturacion';
+import { UpstashControlDeTasaGeocoding } from '@infraestructura/adaptadores/UpstashControlDeTasaGeocoding';
+import { NominatimGeocodingAdapter } from '@infraestructura/adaptadores/NominatimGeocodingAdapter';
 import { OpenAIGeneradorEmbeddings } from '@infraestructura/adaptadores/OpenAIGeneradorEmbeddings';
 import { PrismaCuestionarioAdoptanteRepositorio } from '@infraestructura/adaptadores/PrismaCuestionarioAdoptanteRepositorio';
 import { PrismaSugerenciasCompatibilidadRepositorio } from '@infraestructura/adaptadores/PrismaSugerenciasCompatibilidadRepositorio';
@@ -189,6 +192,17 @@ container.registerSingleton<IControlDeTasa>('IControlDeTasa', UpstashControlDeTa
 container.registerSingleton<IControlDeTasaConReintento>(
   'IControlDeTasaConReintento',
   UpstashControlDeTasaAntiSaturacion,
+);
+// Mismo puerto que el de arriba, pero registrado bajo un token de DI
+// distinto — es un límite independiente (geocodificación, no reportes), no
+// una variante que deba compartir el mismo binding.
+container.registerSingleton<IControlDeTasaConReintento>(
+  'IControlDeTasaGeocoding',
+  UpstashControlDeTasaGeocoding,
+);
+container.registerSingleton<IServicioGeocodificacion>(
+  'IServicioGeocodificacion',
+  NominatimGeocodingAdapter,
 );
 container.registerSingleton<IGeneradorEmbeddings>(
   'IGeneradorEmbeddings',

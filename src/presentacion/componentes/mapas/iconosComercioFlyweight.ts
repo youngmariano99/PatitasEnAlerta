@@ -1,4 +1,7 @@
 import L from 'leaflet';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { PawPrint, Pill, Scissors, Store, Wheat, type LucideIcon } from 'lucide-react';
 
 /**
  * Flyweight (GoF) — un único ícono compartido por `tipo_comercio` (5 valores
@@ -12,22 +15,27 @@ import L from 'leaflet';
  */
 const CACHE_ICONOS = new Map<string, L.DivIcon>();
 
-const EMOJI_POR_TIPO: Record<string, string> = {
-  pet_shop: '🐾',
-  forrajeria: '🌾',
-  peluqueria: '✂️',
-  farmacia_veterinaria: '💊',
-  otro: '🏪',
+const ICONO_POR_TIPO: Record<string, LucideIcon> = {
+  pet_shop: PawPrint,
+  forrajeria: Wheat,
+  peluqueria: Scissors,
+  farmacia_veterinaria: Pill,
+  otro: Store,
 };
 
 export function obtenerIconoComercio(tipoComercio: string): L.DivIcon {
   const cacheado = CACHE_ICONOS.get(tipoComercio);
   if (cacheado) return cacheado;
 
-  const emoji = EMOJI_POR_TIPO[tipoComercio] ?? '🏪';
+  const IconoComponente = ICONO_POR_TIPO[tipoComercio] ?? Store;
+  // Blanco fijo, mismo criterio que iconosReporteFlyweight.ts: glyph de
+  // marcador Leaflet fuera del árbol de React, no un elemento de UI temático.
+  const svgMarkup = renderToStaticMarkup(
+    createElement(IconoComponente, { size: 16, color: '#fff' }),
+  );
   const icono = L.divIcon({
     className: 'icono-comercio-flyweight',
-    html: `<span style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:9999px;background:#8b5cf6;font-size:14px;box-shadow:0 1px 3px rgba(0,0,0,0.4);">${emoji}</span>`,
+    html: `<span style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:9999px;background:#8b5cf6;box-shadow:0 1px 3px rgba(0,0,0,0.4);">${svgMarkup}</span>`,
     iconSize: [28, 28],
     iconAnchor: [14, 14],
   });

@@ -9,6 +9,10 @@ import {
   type TipoReporte,
 } from '@aplicacion/dtos/reportes/CrearReporteDto';
 import { crearClienteSupabaseNavegador } from '@infraestructura/adaptadores/ClienteSupabaseNavegador';
+import {
+  ResultadosCercanosTrasPublicar,
+  type ResultadoCercano,
+} from '@presentacion/componentes/reportes/ResultadosCercanosTrasPublicar';
 
 // Leaflet toca `window` al inicializarse — dynamic import con ssr:false es
 // obligatorio (no un simple import estático) para que Next.js no intente
@@ -32,6 +36,7 @@ interface RespuestaError {
 
 type EstadoImagen = 'sin_seleccionar' | 'subiendo' | 'lista' | 'error';
 type EstadoUbicacion = 'buscando' | 'automatica' | 'manual';
+type EspecieCategoria = 'perro' | 'gato' | 'otro' | '';
 
 interface CopiaPorTipo {
   titulo: string;
@@ -55,8 +60,7 @@ const COPIA_POR_TIPO: Record<TipoReporte, CopiaPorTipo> = {
       'Reportar protege. Cuanto antes lo publiques, más vecinos pueden ayudarte a encontrarla.',
     etiquetaFoto: 'Foto de tu mascota',
     placeholderDescripcion: 'Se perdió cerca de la plaza, responde a su nombre, es muy sociable…',
-    ayudaDescripcion:
-      'Contá dónde y cuándo la viste por última vez, y cualquier detalle que ayude a reconocerla.',
+    ayudaDescripcion: 'Contá dónde y cuándo la viste por última vez.',
     etiquetaEspecie: 'Especie de tu mascota (opcional)',
   },
   encontrado: {
@@ -64,8 +68,7 @@ const COPIA_POR_TIPO: Record<TipoReporte, CopiaPorTipo> = {
     bajada: 'Gracias por avisar. Publicarlo ayuda a que su familia la encuentre lo antes posible.',
     etiquetaFoto: 'Foto de la mascota que encontraste',
     placeholderDescripcion: 'La encontré deambulando sola cerca de la plaza, parece perdida…',
-    ayudaDescripcion:
-      'Contá dónde y cuándo la encontraste, y cualquier detalle que ayude a identificarla.',
+    ayudaDescripcion: 'Contá dónde y cuándo la encontraste.',
     etiquetaEspecie: 'Especie del animal (opcional)',
   },
   problematica: {
@@ -75,8 +78,7 @@ const COPIA_POR_TIPO: Record<TipoReporte, CopiaPorTipo> = {
     etiquetaFoto: 'Foto de la situación',
     placeholderDescripcion:
       'Hay un perro suelto en la esquina, sin dueño a la vista, riesgo para el tránsito…',
-    ayudaDescripcion:
-      'Contá dónde y cuándo ocurrió, y cualquier detalle que ayude a dimensionar la urgencia.',
+    ayudaDescripcion: 'Contá dónde y cuándo ocurrió.',
     etiquetaEspecie: 'Especie del animal involucrado, si aplica (opcional)',
   },
 };
@@ -86,6 +88,25 @@ const ETIQUETAS_SUBTIPO: Record<SubtipoProblematica, string> = {
   foco_sanitario: 'Foco sanitario',
   accidente_vial: 'Accidente vial',
 };
+
+const SEPARADOR_CARACTERISTICAS = '\n\nCaracterísticas: ';
+
+/** Concatena los dos campos del paso 2 en el único `descripcion` que espera el backend — sin cambio de DTO, ver docstring del wizard. */
+function construirDescripcion(quePaso: string, caracteristicas: string): string {
+  const base = quePaso.trim();
+  const extra = caracteristicas.trim();
+  return extra ? `${base}${SEPARADOR_CARACTERISTICAS}${extra}` : base;
+}
+
+interface RespuestaGeocodificacion {
+  direccionCorta: string;
+  provincia: string | null;
+  pais: string | null;
+}
+
+interface RespuestaListadoReportes {
+  items: ResultadoCercano[];
+}
 
 /**
  * Adjunta `context=usuario_id=<id>` a la subida — metadata que
@@ -123,6 +144,12 @@ async function subirImagenACloudinary(archivo: File): Promise<string> {
   });
 
   if (!respuesta.ok) {
+    // Cloudinary devuelve el motivo real en el body (ej. "Upload preset not
+    // found" si NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET no existe o no es
+    // unsigned) — se loguea acá (nunca se muestra tal cual al usuario, que
+    // ve el mensaje genérico de abajo) para poder diagnosticar sin adivinar.
+    const cuerpo = await respuesta.json().catch(() => null);
+    console.error('Cloudinary rechazó la subida', respuesta.status, cuerpo);
     throw new Error('No pudimos subir la imagen. Probá de nuevo.');
   }
 
@@ -144,6 +171,12 @@ interface FormularioReporteWizardProps {
  * Para 'problematica' el paso 2 agrega el selector visual de `subtipo`
  * (radiogroup, nunca texto libre — NFR de validación estricta) y el paso no
  * avanza sin una selección.
+ *
+ * Tras publicar un reporte 'perdido'/'encontrado' (no 'problematica', no
+ * aplica), el wizard no redirige de inmediato — pasa a un estado terminal
+ * que muestra reportes del tipo opuesto cerca de la misma zona (ver
+ * `ResultadosCercanosTrasPublicar.tsx`), para no distraer a quien está
+ * reportando mientras completa el formulario.
  */
 export function FormularioReporteWizard({ tipoInicial }: FormularioReporteWizardProps) {
   const router = useRouter();
@@ -157,16 +190,28 @@ export function FormularioReporteWizard({ tipoInicial }: FormularioReporteWizard
   const [previewLocal, setPreviewLocal] = useState<string | null>(null);
   const [errorImagen, setErrorImagen] = useState<string | null>(null);
 
-  const [descripcion, setDescripcion] = useState('');
-  const [especie, setEspecie] = useState('');
+  const [quePaso, setQuePaso] = useState('');
+  const [caracteristicas, setCaracteristicas] = useState('');
+  const [especieCategoria, setEspecieCategoria] = useState<EspecieCategoria>('');
+  const [especieOtro, setEspecieOtro] = useState('');
   const [subtipo, setSubtipo] = useState<SubtipoProblematica | null>(null);
   const [errorSubtipo, setErrorSubtipo] = useState<string | null>(null);
 
   const [estadoUbicacion, setEstadoUbicacion] = useState<EstadoUbicacion>('buscando');
   const [posicion, setPosicion] = useState<[number, number] | null>(null);
+  const [geocodificando, setGeocodificando] = useState(false);
+  const [direccionSugerida, setDireccionSugerida] = useState<string | null>(null);
+  const [provincia, setProvincia] = useState('');
+  const [pais, setPais] = useState('');
 
   const [enviando, setEnviando] = useState(false);
   const [errorGeneral, setErrorGeneral] = useState<string | null>(null);
+
+  const [mostrarResultadosCercanos, setMostrarResultadosCercanos] = useState(false);
+  const [resultadosCercanos, setResultadosCercanos] = useState<ResultadoCercano[]>([]);
+  const [cargandoResultadosCercanos, setCargandoResultadosCercanos] = useState(false);
+
+  const especieFinal = especieCategoria === 'otro' ? especieOtro.trim() : especieCategoria;
 
   // Fallback de geolocalización (criterio de aceptación): si el navegador no
   // ofrece la API o el usuario rechaza el permiso, se ofrece el mapa para
@@ -187,6 +232,34 @@ export function FormularioReporteWizard({ tipoInicial }: FormularioReporteWizard
     );
   }, [paso, posicion]);
 
+  // Geocodificación inversa: dispara tanto con la ubicación automática como
+  // con un click manual en el mapa (ambos cargan `posicion`) — le muestra al
+  // usuario una confirmación legible de dónde está marcando, y precarga
+  // provincia/país (solo como ayuda visual, nunca se envían al backend: ver
+  // docstring de ResultadosCercanosTrasPublicar y el plan de esta feature).
+  useEffect(() => {
+    if (!posicion) return;
+    let cancelado = false;
+    setGeocodificando(true);
+    fetch(`/api/geocoding/reverse?lat=${posicion[0]}&lon=${posicion[1]}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((datos: RespuestaGeocodificacion | null) => {
+        if (cancelado) return;
+        setDireccionSugerida(datos?.direccionCorta ?? null);
+        setProvincia(datos?.provincia ?? '');
+        setPais(datos?.pais ?? '');
+      })
+      .catch(() => {
+        if (!cancelado) setDireccionSugerida(null);
+      })
+      .finally(() => {
+        if (!cancelado) setGeocodificando(false);
+      });
+    return () => {
+      cancelado = true;
+    };
+  }, [posicion]);
+
   async function manejarSeleccionDeImagen(evento: React.ChangeEvent<HTMLInputElement>) {
     const archivo = evento.target.files?.[0];
     if (!archivo) return;
@@ -200,9 +273,16 @@ export function FormularioReporteWizard({ tipoInicial }: FormularioReporteWizard
       const url = await subirImagenACloudinary(archivo);
       setFotoUrl(url);
       setEstadoImagen('lista');
-    } catch {
+    } catch (error) {
       setEstadoImagen('error');
-      setErrorImagen('No pudimos subir la imagen. Probá de nuevo.');
+      // El mensaje del error ya viene en español y listo para mostrar (ver
+      // subirImagenACloudinary) — mostrarlo tal cual en vez de uno genérico
+      // fijo, y loguearlo: antes acá se perdía la causa real (ej. Cloudinary
+      // sin configurar en .env) sin dejar rastro ni en pantalla ni en consola.
+      const mensaje =
+        error instanceof Error ? error.message : 'No pudimos subir la imagen. Probá de nuevo.';
+      setErrorImagen(mensaje);
+      console.error('No se pudo subir la foto del reporte a Cloudinary', error);
     }
   }
 
@@ -220,7 +300,7 @@ export function FormularioReporteWizard({ tipoInicial }: FormularioReporteWizard
         setErrorSubtipo('Elegí un motivo para tu reporte de problemática.');
         return;
       }
-      if (!descripcion.trim()) return;
+      if (!quePaso.trim()) return;
       setPaso(3);
     }
   }
@@ -229,10 +309,40 @@ export function FormularioReporteWizard({ tipoInicial }: FormularioReporteWizard
     setPaso((actual) => (actual > 1 ? ((actual - 1) as 1 | 2) : actual));
   }
 
+  async function cargarResultadosCercanos(latitud: number, longitud: number) {
+    const tipoOpuesto = tipoInicial === 'perdido' ? 'encontrado' : 'perdido';
+    setMostrarResultadosCercanos(true);
+    setCargandoResultadosCercanos(true);
+    try {
+      const params = new URLSearchParams({
+        tipo: tipoOpuesto,
+        estado: 'reportado',
+        latitud: String(latitud),
+        longitud: String(longitud),
+        radioKm: '10',
+        porPagina: '6',
+      });
+      const respuesta = await fetch(`/api/reportes?${params.toString()}`);
+      const datos: RespuestaListadoReportes = respuesta.ok ? await respuesta.json() : { items: [] };
+      // GET /api/reportes no filtra por especie — se filtra acá, mismo
+      // criterio que MapaComunidad.tsx para sus marcadores.
+      const especieBuscada = especieFinal ? especieFinal.toLowerCase() : null;
+      const items = especieBuscada
+        ? datos.items.filter((item) => item.especie?.toLowerCase() === especieBuscada)
+        : datos.items;
+      setResultadosCercanos(items);
+    } catch {
+      setResultadosCercanos([]);
+    } finally {
+      setCargandoResultadosCercanos(false);
+    }
+  }
+
   async function manejarEnvio(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
     setErrorGeneral(null);
-    if (!fotoUrl || !descripcion.trim() || !posicion) return;
+    const descripcionCombinada = construirDescripcion(quePaso, caracteristicas);
+    if (!fotoUrl || !descripcionCombinada || !posicion) return;
     if (esProblematica && !subtipo) return;
 
     setEnviando(true);
@@ -243,16 +353,21 @@ export function FormularioReporteWizard({ tipoInicial }: FormularioReporteWizard
         body: JSON.stringify({
           tipo: tipoInicial,
           subtipo: esProblematica ? subtipo : undefined,
-          descripcion,
+          descripcion: descripcionCombinada,
           fotoUrl,
           latitud: posicion[0],
           longitud: posicion[1],
-          especie: especie.trim() || undefined,
+          especie: especieFinal || undefined,
         }),
       });
 
       if (respuesta.status === 201) {
-        router.push('/reportes');
+        setEnviando(false);
+        if (esProblematica) {
+          router.push('/reportes');
+          return;
+        }
+        await cargarResultadosCercanos(posicion[0], posicion[1]);
         return;
       }
 
@@ -267,8 +382,25 @@ export function FormularioReporteWizard({ tipoInicial }: FormularioReporteWizard
     }
   }
 
+  if (mostrarResultadosCercanos) {
+    const tipoOpuesto = tipoInicial === 'perdido' ? 'encontrado' : 'perdido';
+    return (
+      <ResultadosCercanosTrasPublicar
+        tipoOpuesto={tipoOpuesto}
+        resultados={resultadosCercanos}
+        cargando={cargandoResultadosCercanos}
+        onIrAlListado={() => router.push('/reportes')}
+      />
+    );
+  }
+
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-12 text-text-primary">
+    // Sin `min-h-screen`/`justify-center`: este componente ya no es el único
+    // contenido de la pantalla (app/reportes/nuevo/page.tsx le agrega un
+    // encabezado ilustrado y el selector de categoría arriba) — centrarlo
+    // verticalmente en la altura completa del viewport dejaba un salto vacío
+    // enorme entre esos elementos y el "Paso 1 de 3".
+    <main className="mx-auto max-w-md px-6 pb-12 pt-6 text-text-primary">
       <p className="mb-1 text-xs font-medium uppercase tracking-wide text-accent">
         Paso {paso} de 3
       </p>
@@ -357,34 +489,66 @@ export function FormularioReporteWizard({ tipoInicial }: FormularioReporteWizard
             ) : null}
 
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="descripcion" className="text-sm font-medium text-text-primary">
+              <label htmlFor="quePaso" className="text-sm font-medium text-text-primary">
                 ¿Qué pasó?
               </label>
               <textarea
-                id="descripcion"
-                rows={5}
-                maxLength={1000}
+                id="quePaso"
+                rows={4}
+                maxLength={600}
                 placeholder={copia.placeholderDescripcion}
-                value={descripcion}
-                onChange={(evento) => setDescripcion(evento.target.value)}
+                value={quePaso}
+                onChange={(evento) => setQuePaso(evento.target.value)}
                 className="rounded-md border border-surface2 bg-surface1 px-3 py-2 text-[15px] text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-accent"
               />
               <p className="text-sm text-text-muted">{copia.ayudaDescripcion}</p>
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="especie" className="text-sm font-medium text-text-primary">
+              <label htmlFor="caracteristicas" className="text-sm font-medium text-text-primary">
+                Características (opcional)
+              </label>
+              <textarea
+                id="caracteristicas"
+                rows={3}
+                maxLength={400}
+                placeholder="Color, tamaño, señas particulares…"
+                value={caracteristicas}
+                onChange={(evento) => setCaracteristicas(evento.target.value)}
+                className="rounded-md border border-surface2 bg-surface1 px-3 py-2 text-[15px] text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-accent"
+              />
+              <p className="text-sm text-text-muted">
+                Sumá detalles si la foto no los muestra bien, o si todavía no subiste una foto.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="especie-categoria" className="text-sm font-medium text-text-primary">
                 {copia.etiquetaEspecie}
               </label>
-              <input
-                id="especie"
-                type="text"
-                maxLength={40}
-                placeholder="Perro, gato…"
-                value={especie}
-                onChange={(evento) => setEspecie(evento.target.value)}
-                className="h-11 min-h-[44px] rounded-md border border-surface2 bg-surface1 px-3 text-[15px] text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-accent"
-              />
+              <select
+                id="especie-categoria"
+                value={especieCategoria}
+                onChange={(evento) => setEspecieCategoria(evento.target.value as EspecieCategoria)}
+                className="h-11 min-h-[44px] rounded-md border border-surface2 bg-surface1 px-3 text-[15px] text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+              >
+                <option value="">Preferís no decir</option>
+                <option value="perro">Perro</option>
+                <option value="gato">Gato</option>
+                <option value="otro">Otro</option>
+              </select>
+              {especieCategoria === 'otro' ? (
+                <input
+                  id="especie-otro"
+                  type="text"
+                  maxLength={40}
+                  placeholder="¿Qué especie?"
+                  value={especieOtro}
+                  onChange={(evento) => setEspecieOtro(evento.target.value)}
+                  className="h-11 min-h-[44px] rounded-md border border-surface2 bg-surface1 px-3 text-[15px] text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-accent"
+                  aria-label="Especificá la especie"
+                />
+              ) : null}
               <p className="text-sm text-text-muted">
                 Nos ayuda a avisarte automáticamente si aparece un reporte compatible en tu zona.
               </p>
@@ -418,6 +582,45 @@ export function FormularioReporteWizard({ tipoInicial }: FormularioReporteWizard
                 setEstadoUbicacion('manual');
               }}
             />
+
+            {geocodificando ? (
+              <p className="text-sm text-text-muted">Buscando la dirección…</p>
+            ) : null}
+            {!geocodificando && direccionSugerida ? (
+              <p className="flex items-start gap-1.5 text-sm text-text-muted">
+                <span aria-hidden="true">📍</span>
+                Estás marcando: {direccionSugerida}
+              </p>
+            ) : null}
+
+            {posicion ? (
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1.5">
+                  <label htmlFor="provincia" className="text-sm font-medium text-text-primary">
+                    Provincia
+                  </label>
+                  <input
+                    id="provincia"
+                    type="text"
+                    value={provincia}
+                    onChange={(evento) => setProvincia(evento.target.value)}
+                    className="h-11 min-h-[44px] rounded-md border border-surface2 bg-surface1 px-3 text-[15px] text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label htmlFor="pais" className="text-sm font-medium text-text-primary">
+                    País
+                  </label>
+                  <input
+                    id="pais"
+                    type="text"
+                    value={pais}
+                    onChange={(evento) => setPais(evento.target.value)}
+                    className="h-11 min-h-[44px] rounded-md border border-surface2 bg-surface1 px-3 text-[15px] text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+                  />
+                </div>
+              </div>
+            ) : null}
           </div>
         ) : null}
 

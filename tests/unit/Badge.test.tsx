@@ -6,7 +6,7 @@ describe('Badge', () => {
     render(<Badge tono="peligro">Vencido</Badge>);
 
     const badge = screen.getByText('Vencido');
-    expect(badge).toHaveTextContent('⛔');
+    expect(badge.querySelector('svg')).toBeInTheDocument();
     expect(badge).toHaveTextContent('Vencido');
   });
 

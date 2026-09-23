@@ -19,6 +19,26 @@ export class AccesoNoAutorizadoError extends ErrorDominio {
 /** Dependencia externa caída o con error (ej. proveedor de embeddings) — ver OpenAIGeneradorEmbeddings.ts. */
 export class ServicioExternoNoDisponibleError extends ErrorDominio {
   constructor() {
-    super('PEA-SIS-004', 'El servicio no está disponible en este momento. Probá de nuevo en breve.', 503);
+    super(
+      'PEA-SIS-004',
+      'El servicio no está disponible en este momento. Probá de nuevo en breve.',
+      503,
+    );
+  }
+}
+
+/**
+ * Rate limit genérico y transversal (a diferencia de `LimiteDeReportesExcedidoError`,
+ * específico de reportes) — pensado para reutilizarse en cualquier endpoint
+ * protegido que necesite un 429 sin un código de módulo propio (ver
+ * UpstashControlDeTasaGeocoding.ts, el primer consumidor).
+ */
+export class LimiteDeConsultasExcedidoError extends ErrorDominio {
+  constructor(public readonly reintentarEnSegundos?: number) {
+    super(
+      'PEA-SIS-006',
+      'Hiciste muchas solicitudes seguidas. Esperá un momento antes de volver a intentar.',
+      429,
+    );
   }
 }
