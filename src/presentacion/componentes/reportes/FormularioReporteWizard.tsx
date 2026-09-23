@@ -123,6 +123,12 @@ async function subirImagenACloudinary(archivo: File): Promise<string> {
   });
 
   if (!respuesta.ok) {
+    // Cloudinary devuelve el motivo real en el body (ej. "Upload preset not
+    // found" si NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET no existe o no es
+    // unsigned) — se loguea acá (nunca se muestra tal cual al usuario, que
+    // ve el mensaje genérico de abajo) para poder diagnosticar sin adivinar.
+    const cuerpo = await respuesta.json().catch(() => null);
+    console.error('Cloudinary rechazó la subida', respuesta.status, cuerpo);
     throw new Error('No pudimos subir la imagen. Probá de nuevo.');
   }
 
@@ -200,9 +206,16 @@ export function FormularioReporteWizard({ tipoInicial }: FormularioReporteWizard
       const url = await subirImagenACloudinary(archivo);
       setFotoUrl(url);
       setEstadoImagen('lista');
-    } catch {
+    } catch (error) {
       setEstadoImagen('error');
-      setErrorImagen('No pudimos subir la imagen. Probá de nuevo.');
+      // El mensaje del error ya viene en español y listo para mostrar (ver
+      // subirImagenACloudinary) — mostrarlo tal cual en vez de uno genérico
+      // fijo, y loguearlo: antes acá se perdía la causa real (ej. Cloudinary
+      // sin configurar en .env) sin dejar rastro ni en pantalla ni en consola.
+      const mensaje =
+        error instanceof Error ? error.message : 'No pudimos subir la imagen. Probá de nuevo.';
+      setErrorImagen(mensaje);
+      console.error('No se pudo subir la foto del reporte a Cloudinary', error);
     }
   }
 
@@ -268,7 +281,12 @@ export function FormularioReporteWizard({ tipoInicial }: FormularioReporteWizard
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-12 text-text-primary">
+    // Sin `min-h-screen`/`justify-center`: este componente ya no es el único
+    // contenido de la pantalla (app/reportes/nuevo/page.tsx le agrega un
+    // encabezado ilustrado y el selector de categoría arriba) — centrarlo
+    // verticalmente en la altura completa del viewport dejaba un salto vacío
+    // enorme entre esos elementos y el "Paso 1 de 3".
+    <main className="mx-auto max-w-md px-6 pb-12 pt-6 text-text-primary">
       <p className="mb-1 text-xs font-medium uppercase tracking-wide text-accent">
         Paso {paso} de 3
       </p>
