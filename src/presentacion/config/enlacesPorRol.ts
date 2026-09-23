@@ -38,6 +38,7 @@ export const ENLACES_POR_ROL: Record<string, EnlaceRapido[]> = {
   municipio: [
     { href: '/municipio/dashboard', etiqueta: 'Panel de reportes' },
     { href: '/municipio/eventos', etiqueta: 'Calendario de operativos' },
+    { href: '/municipio/eventos/nuevo', etiqueta: 'Publicar operativo' },
     { href: '/municipio/turnera', etiqueta: 'Turnera municipal' },
     { href: '/municipio/adopciones', etiqueta: 'Vitrina de adopción' },
     { href: '/cursos', etiqueta: 'Cursos de tenencia responsable' },

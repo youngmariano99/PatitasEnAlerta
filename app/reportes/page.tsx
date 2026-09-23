@@ -350,6 +350,9 @@ export default function PaginaReportes() {
                 <th scope="col" className="px-4 py-3 font-medium">
                   Reportado el
                 </th>
+                <th scope="col" className="px-4 py-3 font-medium">
+                  <span className="sr-only">Detalle</span>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -371,6 +374,14 @@ export default function PaginaReportes() {
                   </td>
                   <td className="px-4 py-3 font-mono text-xs text-text-muted">
                     {formatearFecha(item.createdAt)}
+                  </td>
+                  <td className="px-4 py-3">
+                    <Link
+                      href={`/reportes/${item.id}`}
+                      className="text-accent underline underline-offset-2"
+                    >
+                      Ver historial
+                    </Link>
                   </td>
                 </tr>
               ))}

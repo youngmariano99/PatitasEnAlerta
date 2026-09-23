@@ -81,8 +81,21 @@ function esLecturaPublicaExacta(pathname: string, method: string): boolean {
 // ya lo son las políticas RLS de esas tablas (docs/ROLES.md — `rol_actual()
 // IN ('municipio','administrador')`). El checklist pide reforzarlo también
 // acá, antes de que el panel llegue a renderizar.
+//
+// '/veterinario' y '/admin' se suman acá (auditoría de navegación, Fase C)
+// por el mismo motivo: cada prefijo mapea a un único rol uniforme en todas
+// sus subrutas, así que el gate acá evita que un rol equivocado llegue a
+// renderizar el shell de la pantalla antes de que la API lo rechace.
+// '/red-colaboracion' queda deliberadamente afuera: sus subrutas exigen
+// roles distintos entre sí (ofrecerse: rescatista/veterinario; directorio y
+// búsqueda semántica: sus propios conjuntos — ver
+// OfrecerseComoColaboradorCommand.ts, ListarDirectorioAliados.ts,
+// BuscarReportesSimilares.ts), ya correctamente resuelto por cada caso de
+// uso; un gate único a nivel de prefijo sería incorrecto o redundante.
 const RUTAS_PAGINA_CON_ROL_REQUERIDO: Array<{ prefijo: string; roles: readonly string[] }> = [
   { prefijo: '/municipio', roles: ['municipio', 'administrador'] },
+  { prefijo: '/veterinario', roles: ['veterinario'] },
+  { prefijo: '/admin', roles: ['administrador'] },
 ];
 
 function esRutaProtegida(pathname: string, rutas: string[]): boolean {

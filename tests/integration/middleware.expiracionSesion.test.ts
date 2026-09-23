@@ -331,4 +331,64 @@ describe('middleware — expiración automática de sesión', () => {
       expect(rpcMock).not.toHaveBeenCalled();
     });
   });
+
+  describe('/veterinario exige rol veterinario (auditoría de navegación, Fase C)', () => {
+    it.each(['dueño', 'municipio', 'administrador'])(
+      'redirige a "/" a un usuario autenticado con rol %s',
+      async (rol) => {
+        autenticadoComoRol(rol);
+
+        const respuesta = await middleware(crearRequest('/veterinario/agenda'));
+
+        expect(respuesta.status).toBe(307);
+        const location = new URL(respuesta.headers.get('location')!);
+        expect(location.pathname).toBe('/');
+      },
+    );
+
+    it('deja pasar a un usuario con rol veterinario', async () => {
+      autenticadoComoRol('veterinario');
+
+      const respuesta = await middleware(crearRequest('/veterinario/agenda'));
+
+      expect(respuesta.status).toBe(200);
+    });
+  });
+
+  describe('/admin exige rol administrador (auditoría de navegación, Fase C)', () => {
+    it.each(['dueño', 'veterinario', 'municipio'])(
+      'redirige a "/" a un usuario autenticado con rol %s',
+      async (rol) => {
+        autenticadoComoRol(rol);
+
+        const respuesta = await middleware(crearRequest('/admin/verificaciones'));
+
+        expect(respuesta.status).toBe(307);
+        const location = new URL(respuesta.headers.get('location')!);
+        expect(location.pathname).toBe('/');
+      },
+    );
+
+    it('deja pasar a un usuario con rol administrador', async () => {
+      autenticadoComoRol('administrador');
+
+      const respuesta = await middleware(crearRequest('/admin/verificaciones'));
+
+      expect(respuesta.status).toBe(200);
+    });
+  });
+
+  describe('/red-colaboracion no exige un rol único a nivel de página (varía por subruta en la API)', () => {
+    it.each(['dueño', 'veterinario', 'organizacion', 'rescatista'])(
+      'deja pasar a un usuario con rol %s, sin consultar rol_actual()',
+      async (rol) => {
+        autenticadoComoRol(rol);
+
+        const respuesta = await middleware(crearRequest('/red-colaboracion/solicitudes'));
+
+        expect(respuesta.status).toBe(200);
+        expect(rpcMock).not.toHaveBeenCalled();
+      },
+    );
+  });
 });

@@ -20,6 +20,27 @@ interface BarraSuperiorProps {
 const DESTINOS_SIN_VOLVER = ['/', '/panel'];
 
 /**
+ * Overrides de destino para pantallas donde el historial del navegador
+ * (`router.back()`) no es un "volver" confiable — ej. se puede llegar a
+ * `/mascotas/[id]/libreta` por un link compartido o al refrescar, sin que
+ * haya una entrada de mascota en el historial. En esos casos "Volver"
+ * navega siempre al destino fijo, nunca a lo que sea que haya en el
+ * historial.
+ */
+const OVERRIDES_VOLVER: Array<{
+  patron: RegExp;
+  destino: (coincidencia: RegExpMatchArray) => string;
+}> = [{ patron: /^\/mascotas\/([^/]+)\/libreta$/, destino: (m) => `/mascotas/${m[1]}` }];
+
+function destinoVolverPersonalizado(pathname: string): string | null {
+  for (const { patron, destino } of OVERRIDES_VOLVER) {
+    const coincidencia = pathname.match(patron);
+    if (coincidencia) return destino(coincidencia);
+  }
+  return null;
+}
+
+/**
  * Cabecera persistente: volver + marca a la izquierda, sesión (campana de
  * notificaciones + email + cerrar sesión) o "Iniciar sesión" a la derecha.
  * `perfil` llega ya resuelto desde `ShellNavegacion` (fetch a `/api/perfil`
@@ -30,6 +51,7 @@ export function BarraSuperior({ perfil }: BarraSuperiorProps) {
   const pathname = usePathname();
   const router = useRouter();
   const muestraVolver = pathname ? !DESTINOS_SIN_VOLVER.includes(pathname) : false;
+  const destinoFijo = pathname ? destinoVolverPersonalizado(pathname) : null;
 
   async function cerrarSesion() {
     const supabase = crearClienteSupabaseNavegador();
@@ -46,7 +68,7 @@ export function BarraSuperior({ perfil }: BarraSuperiorProps) {
         {muestraVolver ? (
           <button
             type="button"
-            onClick={() => router.back()}
+            onClick={() => (destinoFijo ? router.push(destinoFijo) : router.back())}
             aria-label="Volver"
             className="flex h-11 w-11 min-h-touch min-w-touch shrink-0 items-center justify-center rounded-md text-lg text-text-primary hover:bg-surface1"
           >

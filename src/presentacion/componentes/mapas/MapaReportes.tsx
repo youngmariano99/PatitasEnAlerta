@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { obtenerIconoReporte } from '@presentacion/componentes/mapas/iconosReporteFlyweight';
@@ -41,6 +42,10 @@ export function MapaReportes({ reportes, centro }: MapaReportesProps) {
               <span className="font-medium capitalize">{reporte.tipo}</span> · {reporte.estado}
               <br />
               {reporte.descripcion}
+              <br />
+              <Link href={`/reportes/${reporte.id}`} className="text-accent underline">
+                Ver historial
+              </Link>
             </Popup>
           </Marker>
         ))}

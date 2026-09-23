@@ -17,7 +17,18 @@ describe('PaginaSolicitudesRecurso (app/red-colaboracion/solicitudes)', () => {
     const usuario = userEvent.setup();
     mockFetch((url, init) => {
       if (url.includes('/colaboraciones') && init?.method === 'POST') {
-        return { ok: true, status: 201, body: {} };
+        return {
+          ok: true,
+          status: 201,
+          body: {
+            id: 'colab-1',
+            solicitudId: 'sol-1',
+            stakeholderId: 'user-1',
+            organizacionId: 'org-1',
+            estado: 'propuesta',
+            createdAt: '2026-09-22T10:00:00.000Z',
+          },
+        };
       }
       return {
         ok: true,
@@ -41,7 +52,9 @@ describe('PaginaSolicitudesRecurso (app/red-colaboracion/solicitudes)', () => {
     expect(await screen.findByText('Necesitamos tránsito para 2 gatos')).toBeInTheDocument();
     await usuario.click(screen.getByRole('button', { name: 'Ofrecerme' }));
 
-    expect(await screen.findByText('Te ofreciste')).toBeInTheDocument();
+    expect(
+      await screen.findByRole('link', { name: 'Te ofreciste — ver seguimiento' }),
+    ).toHaveAttribute('href', '/red-colaboracion/colaboraciones/colab-1');
   });
 
   it('publica una solicitud nueva', async () => {

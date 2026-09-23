@@ -3,12 +3,13 @@ import userEvent from '@testing-library/user-event';
 import { ShellNavegacion } from '@presentacion/componentes/shell/ShellNavegacion';
 
 const backMock = jest.fn();
+const pushMock = jest.fn();
 const signOutMock = jest.fn().mockResolvedValue({ error: null });
 let pathnameActual = '/panel';
 
 jest.mock('next/navigation', () => ({
   usePathname: () => pathnameActual,
-  useRouter: () => ({ back: backMock }),
+  useRouter: () => ({ back: backMock, push: pushMock }),
 }));
 
 jest.mock('@infraestructura/adaptadores/ClienteSupabaseNavegador', () => ({
@@ -30,6 +31,7 @@ function mockFetchPerfil(body: unknown, ok = true) {
 describe('ShellNavegacion', () => {
   beforeEach(() => {
     backMock.mockReset();
+    pushMock.mockReset();
     signOutMock.mockClear();
     pathnameActual = '/panel';
     delete (window as unknown as { location?: unknown }).location;
@@ -108,5 +110,17 @@ describe('ShellNavegacion', () => {
     pathnameActual = '/mascotas';
     rerender(<ShellNavegacion>{'contenido'}</ShellNavegacion>);
     expect(await screen.findByRole('button', { name: 'Volver' })).toBeInTheDocument();
+  });
+
+  it('en /mascotas/[id]/libreta, "Volver" navega siempre a la ficha de la mascota (no al historial)', async () => {
+    const usuario = userEvent.setup();
+    mockFetchPerfil({ id: 'user-1', email: 'dueno@ejemplo.test', rol: 'dueño' });
+    pathnameActual = '/mascotas/mascota-1/libreta';
+
+    render(<ShellNavegacion>{'contenido'}</ShellNavegacion>);
+    await usuario.click(await screen.findByRole('button', { name: 'Volver' }));
+
+    expect(pushMock).toHaveBeenCalledWith('/mascotas/mascota-1');
+    expect(backMock).not.toHaveBeenCalled();
   });
 });

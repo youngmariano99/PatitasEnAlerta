@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import Link from 'next/link';
 import { crearClienteSupabaseNavegador } from '@infraestructura/adaptadores/ClienteSupabaseNavegador';
 
 interface NotificacionApi {
@@ -33,8 +34,32 @@ const ETIQUETAS_TIPO: Record<string, { texto: string; icono: string }> = {
   reporte_coincidente: { texto: 'Encontramos una coincidencia con tu reporte', icono: '🐾' },
   turno_confirmado: { texto: 'Turno confirmado', icono: '📅' },
   turno_cancelado: { texto: 'Turno cancelado', icono: '❌' },
+  turno_recordatorio: { texto: 'Recordatorio de turno', icono: '⏰' },
   verificacion_resuelta: { texto: 'Tu verificación fue resuelta', icono: '✅' },
+  colaboracion_propuesta: { texto: 'Recibiste un ofrecimiento de colaboración', icono: '🤝' },
 };
+
+/**
+ * Mapea `referenciaTabla` a la pantalla donde ese registro es visible — el
+ * mismo criterio de "reutilización antes que invención" del resto del
+ * sprint: la campana no inventa una vista nueva, solo enlaza a la pantalla
+ * ya construida para cada tabla (`docs/SCHEMA.md`, columna `referencia_tabla`
+ * de `notificaciones`). `turnos` no tiene una vista de detalle por ID
+ * todavía, así que enlaza al listado; `verificaciones` no tiene ninguna
+ * pantalla propia del lado del solicitante, por eso queda sin enlace.
+ */
+function rutaDeNotificacion(referenciaTabla: string, referenciaId: string): string | null {
+  switch (referenciaTabla) {
+    case 'reportes':
+      return `/reportes/${referenciaId}`;
+    case 'colaboraciones':
+      return `/red-colaboracion/colaboraciones/${referenciaId}`;
+    case 'turnos':
+      return '/turnos/mis-turnos';
+    default:
+      return null;
+  }
+}
 
 function formatearFecha(iso: string): string {
   return new Date(iso).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' });
@@ -183,25 +208,42 @@ export function CampanaNotificaciones({ usuarioId }: CampanaNotificacionesProps)
             <ul className="max-h-96 overflow-y-auto">
               {items.map((item) => {
                 const info = ETIQUETAS_TIPO[item.tipo] ?? { texto: item.tipo, icono: '•' };
+                const ruta = rutaDeNotificacion(item.referenciaTabla, item.referenciaId);
+                const contenido = (
+                  <div className="flex items-start gap-2">
+                    <span aria-hidden="true">{info.icono}</span>
+                    <div className="flex-1">
+                      <p
+                        className={
+                          item.leido
+                            ? 'text-sm text-text-muted'
+                            : 'text-sm font-medium text-text-primary'
+                        }
+                      >
+                        {info.texto}
+                      </p>
+                      <p className="mt-0.5 font-mono text-xs text-text-primary">
+                        {formatearFecha(item.createdAt)}
+                      </p>
+                    </div>
+                  </div>
+                );
                 return (
                   <li key={item.id} className="border-b border-surface2 px-4 py-3 last:border-b-0">
-                    <div className="flex items-start gap-2">
-                      <span aria-hidden="true">{info.icono}</span>
-                      <div className="flex-1">
-                        <p
-                          className={
-                            item.leido
-                              ? 'text-sm text-text-muted'
-                              : 'text-sm font-medium text-text-primary'
-                          }
-                        >
-                          {info.texto}
-                        </p>
-                        <p className="mt-0.5 font-mono text-xs text-text-primary">
-                          {formatearFecha(item.createdAt)}
-                        </p>
-                      </div>
-                    </div>
+                    {ruta ? (
+                      <Link
+                        href={ruta}
+                        onClick={() => {
+                          if (!item.leido) marcarComoLeida(item.id);
+                          setAbierto(false);
+                        }}
+                        className="block hover:opacity-80"
+                      >
+                        {contenido}
+                      </Link>
+                    ) : (
+                      contenido
+                    )}
                     {!item.leido ? (
                       <button
                         type="button"
