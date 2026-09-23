@@ -17,6 +17,7 @@ test('un vecino publica un reporte de mascota perdida (wizard de 3 pasos)', asyn
     'GET /api/perfil': { body: PERFIL_DUENO },
     'POST /api/reportes': { status: 201, body: { id: 'reporte-1' } },
     'GET /api/reportes': { body: { items: [], total: 0, pagina: 1, porPagina: 50 } },
+    'GET /api/geocoding/reverse': { body: null },
   });
   await simularCloudinary(page);
   await iniciarSesion(page);
@@ -29,22 +30,27 @@ test('un vecino publica un reporte de mascota perdida (wizard de 3 pasos)', asyn
 
   // Paso 2: descripción + especie
   await page.getByLabel('¿Qué pasó?').fill('Se escapó de casa cerca de la plaza, responde a Toby.');
-  await page.locator('#especie').fill('Perro');
+  await page.locator('#especie-categoria').selectOption('perro');
   await page.getByRole('button', { name: 'Continuar' }).click();
 
   // Paso 3: ubicación automática por geolocalización
   await expect(page.getByText('Usamos tu ubicación actual')).toBeVisible();
   await page.getByRole('button', { name: 'Publicar reporte' }).click();
 
-  await expect(page).toHaveURL(/\/reportes$/);
+  // Tras publicar un "perdido" no redirige de inmediato: primero muestra los
+  // "encontrado" cercanos a la zona marcada (ver ResultadosCercanosTrasPublicar).
+  await expect(page.getByText('¡Reporte publicado!')).toBeVisible();
   expect(recibidas['POST /api/reportes']).toHaveLength(1);
   expect(recibidas['POST /api/reportes'][0]).toMatchObject({
     tipo: 'perdido',
-    especie: 'Perro',
+    especie: 'perro',
     fotoUrl: 'https://res.cloudinary.com/e2e/image/upload/foto.png',
     latitud: -37.9989,
     longitud: -61.3565,
   });
+
+  await page.getByRole('button', { name: 'Ir al listado de reportes' }).click();
+  await expect(page).toHaveURL(/\/reportes$/);
 });
 
 test('no deja avanzar del paso 1 sin foto', async ({ page }) => {
