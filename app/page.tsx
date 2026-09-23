@@ -44,9 +44,9 @@ interface RespuestaListado<T> {
 }
 
 const TONO_POR_TIPO_REPORTE: Record<string, 'alerta' | 'exito' | 'peligro'> = {
-  perdido: 'alerta',
+  perdido: 'peligro',
   encontrado: 'exito',
-  problematica: 'peligro',
+  problematica: 'alerta',
 };
 
 const ACCESOS_RAPIDOS = [
@@ -55,24 +55,28 @@ const ACCESOS_RAPIDOS = [
     etiqueta: 'Reportar',
     descripcion: 'Ayudá a que vuelvan a casa',
     icono: Megaphone,
+    imagen: '/animales/Reportar-mascota -perdida.png',
   },
   {
     href: '/municipio/eventos',
     etiqueta: 'Ver operativos',
     descripcion: 'Castración, desparasitación y más',
     icono: Calendar,
+    imagen: '/animales/Datos y turnos del municipio.png',
   },
   {
     href: '/adopciones',
     etiqueta: 'Adopción',
     descripcion: 'Dale una segunda oportunidad',
     icono: Home,
+    imagen: '/animales/Éxito-Confirmación.png',
   },
   {
     href: '/comercios',
-    etiqueta: 'Comercios y veterinarias',
+    etiqueta: 'Veterinarios y comercios',
     descripcion: 'Productos y servicios verificados',
     icono: Store,
+    imagen: '/animales/Veterinarias  gestión y registros clínicos.png',
   },
 ];
 
@@ -126,35 +130,41 @@ export default function HomePage() {
   const marcadoresEventos = eventos?.items ?? [];
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-10 text-text-primary">
-      <section className="mb-10 grid grid-cols-1 items-center gap-6 lg:grid-cols-2">
-        <div className="flex flex-col items-center gap-4 text-center lg:items-start lg:text-left">
-          <h1 className="font-display text-3xl font-bold">Patitas en Alerta</h1>
-          <p className="max-w-md text-text-muted">
-            Reportar protege. Actuar salva. Reportá una mascota perdida o encontrada, seguí los
-            operativos municipales y encontrá tu próximo compañero en adopción — sin necesidad de
-            crear una cuenta.
-          </p>
-          <div className="flex flex-wrap justify-center gap-3 lg:justify-start">
-            <Link href="/reportes/nuevo">
-              <Boton>Reportar una mascota</Boton>
-            </Link>
-            <Link href="/auth/registro">
-              <Boton variante="secundaria">Crear cuenta</Boton>
-            </Link>
+    <main className="mx-auto max-w-6xl px-6 py-8 text-text-primary">
+      <section className="relative mb-6 overflow-hidden rounded-lg">
+        <div className="relative h-80 w-full sm:h-96 lg:h-[440px]">
+          <Image
+            src="/Banner_inicial.png"
+            alt="Un perro y un gato con pañuelos rojos de Patitas en Alerta"
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover"
+          />
+          {/* Degradé sobre la mitad izquierda de la foto (donde hay fondo
+              despejado) para garantizar el contraste del texto — nunca
+              transparencia total, siempre un fondo casi opaco detrás. */}
+          <div className="absolute inset-0 bg-gradient-to-r from-base from-40% via-base/80 via-60% to-transparent" />
+          <div className="relative flex h-full max-w-lg flex-col justify-center gap-4 px-6 sm:px-10">
+            <h1 className="font-display text-3xl font-bold">Patitas en Alerta</h1>
+            <p className="text-text-muted">
+              Reportar protege. Actuar salva. Reportá una mascota perdida o encontrada, seguí los
+              operativos municipales y encontrá tu próximo compañero en adopción — sin necesidad de
+              crear una cuenta.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Link href="/reportes/nuevo">
+                <Boton>Reportar una mascota</Boton>
+              </Link>
+              <Link href="/auth/registro">
+                <Boton variante="secundaria">Crear cuenta</Boton>
+              </Link>
+            </div>
           </div>
         </div>
-        <Image
-          src="/Banner_inicial.png"
-          alt="Un perro y un gato con pañuelos rojos de Patitas en Alerta"
-          width={2048}
-          height={768}
-          priority
-          className="h-56 w-full rounded-lg object-cover sm:h-72 lg:h-full"
-        />
       </section>
 
-      <section className="mb-10">
+      <section className="mb-6">
         <EstadisticasComunidad
           reportesActivos={reportes?.total ?? null}
           operativosProximos={eventos?.total ?? null}
@@ -162,95 +172,116 @@ export default function HomePage() {
         />
       </section>
 
-      <section className="mb-10">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="font-display text-lg font-semibold">Mapa de la comunidad</h2>
-          <Link href="/reportes" className="text-sm text-accent underline-offset-2 hover:underline">
-            Ver todos los reportes
-          </Link>
+      <section className="mb-10 grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="font-display text-lg font-semibold">Mapa de la comunidad</h2>
+            <Link
+              href="/reportes"
+              className="text-sm text-accent underline-offset-2 hover:underline"
+            >
+              Ver todos los reportes
+            </Link>
+          </div>
+          {reportes === null || eventos === null ? (
+            <p className="text-sm text-text-muted">Cargando…</p>
+          ) : (
+            <MapaComunidad
+              reportes={marcadoresReportes}
+              eventos={marcadoresEventos}
+              centro={CENTRO_PRINGLES}
+            />
+          )}
         </div>
-        {reportes === null || eventos === null ? (
-          <p className="text-sm text-text-muted">Cargando…</p>
-        ) : (
-          <MapaComunidad
-            reportes={marcadoresReportes}
-            eventos={marcadoresEventos}
-            centro={CENTRO_PRINGLES}
-          />
-        )}
-      </section>
 
-      <section className="mb-10">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="font-display text-lg font-semibold">Reportes recientes</h2>
-          <Link href="/reportes" className="text-sm text-accent underline-offset-2 hover:underline">
-            Ver todos
-          </Link>
-        </div>
-        {reportes === null ? <p className="text-sm text-text-muted">Cargando…</p> : null}
-        {reportes && reportes.items.length === 0 ? (
-          <p className="text-sm text-text-muted">No hay reportes activos por el momento.</p>
-        ) : null}
-        {reportes && reportes.items.length > 0 ? (
-          <ul className="flex flex-col gap-2">
-            {reportes.items.map((reporte) => (
-              <li key={reporte.id}>
-                <Link href={`/reportes/${reporte.id}`}>
-                  <Tarjeta className="flex items-center justify-between gap-3 hover:border-accent">
-                    <div>
-                      <Badge tono={TONO_POR_TIPO_REPORTE[reporte.tipo] ?? 'neutro'}>
-                        {reporte.tipo}
-                      </Badge>
-                      <p className="mt-1 text-sm text-text-primary">{reporte.descripcion}</p>
-                    </div>
-                  </Tarjeta>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        ) : null}
-      </section>
+        <div className="flex flex-col gap-6">
+          <div>
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="font-display text-lg font-semibold">Reportes recientes</h2>
+              <Link
+                href="/reportes"
+                className="text-sm text-accent underline-offset-2 hover:underline"
+              >
+                Ver todos
+              </Link>
+            </div>
+            {reportes === null ? <p className="text-sm text-text-muted">Cargando…</p> : null}
+            {reportes && reportes.items.length === 0 ? (
+              <p className="text-sm text-text-muted">No hay reportes activos por el momento.</p>
+            ) : null}
+            {reportes && reportes.items.length > 0 ? (
+              <ul className="flex flex-col gap-2">
+                {reportes.items.map((reporte) => (
+                  <li key={reporte.id}>
+                    <Link href={`/reportes/${reporte.id}`}>
+                      <Tarjeta className="hover:border-accent">
+                        <Badge tono={TONO_POR_TIPO_REPORTE[reporte.tipo] ?? 'neutro'}>
+                          {reporte.tipo}
+                        </Badge>
+                        <p className="mt-1 text-sm text-text-primary">{reporte.descripcion}</p>
+                      </Tarjeta>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
 
-      <section className="mb-10">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="font-display text-lg font-semibold">Próximos operativos</h2>
-          <Link
-            href="/municipio/eventos"
-            className="text-sm text-accent underline-offset-2 hover:underline"
-          >
-            Ver calendario
-          </Link>
+          <div>
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="font-display text-lg font-semibold">Próximos operativos</h2>
+              <Link
+                href="/municipio/eventos"
+                className="text-sm text-accent underline-offset-2 hover:underline"
+              >
+                Ver calendario
+              </Link>
+            </div>
+            {eventos === null ? <p className="text-sm text-text-muted">Cargando…</p> : null}
+            {eventos && eventos.items.length === 0 ? (
+              <p className="text-sm text-text-muted">No hay operativos próximos por el momento.</p>
+            ) : null}
+            {eventos && eventos.items.length > 0 ? (
+              <ul className="flex flex-col gap-2">
+                {eventos.items.map((evento) => (
+                  <li key={evento.id}>
+                    <Tarjeta>
+                      <p className="font-medium text-text-primary">{evento.titulo}</p>
+                      <p className="text-sm text-text-muted">
+                        {formatearFecha(evento.fecha)} · {evento.direccion}
+                      </p>
+                    </Tarjeta>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
         </div>
-        {eventos === null ? <p className="text-sm text-text-muted">Cargando…</p> : null}
-        {eventos && eventos.items.length === 0 ? (
-          <p className="text-sm text-text-muted">No hay operativos próximos por el momento.</p>
-        ) : null}
-        {eventos && eventos.items.length > 0 ? (
-          <ul className="flex flex-col gap-2">
-            {eventos.items.map((evento) => (
-              <li key={evento.id}>
-                <Tarjeta>
-                  <p className="font-medium text-text-primary">{evento.titulo}</p>
-                  <p className="text-sm text-text-muted">
-                    {formatearFecha(evento.fecha)} · {evento.direccion}
-                  </p>
-                </Tarjeta>
-              </li>
-            ))}
-          </ul>
-        ) : null}
       </section>
 
       <section>
         <h2 className="mb-3 font-display text-lg font-semibold">Accesos rápidos</h2>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           {ACCESOS_RAPIDOS.map((acceso) => (
             <Link key={acceso.href} href={acceso.href}>
-              <Tarjeta className="flex h-full flex-col items-center gap-2 text-center hover:border-accent">
-                <acceso.icono aria-hidden="true" className="h-6 w-6 text-primary" />
-                <p className="font-medium text-text-primary">{acceso.etiqueta}</p>
-                <p className="text-sm text-text-muted">{acceso.descripcion}</p>
-              </Tarjeta>
+              <div className="flex h-full flex-col overflow-hidden rounded-lg border border-surface2 bg-surface1 shadow-sm hover:border-accent">
+                <div className="relative h-24 w-full sm:h-28">
+                  <Image
+                    src={acceso.imagen}
+                    alt=""
+                    fill
+                    sizes="(min-width: 640px) 25vw, 50vw"
+                    className="object-cover"
+                  />
+                </div>
+                <div className="flex flex-col gap-1 p-3">
+                  <div className="flex items-center gap-1.5">
+                    <acceso.icono aria-hidden="true" className="h-4 w-4 shrink-0 text-primary" />
+                    <p className="text-sm font-medium text-text-primary">{acceso.etiqueta}</p>
+                  </div>
+                  <p className="text-sm text-text-muted">{acceso.descripcion}</p>
+                </div>
+              </div>
             </Link>
           ))}
         </div>

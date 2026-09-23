@@ -21,6 +21,10 @@ const ICONO_POR_TIPO: Record<string, LucideIcon> = {
   otro: MapPin,
 };
 
+// token `accent` (#0073E6, Azul Cívico) — mismo azul que el resto de la UI
+// usa para "operativo/institucional", en vez de un color ajeno al sistema.
+const COLOR_OPERATIVO = '#0073E6';
+
 export function obtenerIconoEvento(tipo: string): L.DivIcon {
   const cacheado = CACHE_ICONOS.get(tipo);
   if (cacheado) return cacheado;
@@ -33,7 +37,7 @@ export function obtenerIconoEvento(tipo: string): L.DivIcon {
   );
   const icono = L.divIcon({
     className: 'icono-evento-flyweight',
-    html: `<span style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:9999px;background:#3b82f6;box-shadow:0 1px 3px rgba(0,0,0,0.4);">${svgMarkup}</span>`,
+    html: `<span style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:9999px;background:${COLOR_OPERATIVO};box-shadow:0 1px 3px rgba(0,0,0,0.4);border:2px solid #fff;">${svgMarkup}</span>`,
     iconSize: [28, 28],
     iconAnchor: [14, 14],
   });
