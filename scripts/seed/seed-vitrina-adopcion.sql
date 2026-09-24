@@ -1,4 +1,4 @@
--- Siembra del Módulo 3 (Vitrina de Adopción institucional): 60 fichas,
+-- Siembra del Módulo 3 (Vitrina de Adopción institucional): 200 fichas,
 -- mezcla de estados (disponible/adoptado/baja), para probar paginación y
 -- filtros del panel municipal (app/municipio/adopciones/page.tsx) antes de
 -- ejercitar el alta manual (PublicarFichaAdopcion).
@@ -32,7 +32,7 @@ SELECT
   -- ya adoptadas, pero ambos casos tienen que existir para probar el filtro
   -- por estado del panel.
   (ARRAY['disponible', 'disponible', 'disponible', 'adoptado', 'baja'])[1 + floor(random() * 5)::int]
-FROM generate_series(1, 60) AS gs
+FROM generate_series(1, 200) AS gs
 WHERE EXISTS (SELECT 1 FROM usuarios WHERE rol_id = 3 AND deleted_at IS NULL);
 
 COMMIT;

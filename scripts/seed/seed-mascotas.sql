@@ -1,4 +1,4 @@
--- Siembra acotada al Módulo 1 (AUTH-04): 180 mascotas repartidas entre
+-- Siembra acotada al Módulo 1 (AUTH-04): 1500 mascotas repartidas entre
 -- dueños existentes, para poder probar el listado /mascotas (paginación,
 -- filtros) antes de ejercitar el alta manual.
 -- Adaptado del bloque "9. Mascotas" de docs/SEED.md (mismos arrays de
@@ -22,7 +22,7 @@ SELECT
   floor(random()*14)::smallint,
   'https://res.cloudinary.com/patitas-en-alerta/image/upload/v1/mascotas/seed-' || gs || '.jpg',
   CASE WHEN random() < 0.3 THEN lpad((900000000 + gs)::text, 15, '0') ELSE NULL END
-FROM generate_series(1, 180) AS gs
+FROM generate_series(1, 1500) AS gs
 WHERE EXISTS (SELECT 1 FROM usuarios WHERE rol_id = 1 AND deleted_at IS NULL);
 
 -- Baja lógica de ~10% de las mascotas recién sembradas (AUTH-05), para

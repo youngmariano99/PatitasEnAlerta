@@ -1,4 +1,4 @@
--- Siembra acotada al Módulo 1 (AUTH-01): 120 dueños de mascota, para poder
+-- Siembra acotada al Módulo 1 (AUTH-01): 1000 dueños de mascota, para poder
 -- probar el formulario de registro (app/auth/registro) contra emails que ya
 -- existen y verificar el flujo PEA-AUTH-001 (409) manualmente o en QA.
 -- Extraído 1:1 del bloque "2. Usuarios: Dueños de mascota" de docs/SEED.md
@@ -22,7 +22,7 @@ INSERT INTO usuarios (email, password_hash, rol_id, estado_verificacion)
 SELECT 'dueño' || gs || '@ejemplo.test',
        '$2b$10$devSeedOnlyNotForProduction00000000000000000000000',
        1, 'no_requerido'
-FROM generate_series(1, 120) AS gs
+FROM generate_series(1, 1000) AS gs
 ON CONFLICT DO NOTHING;
 
 COMMIT;

@@ -1,4 +1,4 @@
--- Siembra de `notificaciones`: 300 registros con mezcla leído/no leído,
+-- Siembra de `notificaciones`: 2500 registros con mezcla leído/no leído,
 -- para poder probar el badge de notificaciones (paginación, contador de no
 -- leídas) sin depender de que se hayan generado coincidencias reales vía
 -- DetectarCoincidenciaReporteJob.
@@ -24,7 +24,7 @@ SELECT
   (SELECT id FROM reportes ORDER BY random() LIMIT 1),
   random() < 0.5,
   now() - (random() * 30 || ' days')::interval
-FROM generate_series(1, 300)
+FROM generate_series(1, 2500)
 WHERE EXISTS (SELECT 1 FROM usuarios WHERE rol_id = 1 AND deleted_at IS NULL)
   AND EXISTS (SELECT 1 FROM reportes);
 

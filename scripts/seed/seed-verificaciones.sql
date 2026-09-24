@@ -1,7 +1,7 @@
 -- Siembra acotada al Módulo 1 (AUTH-08): 10 verificaciones con mezcla real
 -- pendiente/aprobado/rechazado, para poblar la cola inicial del panel
 -- /admin/verificaciones con casos de los tres estados (scripts/seed/seed-veterinarios.sql
--- ya siembra 8 veterinarios, pero solo alterna pendiente/verificado — sin
+-- ya siembra 60 veterinarios, pero solo alterna pendiente/verificado — sin
 -- ningún caso 'rechazado' para probar ese estado del BadgeVerificacion ni el
 -- flujo de motivo_rechazo). Usa emails propios (vet-verificacion{n}@ejemplo.test)
 -- para no pisar los usuarios de seed-veterinarios.sql. Adaptado del bloque

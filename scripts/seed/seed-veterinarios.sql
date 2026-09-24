@@ -1,4 +1,4 @@
--- Siembra acotada al Módulo 1 (AUTH-02/AUTH-07): 8 veterinarios con su
+-- Siembra acotada al Módulo 1 (AUTH-02/AUTH-07): 60 veterinarios con su
 -- perfiles_veterinario y su fila en verificaciones. Estado MIXTO a
 -- propósito (mitad 'pendiente', mitad 'verificado' — AUTH-07): permite
 -- probar los dos estados visuales de BadgeVerificacion sin tener que
@@ -28,7 +28,7 @@ WITH ins AS (
          'gestionado_por_supabase_auth',
          2,
          CASE WHEN gs % 2 = 0 THEN 'verificado' ELSE 'pendiente' END
-  FROM generate_series(1, 8) AS gs
+  FROM generate_series(1, 60) AS gs
   ON CONFLICT DO NOTHING
   RETURNING id, estado_verificacion
 )
