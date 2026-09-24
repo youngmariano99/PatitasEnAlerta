@@ -1,6 +1,7 @@
 'use client';
 
-import { MapContainer, Marker, TileLayer, useMapEvents } from 'react-leaflet';
+import { useEffect } from 'react';
+import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -31,6 +32,23 @@ function CapturadorDeClicks({ onSeleccionar }: Pick<SelectorUbicacionMapaProps, 
 }
 
 /**
+ * Este mapa se monta recién al llegar al paso 3 del wizard (dynamic import,
+ * sin SSR) — si el layout del wizard todavía no terminó de asentarse en ese
+ * instante, Leaflet calcula mal la posición interna de su pane y rompe con
+ * "Cannot read properties of undefined (reading '_leaflet_pos')" apenas el
+ * usuario hace zoom. Forzar un recálculo de tamaño en cuanto el mapa está
+ * listo lo evita.
+ */
+function RecalculoDeTamano() {
+  const mapa = useMap();
+  useEffect(() => {
+    const id = requestAnimationFrame(() => mapa.invalidateSize());
+    return () => cancelAnimationFrame(id);
+  }, [mapa]);
+  return null;
+}
+
+/**
  * Selector manual de ubicación sobre Leaflet/OpenStreetMap — fallback del
  * paso de geolocalización de app/reportes/nuevo/page.tsx cuando el
  * navegador no puede (o el usuario no quiere) compartir su posición
@@ -44,11 +62,17 @@ export function SelectorUbicacionMapa({
 }: SelectorUbicacionMapaProps) {
   return (
     <div className="overflow-hidden rounded-md border border-surface2">
-      <MapContainer center={centro} zoom={13} style={{ height: 260, width: '100%' }}>
+      <MapContainer
+        center={centro}
+        zoom={13}
+        doubleClickZoom={false}
+        style={{ height: 260, width: '100%' }}
+      >
         <TileLayer
           attribution='&copy; colaboradores de <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
+        <RecalculoDeTamano />
         <CapturadorDeClicks onSeleccionar={onSeleccionar} />
         {posicion ? <Marker position={posicion} icon={iconoPin} /> : null}
       </MapContainer>
