@@ -95,14 +95,14 @@ export default function HomePage() {
   const [totalAdopcion, setTotalAdopcion] = useState<number | null>(null);
 
   useEffect(() => {
-    fetch('/api/reportes?porPagina=6')
+    fetch('/api/reportes?porPagina=30')
       .then((r) => (r.ok ? r.json() : null))
       .then((datos: RespuestaListado<ReporteApi> | null) =>
         setReportes(datos ?? { items: [], total: 0 }),
       )
       .catch(() => setReportes({ items: [], total: 0 }));
 
-    fetch('/api/municipio/eventos?porPagina=3')
+    fetch('/api/municipio/eventos?porPagina=15')
       .then((r) => (r.ok ? r.json() : null))
       .then((datos: RespuestaListado<EventoApi> | null) =>
         setEventos(datos ?? { items: [], total: 0 }),

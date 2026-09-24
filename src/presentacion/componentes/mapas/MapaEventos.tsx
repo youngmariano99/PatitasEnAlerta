@@ -26,8 +26,8 @@ function formatearFecha(iso: string): string {
 /**
  * Mapa del calendario público de operativos (Módulo 3) — un marcador por
  * evento de la página actual, con el ícono Flyweight de
- * iconosEventoFlyweight.ts (compartido por tipo, nunca uno nuevo por
- * marcador). Mismo criterio que MapaReportes.tsx.
+ * iconosEventoFlyweight.ts (una única instancia compartida por todos los
+ * marcadores, nunca uno nuevo por evento). Mismo criterio que MapaReportes.tsx.
  */
 export function MapaEventos({ eventos, centro }: MapaEventosProps) {
   return (
@@ -41,7 +41,7 @@ export function MapaEventos({ eventos, centro }: MapaEventosProps) {
           <Marker
             key={evento.id}
             position={[evento.latitud, evento.longitud]}
-            icon={obtenerIconoEvento(evento.tipo)}
+            icon={obtenerIconoEvento()}
           >
             <Popup>
               <span className="font-medium">{evento.titulo}</span>

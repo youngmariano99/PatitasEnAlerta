@@ -114,7 +114,7 @@ export function MapaComunidad({ reportes, eventos, centro }: MapaComunidadProps)
                 <Marker
                   key={`evento-${evento.id}`}
                   position={[evento.latitud, evento.longitud]}
-                  icon={obtenerIconoEvento(evento.tipo)}
+                  icon={obtenerIconoEvento()}
                 >
                   <Popup>
                     <span className="font-medium">{evento.titulo}</span>
