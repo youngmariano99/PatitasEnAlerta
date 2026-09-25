@@ -1,101 +1,24 @@
-## 1. Estrategia del Lote de Datos de Prueba
+-- Siembra completa en un único archivo (Bloque 1.A MVP + Bloque 1.B
+-- Post-MVP) — mismo contenido que el bloque SQL de docs/SEED.md, que sigue
+-- siendo la fuente de verdad documentada del volumen por entidad. Simula una
+-- comunidad de referencia de ~1300 cuentas (1000 dueños + ~290 cuentas
+-- profesionales/institucionales), todas en Coronel Pringles, Buenos Aires
+-- (B7530) — ver docs/SEED.md, Sección 1.
+--
+-- Reemplaza tener que correr los 12 scripts individuales de scripts/seed/
+-- uno por uno: este archivo hace todo en una sola transacción, encadenando
+-- los UUID generados de padre a hijo con tablas temporales (no depende de
+-- que existan filas previas en la base). Los scripts individuales siguen
+-- existiendo para re-sembrar un módulo puntual sin tocar el resto.
+--
+-- Antes de correrlo en una base que ya tiene datos de un seed anterior,
+-- corré primero scripts/seed/limpiar-seed.sql para partir de cero (este
+-- script no hace ninguna limpieza automática).
+--
+-- Uso:
+--   psql "$DATABASE_URL" -f scripts/seed/limpiar-seed.sql  -- opcional, si ya sembraste antes
+--   psql "$DATABASE_URL" -f scripts/seed/seed-completo.sql
 
-- **Motor de ejecución:** SQL puro contra PostgreSQL/Supabase (no Prisma Client), para que el script sea auditable línea por línea y ejecutable directo en `psql` o el SQL Editor de Supabase, en un único `BEGIN/COMMIT`.
-- **Orden de inserción:** estrictamente por dependencia de clave foránea (`roles` → `usuarios` → perfiles/verificaciones → `mascotas` → `reportes` → resto de módulos), usando tablas temporales (`CREATE TEMP TABLE ... AS WITH ins AS (INSERT ... RETURNING id) SELECT ...`) para reutilizar los `UUID` generados en tablas hijas sin hardcodearlos.
-- **Variedad sin miles de líneas manuales:** nombres, razas, direcciones y descripciones se generan combinando `generate_series` con arrays de valores realistas (indexados con `random()`), en vez de listar cada fila a mano.
-- **Distribución temporal:** `created_at`/`franja_inicio` distribuidos en las últimas 8 semanas (`now() - random() * interval '56 days'`), para poder probar filtros por período y las vistas materializadas del dashboard con datos no planos.
-- **Geolocalización:** jitter aleatorio (±~5 km) alrededor de las coordenadas de Coronel Pringles (`-37.9989, -61.3565`), coherente con el alcance single-tenant documentado en el esquema.
-- **Direcciones:** todo campo `direccion` (eventos, comercios) combina una calle real de Coronel Pringles (San Martín, Rivadavia, Alsina, Avellaneda, Simón Bolívar, Belgrano, Moreno, Garay) con una altura aleatoria, y siempre cierra con el sufijo fijo `, Coronel Pringles, Buenos Aires (B7530)` — todo el dataset representa un único municipio real, sin mezclar localidades.
-- **Volumen orientado a paginación real:** toda entidad con listado paginado (tope de 50 registros/página, NFR de Rendimiento) recibe un volumen superior a 50 filas, para que la paginación, los filtros y la búsqueda semántica (`pgvector`) se prueben contra un dataset no trivial.
-- **Escala "ciudad simulada":** el volumen de Bloque 1.A/1.B está pensado para simular una comunidad de referencia de **~1300 cuentas activas en la plataforma** (1000 dueños + ~290 cuentas profesionales/institucionales entre veterinarios, rescatistas, comerciantes y organizaciones, más municipio/administrador) — suficiente para poblar visualmente cualquier pantalla (mapas, listados, dashboards) y encontrar problemas de escala/paginación/rendimiento que un dataset chico no expone.
-- **Separación 1.A / 1.B:** Bloque 1 (MVP) con volumen pensado para la demo y pruebas de carga básicas; Bloque 2 (Post-MVP) con volumen menor, suficiente para validar integridad referencial de los módulos 5–9 antes de que exista UI que los consuma.
-- **⚠️ Caveat de autenticación:** el esquema modela `usuarios.password_hash` como columna propia, pero el stack define **Supabase Auth** como proveedor de autenticación real (tabla protegida `auth.users`). Este script siembra `public.usuarios` de forma independiente con un hash de relleno — **válido únicamente para entornos locales de desarrollo**. En staging/producción, el alta de usuarios de prueba debe hacerse vía `supabase.auth.admin.createUser()` (o el seeding de Supabase CLI), sincronizando `usuarios.id` con `auth.users.id`; nunca insertando directamente en `auth.users` por SQL crudo.
-- **Aislamiento:** el script no toca `roles` si ya existen (`ON CONFLICT DO NOTHING`), para poder re-ejecutarse en un entorno con las migraciones ya aplicadas sin duplicar el catálogo de roles.
-
-### Cómo correr todo en orden
-
-Ningún script hace limpieza previa (son puramente aditivos — correr uno dos veces duplica sus datos). Para partir de cero antes de (re)sembrar, corré primero `limpiar-seed.sql` — borra solo los usuarios `@ejemplo.test` y todo lo que cuelga de ellos, nunca cuentas reales creadas a mano (Sección 0 de `docs/PROCEDIMIENTO_TESTING_MANUAL.md`).
-
-**Camino recomendado — 2 archivos, todo en uno:**
-
-```bash
-psql "$DATABASE_URL" -f scripts/seed/limpiar-seed.sql   # opcional, solo si ya sembraste antes
-psql "$DATABASE_URL" -f scripts/seed/seed-completo.sql  # Bloque 1.A + 1.B completo, una sola transacción
-```
-
-**Alternativa — un módulo a la vez** (si querés re-sembrar solo una parte puntual sin rehacer todo, por ejemplo después de un `TRUNCATE` manual de una sola tabla). Cada script valida con `WHERE EXISTS` que sus dependencias ya existen, así que hay que respetar este orden:
-
-```bash
-psql "$DATABASE_URL" -f scripts/seed/seed-duenos.sql
-psql "$DATABASE_URL" -f scripts/seed/seed-veterinarios.sql
-psql "$DATABASE_URL" -f scripts/seed/seed-municipio.sql
-psql "$DATABASE_URL" -f scripts/seed/seed-verificaciones.sql
-psql "$DATABASE_URL" -f scripts/seed/seed-mascotas.sql
-psql "$DATABASE_URL" -f scripts/seed/seed-reportes.sql
-psql "$DATABASE_URL" -f scripts/seed/seed-historial-estado.sql
-psql "$DATABASE_URL" -f scripts/seed/seed-notificaciones.sql
-psql "$DATABASE_URL" -f scripts/seed/seed-eventos.sql
-psql "$DATABASE_URL" -f scripts/seed/seed-turnos-municipio.sql
-psql "$DATABASE_URL" -f scripts/seed/seed-vitrina-adopcion.sql
-psql "$DATABASE_URL" -f scripts/seed/seed-post-mvp.sql   # Módulos 5-9: rescatistas, comerciantes, organizaciones, red de colaboración, marketplace, foros/cursos, compatibilidad de adopción
-psql "$DATABASE_URL" -f scripts/seed/refresh-metricas-dashboard.sql
-```
-
-El bloque SQL de la Sección 3 (más abajo) tiene el mismo contenido que `seed-completo.sql`, documentado inline — útil para leerlo o pegarlo directo en el SQL Editor de Supabase sin pasar por `psql`.
-
----
-
-## 2. Volumen por Entidad
-
-### Bloque 1.A — MVP
-
-| Entidad                    | Volumen                                          | Justificación                                                                                                                                                                                                  |
-| -------------------------- | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| roles                      | 7 (incluye `organizacion`, id 7, ver `ROLES.md`) | Catálogo fijo                                                                                                                                                                                                  |
-| usuarios (dueño)           | 1000                                             | Simula la base de "vecinos" de una ciudad real usando la plataforma                                                                                                                                            |
-| usuarios (veterinario)     | 60                                               | Suficiente para probar agenda/turnera distribuida entre muchos proveedores, y paginación de directorios                                                                                                        |
-| usuarios (municipio)       | 1                                                | Alcance single-tenant documentado en el esquema                                                                                                                                                                |
-| usuarios (administrador)   | 2                                                | Uno activo + uno de respaldo                                                                                                                                                                                   |
-| perfiles_veterinario       | 60                                               | 1:1 con veterinarios                                                                                                                                                                                           |
-| perfiles_municipio         | 1                                                | 1:1 con el municipio                                                                                                                                                                                           |
-| verificaciones             | 61                                               | Mezcla `pendiente`/`aprobado`/`rechazado` para probar la cola del Admin (60 veterinarios + 1 municipio)                                                                                                        |
-| mascotas                   | 1500                                             | ~1.5 mascotas por dueño en promedio                                                                                                                                                                            |
-| reportes                   | 1800                                             | Alto volumen para paginación/mapa de calor a escala real; mezcla de `tipo`/`estado`/`especie`; alimenta embeddings; incluye 1 par 'perdido'/'encontrado' garantizado coincidente en zona+especie para REP-U-06 |
-| reportes_historial_estado  | ~3000                                            | 1 a 3 transiciones por reporte                                                                                                                                                                                 |
-| notificaciones             | 2500                                             | Mezcla leído/no leído por usuario                                                                                                                                                                              |
-| eventos                    | 40                                               | Pasados y futuros, para calendario y dashboard — no necesita escalar 1:1 con la población                                                                                                                      |
-| disponibilidad_veterinario | ~210                                             | ~5 franjas semanales por veterinario (60 veterinarios)                                                                                                                                                         |
-| turnos                     | ~1000                                            | Alto volumen para paginación; mezcla proveedor municipio/veterinario y estado (40 eventos × 10 + 60 veterinarios × 10)                                                                                         |
-| vitrina_adopcion           | 200                                              | Alto volumen para paginación de la vitrina pública; ~50% con atributos de compatibilidad completos (Módulo 9)                                                                                                  |
-| autorizaciones_libreta     | 600                                              | Mezcla activas/revocadas                                                                                                                                                                                       |
-| entradas_libreta_sanitaria | ~1200                                            | Varias entradas por mascota autorizada                                                                                                                                                                         |
-
-### Bloque 1.B — Post-MVP (volumen mínimo de integridad, no de carga)
-
-| Entidad                    | Volumen | Justificación                                                                     |
-| -------------------------- | ------- | --------------------------------------------------------------------------------- |
-| usuarios (rescatista)      | 100     | Suficiente para probar colaboraciones cruzadas y paginación del directorio        |
-| usuarios (comerciante)     | 80      | 1:1 con comercios                                                                 |
-| usuarios (organizacion)    | 50      | Requiere el rol agregado en `ROLES.md`                                            |
-| solicitudes_recurso        | 400     | Alto volumen para paginación futura                                               |
-| colaboraciones             | 600     | 1 a 2 ofertas por solicitud                                                       |
-| productos_veterinario      | 400     | Catálogo por veterinario                                                          |
-| pedidos_producto           | 500     | Mezcla de estados                                                                 |
-| historiales_compartidos    | 40      | Volumen bajo por naturaleza sensible del caso de uso — se escala poco a propósito |
-| comercios                  | 80      | 1:1 con usuarios comerciante                                                      |
-| productos_comercio         | 600     | Catálogo por comercio                                                             |
-| cursos                     | 60      | Publicados por municipio/organización                                             |
-| inscripciones_curso        | 3000    | Varias por curso, escaladas a 1000 dueños                                         |
-| temas_foro                 | 300     | Alto volumen para paginación del foro                                             |
-| respuestas_foro            | 2000    | Varias respuestas por tema                                                        |
-| cuestionarios_adoptante    | 300     | Uno por adoptante potencial                                                       |
-| sugerencias_compatibilidad | 500     | Varias sugerencias por cuestionario                                               |
-
----
-
-## 3. Script / Configuración de Siembra (SQL)
-
-```sql
 BEGIN;
 
 -- =====================================================================
@@ -285,7 +208,7 @@ FROM generate_series(1, 2500);
 
 -- 13. Eventos municipales
 -- direccion: calle real de Coronel Pringles + altura al azar, siempre con el
--- sufijo fijo de ciudad/provincia/CP — ver "Direcciones" en la Sección 1.
+-- sufijo fijo de ciudad/provincia/CP — ver "Direcciones" en docs/SEED.md.
 CREATE TEMP TABLE tmp_eventos AS
 WITH ins AS (
   INSERT INTO eventos (municipio_id, titulo, tipo, direccion, latitud, longitud, fecha, cupos_totales, requisitos)
@@ -493,7 +416,7 @@ SELECT
 FROM generate_series(1, 500);
 
 -- Volumen bajo a propósito (naturaleza sensible del caso de uso) aunque el
--- resto del dataset escale a ~1000 dueños — ver "Escala ciudad simulada".
+-- resto del dataset escale a ~1000 dueños — ver docs/SEED.md, "Escala ciudad simulada".
 INSERT INTO historiales_compartidos (mascota_id, veterinario_origen_id, veterinario_destino_id, revocado_en)
 SELECT
   (SELECT id FROM tmp_mascotas ORDER BY random() LIMIT 1),
@@ -505,8 +428,7 @@ WHERE v1.id <> v2.id
 LIMIT 40;
 
 -- 22. Marketplace de comerciantes
--- direccion: mismo criterio de calle real + sufijo fijo que los eventos
--- (Sección 1, "Direcciones").
+-- direccion: mismo criterio de calle real + sufijo fijo que los eventos.
 CREATE TEMP TABLE tmp_comercios AS
 WITH ins AS (
   INSERT INTO comercios (usuario_id, nombre_comercio, tipo_comercio, direccion, latitud, longitud, estado_verificacion)
@@ -545,13 +467,9 @@ WITH ins AS (
   RETURNING id
 ) SELECT id FROM ins;
 
--- Mismo criterio que la colaboraciones de más arriba: muestreo sin
+-- Mismo criterio que las colaboraciones de más arriba: muestreo sin
 -- reemplazo sobre el cross join de cursos x dueños (cada par existe una
--- única vez por construcción) — el `SELECT DISTINCT ON (curso_id, usuario_id)`
--- original no compilaba (esas subconsultas escalares sin alias no exponen
--- esos nombres de columna a DISTINCT ON, PostgreSQL 42703) y, aun
--- corregido el alias, seguía dependiendo de un sorteo con reemplazo que
--- puede violar ux_inscripcion_curso_usuario bajo mala suerte.
+-- única vez por construcción), para no violar ux_inscripcion_curso_usuario.
 INSERT INTO inscripciones_curso (curso_id, usuario_id)
 SELECT curso_id, usuario_id
 FROM (
@@ -607,4 +525,3 @@ CROSS JOIN generate_series(1, 3)
 LIMIT 500;
 
 COMMIT;
-```

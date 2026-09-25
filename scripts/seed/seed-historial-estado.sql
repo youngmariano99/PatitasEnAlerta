@@ -1,4 +1,4 @@
--- Siembra de `reportes_historial_estado`: ~380 registros, 1 a 3 transiciones
+-- Siembra de `reportes_historial_estado`: ~3000 registros, 1 a 3 transiciones
 -- por reporte, para poder probar el timeline de estado en la UI (Panel
 -- municipal) sin depender de que cada reporte real haya pasado de verdad
 -- por CambiarEstadoReporteCommand.
@@ -11,9 +11,9 @@
 -- Cada cadena de transiciones sigue el mismo camino lineal sin atajos que
 -- valida CambiarEstadoReporteCommand vía ReporteEstado (State):
 -- reportado → en_revision → en_atencion → resuelto → cerrado. Elegir una
--- longitud de 1 a 3 pasos por reporte alcanza ~380 registros en total sobre
--- los 220 reportes sembrados por seed-reportes.sql (promedio ~1.7 pasos por
--- reporte de los ~220 elegibles).
+-- longitud de 1 a 3 pasos por reporte alcanza ~3000 registros en total sobre
+-- los 1800 reportes sembrados por seed-reportes.sql (promedio ~1.7 pasos por
+-- reporte de los ~1800 elegibles).
 --
 -- Uso:
 --   psql "$DATABASE_URL" -f scripts/seed/seed-municipio.sql  -- si todavía no corrió
@@ -27,7 +27,7 @@ WITH candidatos AS (
   FROM reportes
   WHERE deleted_at IS NULL
   ORDER BY random()
-  LIMIT 220
+  LIMIT 1800
 ),
 config AS (
   SELECT id AS reporte_id, created_at, 1 + floor(random() * 3)::int AS cantidad_pasos

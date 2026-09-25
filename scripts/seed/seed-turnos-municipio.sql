@@ -12,9 +12,9 @@
 --
 -- Alcance: solo `proveedor_tipo='municipio'` (lo que corresponde a esta
 -- actividad, GenerarTurnosEvento). El volumen total de `turnos` documentado
--- en docs/SEED.md (260) incluye además la mitad `veterinario`, que sembrará
+-- en docs/SEED.md (~1000) incluye además la mitad `veterinario`, que sembrará
 -- su propio script cuando se implemente el Módulo 4 — este script aporta
--- los 150 registros municipales (15 eventos × 10 franjas).
+-- los 400 registros municipales (40 eventos × 10 franjas).
 --
 -- Nota: 10 franjas por evento es un valor fijo de siembra (igual al bloque
 -- histórico de docs/SEED.md), independiente de `cupos_totales` real de cada

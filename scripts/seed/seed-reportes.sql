@@ -1,4 +1,4 @@
--- Siembra del Módulo 2 (Motor de Reportes Unificado): 220 reportes para
+-- Siembra del Módulo 2 (Motor de Reportes Unificado): 1800 reportes para
 -- poder probar paginación, filtros por tipo/estado y el mapa de calor antes
 -- de ejercitar el alta manual (REP-01/REP-02/REP-03, CrearReporte).
 -- Los reportes 'problematica' ya distribuían sus 3 subtipos al azar
@@ -19,7 +19,7 @@
 
 BEGIN;
 
--- 218 reportes aleatorios + 2 garantizados (bloque siguiente) = 220 en total.
+-- 1798 reportes aleatorios + 2 garantizados (bloque siguiente) = 1800 en total.
 INSERT INTO reportes (tipo, subtipo, reportado_por, mascota_id, descripcion, foto_url,
                        latitud, longitud, especie, estado, created_at)
 SELECT
@@ -47,7 +47,7 @@ SELECT
        ELSE NULL END,
   t.estado,
   now() - (random() * 56 || ' days')::interval
-FROM generate_series(1, 218) AS gs
+FROM generate_series(1, 1798) AS gs
 CROSS JOIN LATERAL (
   SELECT
     (ARRAY['perdido', 'encontrado', 'problematica'])[1 + floor(random() * 3)::int] AS tipo,
