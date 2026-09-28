@@ -24,6 +24,7 @@ const HISTORIAL: HistorialEstadoItem[] = [
 ];
 
 class RepositorioReportesFalso implements IRepositorioReportes {
+  async obtenerPorId(id: string): Promise<any> { return null; }
   public propietarioId: string | null = DUENO_ID;
 
   async crear(): Promise<never> {

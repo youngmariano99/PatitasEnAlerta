@@ -8,6 +8,7 @@ const ETIQUETAS_ESTADO: Record<EstadoReporte, { texto: string; icono: string }> 
   reportado: { texto: 'Reportado', icono: '📢' },
   en_revision: { texto: 'En revisión', icono: '🔍' },
   en_atencion: { texto: 'En atención', icono: '🔍' },
+  atendido: { texto: 'Atendido', icono: '✅' },
   resuelto: { texto: 'Resuelto', icono: '✅' },
   cerrado: { texto: 'Cerrado', icono: '⏹️' },
 };

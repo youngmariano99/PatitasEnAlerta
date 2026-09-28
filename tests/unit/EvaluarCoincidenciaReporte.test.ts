@@ -16,6 +16,7 @@ function crearFakes(coincidencias: ReporteActivoResumen[] = []) {
     obtenerPropietario: jest.fn(),
     listarHistorialEstado: jest.fn(),
     buscarPorSimilitudSemantica: jest.fn(),
+    obtenerPorId: jest.fn(),
   };
   const repositorioNotificaciones: jest.Mocked<INotificacionesRepositorio> = {
     crear: jest.fn().mockResolvedValue(undefined),

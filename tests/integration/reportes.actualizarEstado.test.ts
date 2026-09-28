@@ -15,6 +15,7 @@ jest.mock('@supabase/ssr', () => ({
 import { PATCH } from '@app/api/reportes/[id]/estado/route';
 
 class RepositorioReportesFalso implements IRepositorioReportes {
+  async obtenerPorId(id: string): Promise<any> { return null; }
   public estadoActual: string | null = 'reportado';
   public llamadasActualizar: Array<{ id: string; estado: string; usuarioId: string }> = [];
 

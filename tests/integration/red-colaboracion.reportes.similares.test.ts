@@ -36,6 +36,7 @@ const reporteDeEjemplo: ReporteSimilar = {
 };
 
 class RepositorioReportesFalso implements IRepositorioReportes {
+  async obtenerPorId(id: string): Promise<any> { return null; }
   public ultimosCriterios: CriteriosBusquedaSemantica | null = null;
 
   async crear(): Promise<never> {

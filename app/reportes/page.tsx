@@ -13,6 +13,7 @@ import { EncabezadoIlustrado } from '@presentacion/componentes/estado/Encabezado
 import { Badge } from '@presentacion/componentes/ui/Badge';
 import { Boton } from '@presentacion/componentes/ui/Boton';
 import { TONO_POR_TIPO_REPORTE } from '@presentacion/config/tonosReporte';
+import { optimizarImagenCloudinary, PRESETS_IMAGEN } from '@presentacion/lib/optimizacionImagenes';
 
 // Leaflet toca `window` al inicializarse — dynamic import con ssr:false,
 // mismo criterio que SelectorUbicacionMapa (app/reportes/nuevo).
@@ -35,6 +36,7 @@ const ETIQUETAS_ESTADO: Record<EstadoReporte, { texto: string; icono: string }> 
   reportado: { texto: 'Reportado', icono: '📢' },
   en_revision: { texto: 'En revisión', icono: '🔍' },
   en_atencion: { texto: 'En atención', icono: '🔍' },
+  atendido: { texto: 'Atendido', icono: '✅' },
   resuelto: { texto: 'Resuelto', icono: '✅' },
   cerrado: { texto: 'Cerrado', icono: '⏹️' },
 };
@@ -64,7 +66,7 @@ interface RespuestaError {
   mensaje: string;
 }
 
-type Vista = 'tabla' | 'mapa';
+type Vista = 'tabla' | 'mapa' | 'muro';
 
 function formatearFecha(iso: string): string {
   return new Date(iso).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' });
@@ -90,7 +92,7 @@ function badgeEstado(estado: string) {
  */
 export default function PaginaReportes() {
   const [vista, setVista] = useState<Vista>('mapa');
-  const [tipo, setTipo] = useState<TipoReporte | ''>('');
+  const [tipo, setTipo] = useState<TipoReporte | ''>('problematica');
   const [estado, setEstado] = useState<EstadoReporte | ''>('');
   const [cercaDeMi, setCercaDeMi] = useState(false);
   const [posicion, setPosicion] = useState<[number, number] | null>(null);
@@ -181,6 +183,7 @@ export default function PaginaReportes() {
     latitud: item.latitud,
     longitud: item.longitud,
     especie: item.especie,
+    fotoUrl: item.fotoUrl,
   }));
   const centroMapa: [number, number] =
     posicion ?? (items[0] ? [items[0].latitud, items[0].longitud] : CENTRO_POR_DEFECTO);
@@ -263,6 +266,20 @@ export default function PaginaReportes() {
           <button
             type="button"
             role="tab"
+            aria-selected={vista === 'muro'}
+            onClick={() => setVista('muro')}
+            className={clsx(
+              'h-11 min-h-[44px] rounded-md border px-4 text-[15px] font-medium',
+              vista === 'muro'
+                ? 'border-accent bg-accent text-text-primary'
+                : 'border-surface2 bg-surface1 text-text-muted',
+            )}
+          >
+            Muro
+          </button>
+          <button
+            type="button"
+            role="tab"
             aria-selected={vista === 'tabla'}
             onClick={() => setVista('tabla')}
             className={clsx(
@@ -340,6 +357,9 @@ export default function PaginaReportes() {
             <thead>
               <tr className="border-b border-surface2 bg-surface1 text-xs uppercase tracking-wide text-text-muted">
                 <th scope="col" className="px-4 py-3 font-medium">
+                  Foto
+                </th>
+                <th scope="col" className="px-4 py-3 font-medium">
                   Tipo
                 </th>
                 <th scope="col" className="px-4 py-3 font-medium">
@@ -359,6 +379,25 @@ export default function PaginaReportes() {
             <tbody>
               {items.map((item) => (
                 <tr key={item.id} className="border-b border-surface2 last:border-b-0">
+                  <td className="px-4 py-3">
+                    <div className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-md border border-surface2 bg-surface2">
+                      <span className="text-base" aria-hidden="true">
+                        {item.especie?.toLowerCase() === 'gato' ? '🐱' : item.especie?.toLowerCase() === 'perro' ? '🐶' : '🐾'}
+                      </span>
+                      {item.fotoUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={optimizarImagenCloudinary(item.fotoUrl, PRESETS_IMAGEN.miniatura)}
+                          alt={item.descripcion}
+                          className="absolute inset-0 h-full w-full object-cover"
+                          loading="lazy"
+                          onError={(e) => {
+                            (e.currentTarget as HTMLElement).style.display = 'none';
+                          }}
+                        />
+                      ) : null}
+                    </div>
+                  </td>
                   <td className="px-4 py-3">
                     <Badge tono={TONO_POR_TIPO_REPORTE[item.tipo as TipoReporte] ?? 'neutro'}>
                       {ETIQUETAS_TIPO[item.tipo as TipoReporte] ?? item.tipo}
@@ -386,6 +425,55 @@ export default function PaginaReportes() {
               ))}
             </tbody>
           </table>
+        </div>
+      ) : null}
+
+      {!cargando && !errorCarga && items.length > 0 && vista === 'muro' ? (
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {items.map((item) => (
+            <Link
+              key={item.id}
+              href={`/reportes/${item.id}`}
+              className="group flex flex-col overflow-hidden rounded-xl border border-surface2 bg-surface1 transition-all hover:-translate-y-1 hover:border-accent hover:shadow-lg"
+            >
+              <div className="relative aspect-[4/3] w-full bg-surface2">
+                {item.fotoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={optimizarImagenCloudinary(item.fotoUrl, PRESETS_IMAGEN.galeria)}
+                    alt={item.descripcion}
+                    className="absolute inset-0 h-full w-full object-cover"
+                    loading="lazy"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLElement).style.display = 'none';
+                    }}
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-4xl" aria-hidden="true">
+                    {item.especie?.toLowerCase() === 'gato' ? '🐱' : item.especie?.toLowerCase() === 'perro' ? '🐶' : '🐾'}
+                  </div>
+                )}
+                <div className="absolute left-3 top-3 flex flex-col gap-1.5">
+                  <Badge tono={TONO_POR_TIPO_REPORTE[item.tipo as TipoReporte] ?? 'neutro'}>
+                    {ETIQUETAS_TIPO[item.tipo as TipoReporte] ?? item.tipo}
+                  </Badge>
+                </div>
+              </div>
+              <div className="flex flex-1 flex-col p-4">
+                <div className="mb-2 flex items-center justify-between text-xs text-text-muted">
+                  <span className="font-medium text-text-primary">{item.especie || 'Mascota'}</span>
+                  <span>{formatearFecha(item.createdAt)}</span>
+                </div>
+                <p className="line-clamp-3 text-sm text-text-muted group-hover:text-text-primary">
+                  {item.descripcion}
+                </p>
+                <div className="mt-auto pt-4 flex items-center justify-between">
+                  <div className="text-xs">{badgeEstado(item.estado)}</div>
+                  <span className="text-xs font-medium text-accent">Ver detalle →</span>
+                </div>
+              </div>
+            </Link>
+          ))}
         </div>
       ) : null}
 

@@ -66,7 +66,7 @@ describe('PaginaReportes (app/reportes)', () => {
     expect(screen.queryByText(reporteBase.id)).not.toBeInTheDocument();
 
     const filas = within(tabla).getAllByRole('row');
-    const celdaFecha = within(filas[1]!).getAllByRole('cell')[3]!;
+    const celdaFecha = within(filas[1]!).getAllByRole('cell')[4]!;
     expect(celdaFecha).toHaveClass('font-mono');
   });
 

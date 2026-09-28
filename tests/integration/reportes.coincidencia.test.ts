@@ -46,6 +46,7 @@ function distanciaAproximadaKm(lat1: number, lon1: number, lat2: number, lon2: n
 
 /** Filtra de verdad (tipo/estado/especie/radio) sobre lo que se creó — no un resultado fijo. */
 class RepositorioReportesEnMemoria implements IRepositorioReportes {
+  async obtenerPorId(id: string): Promise<any> { return null; }
   private reportes: Array<DatosNuevoReporte & { id: string; estado: string }> = [];
   private contador = 0;
 

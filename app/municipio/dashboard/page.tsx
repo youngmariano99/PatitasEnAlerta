@@ -85,9 +85,14 @@ export default function PaginaDashboardMunicipio() {
         </p>
       ) : null}
 
-      {!cargando && !error && rol ? <PanelReportesMunicipio rol={rol} /> : null}
-
       <DashboardAnaliticoMunicipal />
+
+      {!cargando && !error && rol ? (
+        <div className="mt-12">
+          <h2 className="mb-4 text-lg font-semibold">Últimos reportes de la comunidad</h2>
+          <PanelReportesMunicipio rol={rol} />
+        </div>
+      ) : null}
     </main>
   );
 }

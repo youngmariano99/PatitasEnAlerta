@@ -24,6 +24,7 @@ import { Reporte } from '@dominio/entidades/Reporte';
  * Sin describe/it acá: Jest no lo toma como suite propia.
  */
 export class RepositorioReportesFalso implements IRepositorioReportes {
+  async obtenerPorId(id: string): Promise<any> { return null; }
   public creados: DatosNuevoReporte[] = [];
   public llamadasBusquedaCoincidencias: CriteriosCoincidenciaReporte[] = [];
   public coincidenciasARetornar: ReporteActivoResumen[] = [];

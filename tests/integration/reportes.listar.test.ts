@@ -16,6 +16,7 @@ import type {
 import { GET } from '@app/api/reportes/route';
 
 class RepositorioReportesFalso implements IRepositorioReportes {
+  async obtenerPorId(id: string): Promise<any> { return null; }
   public llamadas: { filtros: FiltrosListadoReportes; pagina: number; porPagina: number }[] = [];
   public paginaARetornar: PaginaReportes = { items: [], total: 0, pagina: 1, porPagina: 50 };
 

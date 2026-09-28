@@ -12,7 +12,7 @@ export interface DatosReporte {
 }
 
 /** Todos los estados válidos de un reporte (docs/SCHEMA.md, CHECK estado). */
-export const ESTADOS_REPORTE_SOPORTADOS = ['reportado', 'en_revision', 'en_atencion', 'resuelto', 'cerrado'] as const;
+export const ESTADOS_REPORTE_SOPORTADOS = ['reportado', 'en_revision', 'en_atencion', 'atendido', 'resuelto', 'cerrado'] as const;
 export type EstadoReporte = (typeof ESTADOS_REPORTE_SOPORTADOS)[number];
 
 /**

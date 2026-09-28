@@ -39,6 +39,8 @@ function crearFakes(opciones?: { rol?: string }) {
     obtenerPropietario: jest.fn(),
     listarHistorialEstado: jest.fn(),
     buscarPorSimilitudSemantica: jest.fn().mockResolvedValue([reporteDeEjemplo]),
+    
+    obtenerPorId: jest.fn(),
   };
   const generadorEmbeddings: jest.Mocked<IGeneradorEmbeddings> = {
     generarEmbedding: jest.fn().mockResolvedValue(vectorDeEjemplo),

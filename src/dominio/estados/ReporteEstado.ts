@@ -48,10 +48,14 @@ export abstract class ReporteEstado {
         return new EstadoEnRevision();
       case 'en_atencion':
         return new EstadoEnAtencion();
+      case 'atendido':
+        return new EstadoAtendido();
       case 'resuelto':
         return new EstadoResuelto();
       case 'cerrado':
         return new EstadoCerrado();
+      default:
+        throw new Error(`Estado desconocido: ${valor}`);
     }
   }
 }
@@ -59,19 +63,25 @@ export abstract class ReporteEstado {
 /** Recién publicado — todavía sin revisar. */
 export class EstadoReportado extends ReporteEstado {
   readonly valor: EstadoReporte = 'reportado';
-  protected readonly transiciones: readonly EstadoReporte[] = ['en_revision'];
+  protected readonly transiciones: readonly EstadoReporte[] = ['en_revision', 'en_atencion', 'resuelto', 'atendido', 'cerrado'];
 }
 
 /** Un operador municipal ya lo tomó y está evaluando si amerita una intervención. */
 export class EstadoEnRevision extends ReporteEstado {
   readonly valor: EstadoReporte = 'en_revision';
-  protected readonly transiciones: readonly EstadoReporte[] = ['en_atencion'];
+  protected readonly transiciones: readonly EstadoReporte[] = ['en_atencion', 'resuelto', 'atendido', 'cerrado'];
 }
 
 /** El municipio ya está actuando sobre el reporte (operativo en curso, visita agendada, etc.). */
 export class EstadoEnAtencion extends ReporteEstado {
   readonly valor: EstadoReporte = 'en_atencion';
-  protected readonly transiciones: readonly EstadoReporte[] = ['resuelto'];
+  protected readonly transiciones: readonly EstadoReporte[] = ['resuelto', 'atendido', 'cerrado'];
+}
+
+/** Atendido con un resultado concreto (solo problemáticas). */
+export class EstadoAtendido extends ReporteEstado {
+  readonly valor: EstadoReporte = 'atendido';
+  protected readonly transiciones: readonly EstadoReporte[] = ['cerrado'];
 }
 
 /** Atendido con un resultado concreto (mascota recuperada, foco saneado, etc.). */
