@@ -29,7 +29,7 @@ test('un vecino publica un reporte de mascota perdida (wizard de 3 pasos)', asyn
   await page.getByRole('button', { name: 'Continuar' }).click();
 
   // Paso 2: descripción + especie
-  await page.getByLabel('¿Qué pasó?').fill('Se escapó de casa cerca de la plaza, responde a Toby.');
+  await page.locator('#quePaso').fill('Se escapó de casa cerca de la plaza, responde a Toby.');
   await page.locator('#especie-categoria').selectOption('perro');
   await page.getByRole('button', { name: 'Continuar' }).click();
 
