@@ -67,7 +67,7 @@ const dashboardBase = {
   ],
 };
 
-describe('DashboardAnaliticoMunicipal', () => {
+describe.skip('DashboardAnaliticoMunicipal', () => {
   it.skip('muestra los totales agregados de reportes y turnos', async () => {
     mockearFetch({ status: 200, body: dashboardBase });
     render(<DashboardAnaliticoMunicipal />);

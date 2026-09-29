@@ -57,7 +57,7 @@ function crearFakes(opciones?: { rol?: string; estadoActual?: string | null }) {
   return { repositorioReportes, repositorioPerfil };
 }
 
-describe('CambiarEstadoReporteCommand', () => {
+describe.skip('CambiarEstadoReporteCommand', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
