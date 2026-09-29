@@ -22,43 +22,71 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 
+import type { Variants } from 'framer-motion';
+
+const STAGGER_CONTAINER: Variants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: { staggerChildren: 0.2 },
+  },
+};
+
+const STAGGER_ITEM: Variants = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } },
+};
+
 const SLIDES = [
   // FASE 1: Introducción
   {
     id: 1,
     title: 'Patitas en Alerta',
-    subtitle: 'Conectando a la comunidad por el bienestar animal',
+    subtitle: 'Conectando a nuestra comunidad para proteger a quienes no tienen voz.',
     bgImage: '/Banner_inicial.png',
     overlay: true,
+    logo: '/logopatitas.png',
   },
   {
     id: 2,
     title: 'El Origen',
+    image: '/Banner_inicial2.png',
+    imagePosition: 'right',
     content: (
-      <div className="flex flex-col gap-6 text-xl">
-        <p>
+      <motion.div
+        variants={STAGGER_CONTAINER}
+        initial="hidden"
+        animate="show"
+        className="flex flex-col gap-6 text-xl md:text-2xl leading-relaxed"
+      >
+        <motion.p variants={STAGGER_ITEM}>
           La idea de este proyecto nació de mis ganas de generar un{' '}
           <strong>impacto positivo en la comunidad</strong> aplicando los conocimientos adquiridos
           en la Tecnicatura en Programación.
-        </p>
-        <p>
+        </motion.p>
+        <motion.p variants={STAGGER_ITEM}>
           Quería construir algo que no solo fuera un ejercicio académico, sino una herramienta real
-          para resolver problemas diarios que enfrentamos todos.
-        </p>
-      </div>
+          para resolver problemas diarios que enfrentamos todos respecto al bienestar animal.
+        </motion.p>
+      </motion.div>
     ),
-    icon: <Heart className="w-16 h-16 text-accent mb-4" />,
+    icon: <Heart className="w-20 h-20 text-accent mb-6" />,
   },
   {
     id: 3,
     title: 'Benchmarking: ¿Qué hay en el mercado?',
     content: (
-      <div className="flex flex-col gap-6 text-xl">
-        <p>
+      <motion.div
+        variants={STAGGER_CONTAINER}
+        initial="hidden"
+        animate="show"
+        className="flex flex-col gap-6 text-xl md:text-2xl leading-relaxed"
+      >
+        <motion.p variants={STAGGER_ITEM}>
           Investigando apps actuales noté que resuelven problemas de forma{' '}
           <strong>fragmentada</strong>:
-        </p>
-        <ul className="list-disc list-inside space-y-4 ml-4">
+        </motion.p>
+        <motion.ul variants={STAGGER_ITEM} className="list-disc list-inside space-y-6 ml-6">
           <li>
             <strong>VetCard:</strong> Libretas digitales.
           </li>
@@ -71,68 +99,101 @@ const SLIDES = [
           <li>
             <strong>PetsApp:</strong> Telemedicina.
           </li>
-        </ul>
-        <div className="mt-6 p-4 bg-red-500/10 border-l-4 border-red-500 rounded text-red-700 dark:text-red-300">
+        </motion.ul>
+        <motion.div
+          variants={STAGGER_ITEM}
+          className="mt-8 p-6 bg-red-500/10 border-l-8 border-red-500 rounded text-red-700 dark:text-red-300 font-medium"
+        >
           <strong>Falla principal:</strong> Es inexistente una plataforma que <em>integre</em> a
           todos los involucrados en el ecosistema local.
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     ),
-    icon: <Search className="w-16 h-16 text-accent mb-4" />,
+    icon: <Search className="w-20 h-20 text-accent mb-6" />,
   },
   {
     id: 4,
     title: 'Problemáticas Locales',
     content: (
-      <div className="grid grid-cols-2 gap-6 text-lg mt-4">
-        <div className="bg-surface2 p-6 rounded-xl flex gap-4 items-start">
-          <MapPin className="w-8 h-8 text-danger shrink-0" />
+      <motion.div
+        variants={STAGGER_CONTAINER}
+        initial="hidden"
+        animate="show"
+        className="grid grid-cols-2 gap-6 text-xl md:text-2xl mt-4"
+      >
+        <motion.div
+          variants={STAGGER_ITEM}
+          className="bg-surface2 p-8 rounded-2xl flex gap-6 items-start shadow-sm hover:shadow-md transition-shadow"
+        >
+          <MapPin className="w-12 h-12 text-danger shrink-0 mt-1" />
           <p>
             Reportes de animales perdidos en Facebook sin <strong>ninguna trazabilidad</strong>.
           </p>
-        </div>
-        <div className="bg-surface2 p-6 rounded-xl flex gap-4 items-start">
-          <FileText className="w-8 h-8 text-warning shrink-0" />
+        </motion.div>
+        <motion.div
+          variants={STAGGER_ITEM}
+          className="bg-surface2 p-8 rounded-2xl flex gap-6 items-start shadow-sm hover:shadow-md transition-shadow"
+        >
+          <FileText className="w-12 h-12 text-warning shrink-0 mt-1" />
           <p>
             Gestión de turnos de Zoonosis (castraciones) aún en <strong>papel</strong>.
           </p>
-        </div>
-        <div className="bg-surface2 p-6 rounded-xl flex gap-4 items-start">
-          <Users className="w-8 h-8 text-accent shrink-0" />
+        </motion.div>
+        <motion.div
+          variants={STAGGER_ITEM}
+          className="bg-surface2 p-8 rounded-2xl flex gap-6 items-start shadow-sm hover:shadow-md transition-shadow"
+        >
+          <Users className="w-12 h-12 text-accent shrink-0 mt-1" />
           <p>
             <strong>Desgaste extremo</strong> de ONGs y voluntarios buscando recursos a pulmón.
           </p>
-        </div>
-        <div className="bg-surface2 p-6 rounded-xl flex gap-4 items-start">
-          <Stethoscope className="w-8 h-8 text-info shrink-0" />
+        </motion.div>
+        <motion.div
+          variants={STAGGER_ITEM}
+          className="bg-surface2 p-8 rounded-2xl flex gap-6 items-start shadow-sm hover:shadow-md transition-shadow"
+        >
+          <Stethoscope className="w-12 h-12 text-info shrink-0 mt-1" />
           <p>Veterinarias pequeñas sin recursos para llevar control digital de pacientes.</p>
-        </div>
-        <div className="bg-surface2 p-6 rounded-xl flex gap-4 items-start">
-          <Database className="w-8 h-8 text-purple-500 shrink-0" />
+        </motion.div>
+        <motion.div
+          variants={STAGGER_ITEM}
+          className="bg-surface2 p-8 rounded-2xl flex gap-6 items-start shadow-sm hover:shadow-md transition-shadow"
+        >
+          <Database className="w-12 h-12 text-purple-500 shrink-0 mt-1" />
           <p>
             Pérdida total de <strong>datos estadísticos</strong> para tomar políticas públicas
             locales.
           </p>
-        </div>
-        <div className="bg-surface2 p-6 rounded-xl flex gap-4 items-start">
-          <Megaphone className="w-8 h-8 text-green-500 shrink-0" />
+        </motion.div>
+        <motion.div
+          variants={STAGGER_ITEM}
+          className="bg-surface2 p-8 rounded-2xl flex gap-6 items-start shadow-sm hover:shadow-md transition-shadow"
+        >
+          <Megaphone className="w-12 h-12 text-green-500 shrink-0 mt-1" />
           <p>
             Falta de conocimiento sobre la <strong>tenencia responsable</strong> de mascotas.
           </p>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     ),
   },
   {
     id: 5,
+    bgImage: '/Banner_inicial2.png',
+    overlay: true,
     content: (
-      <div className="flex flex-col items-center text-center h-full justify-center">
-        <Target className="w-24 h-24 text-accent mb-8" />
-        <h2 className="text-4xl md:text-5xl font-bold leading-tight max-w-4xl text-text-primary">
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.8 }}
+        className="flex flex-col items-center text-center h-full justify-center bg-black/40 p-12 rounded-3xl backdrop-blur-sm"
+      >
+        <Target className="w-32 h-32 text-accent mb-12" />
+        <h2 className="text-3xl md:text-6xl font-black leading-tight max-w-5xl text-white drop-shadow-lg">
           &quot;Centralizar y unir a todos los interesados brindándoles herramientas digitales que
           potencien y faciliten la ayuda que ya están intentando dar.&quot;
         </h2>
-      </div>
+      </motion.div>
     ),
   },
   // FASE 2: MVP
@@ -186,89 +247,128 @@ const SLIDES = [
     title: 'El Futuro: Inteligencia Artificial',
     subtitle: 'El MVP prepara el terreno estructurando datos limpios. ¿Qué sigue?',
     content: (
-      <div className="grid grid-cols-2 gap-8 mt-8">
-        <div className="flex flex-col gap-4 items-center text-center p-6 bg-surface2 rounded-2xl">
-          <Activity className="w-16 h-16 text-accent" />
-          <h3 className="text-xl font-bold">Análisis Predictivo</h3>
-          <p className="text-text-muted">
+      <motion.div
+        variants={STAGGER_CONTAINER}
+        initial="hidden"
+        animate="show"
+        className="grid grid-cols-2 gap-8 mt-12"
+      >
+        <motion.div
+          variants={STAGGER_ITEM}
+          className="flex flex-col gap-6 items-center text-center p-10 bg-surface2 rounded-3xl shadow-lg border border-surface3"
+        >
+          <Activity className="w-24 h-24 text-accent" />
+          <h3 className="text-2xl font-bold">Análisis Predictivo</h3>
+          <p className="text-xl text-text-muted">
             Descubrir patrones ocultos para que Zoonosis se anticipe a brotes o zonas críticas.
           </p>
-        </div>
-        <div className="flex flex-col gap-4 items-center text-center p-6 bg-surface2 rounded-2xl">
-          <BrainCircuit className="w-16 h-16 text-accent" />
-          <h3 className="text-xl font-bold">Machine Learning en Adopciones</h3>
-          <p className="text-text-muted">
-            Refinar el algoritmo de emparejamiento usando el registro histórico de éxito.
+        </motion.div>
+        <motion.div
+          variants={STAGGER_ITEM}
+          className="flex flex-col gap-6 items-center text-center p-10 bg-surface2 rounded-3xl shadow-lg border border-surface3"
+        >
+          <BrainCircuit className="w-24 h-24 text-accent" />
+          <h3 className="text-2xl font-bold">Machine Learning</h3>
+          <p className="text-xl text-text-muted">
+            Refinar el algoritmo de emparejamiento de adopciones usando el registro histórico de
+            éxito.
           </p>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     ),
   },
   {
     id: 13,
     title: 'Búsqueda Potenciada por IA e IoT',
     content: (
-      <div className="flex flex-col items-center text-center gap-8 mt-12">
-        <Cpu className="w-24 h-24 text-accent" />
-        <h3 className="text-3xl font-bold">Reconocimiento de Imágenes</h3>
-        <p className="text-xl text-text-muted max-w-2xl">
+      <motion.div
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ type: 'spring', bounce: 0.4, duration: 0.8 }}
+        className="flex flex-col items-center text-center gap-8 mt-16 p-12 bg-surface2 rounded-3xl shadow-xl border border-surface3"
+      >
+        <Cpu className="w-32 h-32 text-accent" />
+        <h3 className="text-3xl font-black">Reconocimiento de Imágenes</h3>
+        <p className="text-2xl text-text-muted max-w-4xl leading-relaxed">
           Integración con IA para detectar automáticamente coincidencias entre animales encontrados
           y reportados como perdidos mediante el análisis de sus fotos. Conexión futura con cámaras
           y lectores de microchips.
         </p>
-      </div>
+      </motion.div>
     ),
   },
   {
     id: 14,
     title: 'Asistente IA + Notificaciones Inteligentes',
     content: (
-      <div className="grid grid-cols-2 gap-8 mt-8">
-        <div className="flex flex-col gap-4 p-8 bg-surface2 rounded-2xl">
-          <MessageSquare className="w-12 h-12 text-accent" />
+      <motion.div
+        variants={STAGGER_CONTAINER}
+        initial="hidden"
+        animate="show"
+        className="grid grid-cols-2 gap-8 mt-12"
+      >
+        <motion.div
+          variants={STAGGER_ITEM}
+          className="flex flex-col gap-6 p-10 bg-surface2 rounded-3xl shadow-lg border border-surface3 hover:border-accent/50 transition-colors"
+        >
+          <MessageSquare className="w-16 h-16 text-accent" />
           <h3 className="text-2xl font-bold">Asistente Virtual</h3>
-          <p className="text-lg text-text-muted">
+          <p className="text-xl text-text-muted leading-relaxed">
             Chatbot para consultar temas de bienestar animal y tenencia responsable, derivando a un
             profesional humano cuando sea necesario.
           </p>
-        </div>
-        <div className="flex flex-col gap-4 p-8 bg-surface2 rounded-2xl">
-          <ShieldAlert className="w-12 h-12 text-accent" />
+        </motion.div>
+        <motion.div
+          variants={STAGGER_ITEM}
+          className="flex flex-col gap-6 p-10 bg-surface2 rounded-3xl shadow-lg border border-surface3 hover:border-accent/50 transition-colors"
+        >
+          <ShieldAlert className="w-16 h-16 text-accent" />
           <h3 className="text-2xl font-bold">Notificaciones Proactivas</h3>
-          <p className="text-lg text-text-muted">
+          <p className="text-xl text-text-muted leading-relaxed">
             Alertas automáticas para mantener al día tratamientos, vacunaciones y un seguimiento
             inteligente de la mascota.
           </p>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     ),
   },
   {
     id: 15,
     title: 'Expansión Funcional',
     content: (
-      <div className="flex flex-col gap-8 mt-8">
-        <div className="flex items-center gap-6 p-6 bg-surface2 rounded-2xl">
-          <Heart className="w-12 h-12 text-danger shrink-0" />
+      <motion.div
+        variants={STAGGER_CONTAINER}
+        initial="hidden"
+        animate="show"
+        className="flex flex-col gap-8 mt-10"
+      >
+        <motion.div
+          variants={STAGGER_ITEM}
+          className="flex items-center gap-6 p-8 bg-surface2 rounded-3xl shadow-md border-l-8 border-l-danger"
+        >
+          <Heart className="w-16 h-16 text-danger shrink-0" />
           <div>
-            <h3 className="text-2xl font-bold mb-2">Gestión de Donaciones y Recursos</h3>
-            <p className="text-lg text-text-muted">
+            <h3 className="text-2xl font-bold mb-3">Gestión de Donaciones y Recursos</h3>
+            <p className="text-xl text-text-muted">
               Las ONGs podrán pedir donaciones en la web de forma oficial y segura, automatizando la
               gestión predictiva de inventarios.
             </p>
           </div>
-        </div>
-        <div className="flex items-center gap-6 p-6 bg-surface2 rounded-2xl">
-          <ShieldAlert className="w-12 h-12 text-warning shrink-0" />
+        </motion.div>
+        <motion.div
+          variants={STAGGER_ITEM}
+          className="flex items-center gap-6 p-8 bg-surface2 rounded-3xl shadow-md border-l-8 border-l-warning"
+        >
+          <ShieldAlert className="w-16 h-16 text-warning shrink-0" />
           <div>
-            <h3 className="text-2xl font-bold mb-2">Denuncias Directas</h3>
-            <p className="text-lg text-text-muted">
+            <h3 className="text-2xl font-bold mb-3">Denuncias Directas</h3>
+            <p className="text-xl text-text-muted">
               Canal seguro para realizar denuncias formales sobre maltratos u otras conductas
               indebidas a las autoridades correspondientes.
             </p>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     ),
   },
   // FASE 4: Final
@@ -277,15 +377,20 @@ const SLIDES = [
     title: 'Mariano Young',
     subtitle: 'Técnico en programación y futuro administrador de empresas',
     content: (
-      <div className="flex flex-col items-center mt-12 gap-6">
-        <div className="w-40 h-40 rounded-full bg-accent text-white flex items-center justify-center text-6xl font-bold">
+      <motion.div
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.6 }}
+        className="flex flex-col items-center mt-16 gap-6"
+      >
+        <div className="w-48 h-48 rounded-full bg-accent text-white flex items-center justify-center text-5xl md:text-6xl font-black shadow-2xl ring-8 ring-accent/30">
           MY
         </div>
-        <p className="text-2xl text-center max-w-3xl text-text-muted mt-4">
+        <p className="text-2xl text-center max-w-4xl text-text-muted mt-6 leading-relaxed">
           Buscando siempre tender un puente entre las necesidades reales de los negocios y las
           soluciones tecnológicas eficientes.
         </p>
-      </div>
+      </motion.div>
     ),
   },
   {
@@ -293,29 +398,38 @@ const SLIDES = [
     title: 'Experiencia',
     subtitle: 'Desarrollo de sistemas de gestión y webs',
     content: (
-      <div className="flex flex-col items-center mt-8 gap-8">
-        <div className="bg-white p-6 rounded-2xl shadow-xl w-64 h-32 relative flex items-center justify-center">
+      <div className="flex flex-col items-center mt-12 gap-8">
+        <motion.div
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="bg-white p-8 rounded-3xl shadow-2xl w-80 h-40 relative flex items-center justify-center"
+        >
           <Image
             src="/LogoappyStudio.jpeg"
             alt="Appy Studio"
             fill
-            className="object-contain p-4 rounded-xl"
+            className="object-contain p-6 rounded-2xl"
           />
-        </div>
-        <ul className="text-xl space-y-4 list-disc list-inside">
-          <li>
+        </motion.div>
+        <motion.ul
+          variants={STAGGER_CONTAINER}
+          initial="hidden"
+          animate="show"
+          className="text-2xl space-y-6 list-disc list-inside bg-surface2 p-10 rounded-3xl shadow-lg border border-surface3"
+        >
+          <motion.li variants={STAGGER_ITEM}>
             Catálogo web para <strong>Filomena</strong>
-          </li>
-          <li>
+          </motion.li>
+          <motion.li variants={STAGGER_ITEM}>
             Marketplace de servicios para <strong>Argoot</strong>
-          </li>
-          <li>
+          </motion.li>
+          <motion.li variants={STAGGER_ITEM}>
             Página web para tapicería <strong>Italia</strong>
-          </li>
-          <li>
+          </motion.li>
+          <motion.li variants={STAGGER_ITEM}>
             Sistema de gestión para Leñera <strong>&quot;Los chingolitos&quot;</strong>
-          </li>
-        </ul>
+          </motion.li>
+        </motion.ul>
       </div>
     ),
   },
@@ -324,40 +438,70 @@ const SLIDES = [
     title: 'Nodexa',
     subtitle: 'Tu aliado tecnológico',
     content: (
-      <div className="flex flex-col items-center gap-8 mt-4">
-        <div className="bg-white p-6 rounded-2xl shadow-xl w-80 h-32 relative flex items-center justify-center">
+      <div className="flex flex-col items-center gap-8 mt-8">
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: 'spring', bounce: 0.5 }}
+          className="bg-white p-8 rounded-3xl shadow-2xl w-96 h-40 relative flex items-center justify-center"
+        >
           <Image
             src="/LogoNodexa.png"
             alt="Nodexa"
             fill
-            className="object-contain p-4 rounded-xl"
+            className="object-contain p-6 rounded-2xl"
           />
-        </div>
-        <p className="text-xl text-center max-w-4xl leading-relaxed">
+        </motion.div>
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3, duration: 0.8 }}
+          className="text-2xl text-center max-w-5xl leading-relaxed bg-surface2 p-10 rounded-3xl shadow-lg border border-surface3"
+        >
           Agencia de desarrollo de software enfocada en entender problemas y encontrar soluciones
           que generen un impacto positivo en los clientes.
           <br />
           <br />
           Ajustando el servicio a los intereses y posibilidades: brindando desde herramientas
           accesibles para iniciar de a poco (suscripciones), hasta sistemas robustos y a medida.
-        </p>
+        </motion.p>
       </div>
     ),
   },
   {
     id: 19,
     content: (
-      <div className="flex flex-col items-center justify-center h-full gap-12 text-center w-full">
-        <h2 className="text-5xl md:text-7xl font-bold text-accent">¡Muchas Gracias!</h2>
-        <div className="flex gap-8 text-xl md:text-2xl mt-8">
-          <div className="flex items-center gap-4 bg-surface2 px-8 py-4 rounded-full">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.8 }}
+        className="flex flex-col items-center justify-center h-full gap-10 text-center w-full"
+      >
+        <Image
+          src="/logopatitas.png"
+          alt="Patitas en Alerta Logo"
+          width={250}
+          height={250}
+          className="drop-shadow-2xl mb-4"
+        />
+        <h2 className="text-5xl md:text-7xl font-black text-accent drop-shadow-lg">
+          ¡Muchas Gracias!
+        </h2>
+        <div className="flex gap-8 text-xl md:text-2xl mt-4">
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            className="flex items-center gap-4 bg-surface2 px-10 py-6 rounded-full shadow-lg border border-surface3 cursor-pointer"
+          >
             <span className="font-bold">Instagram:</span> @marianoyoung.dev
-          </div>
-          <div className="flex items-center gap-4 bg-surface2 px-8 py-4 rounded-full">
+          </motion.div>
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            className="flex items-center gap-4 bg-surface2 px-10 py-6 rounded-full shadow-lg border border-surface3 cursor-pointer"
+          >
             <span className="font-bold">TikTok:</span> @young_mariano
-          </div>
+          </motion.div>
         </div>
-      </div>
+      </motion.div>
     ),
   },
 ];
@@ -384,13 +528,12 @@ export function Slideshow() {
   }, []);
 
   const slide = SLIDES[current];
-
   if (!slide) return null;
 
   return (
     <div className="fixed inset-0 bg-surface1 text-text-primary overflow-hidden flex flex-col z-[9999]">
       {/* Barra de progreso */}
-      <div className="h-2 w-full bg-surface2 absolute top-0 left-0 z-50">
+      <div className="h-3 w-full bg-surface2 absolute top-0 left-0 z-50">
         <motion.div
           className="h-full bg-accent"
           initial={{ width: 0 }}
@@ -402,59 +545,88 @@ export function Slideshow() {
       <AnimatePresence mode="wait">
         <motion.div
           key={slide.id}
-          initial={{ opacity: 0, x: 50 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -50 }}
-          transition={{ duration: 0.5, ease: 'easeInOut' }}
+          initial={{ opacity: 0, x: 100, scale: 0.98 }}
+          animate={{ opacity: 1, x: 0, scale: 1 }}
+          exit={{ opacity: 0, x: -100, scale: 0.98 }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           className="flex-1 w-full h-full relative flex items-center justify-center p-12 lg:p-24"
         >
           {slide.bgImage && (
             <div className="absolute inset-0 z-0">
-              <Image src={slide.bgImage} alt="" fill className="object-cover" priority />
-              {slide.overlay && <div className="absolute inset-0 bg-black/60" />}
+              <motion.div
+                initial={{ scale: 1.1 }}
+                animate={{ scale: 1 }}
+                transition={{ duration: 10, ease: 'linear' }}
+                className="w-full h-full relative"
+              >
+                <Image src={slide.bgImage} alt="" fill className="object-cover" priority />
+              </motion.div>
+              {slide.overlay && <div className="absolute inset-0 bg-black/65" />}
             </div>
           )}
 
-          <div className="z-10 w-full max-w-7xl mx-auto h-full flex flex-col justify-center">
+          <div className="z-10 w-full max-w-[90rem] mx-auto h-full flex flex-col justify-center">
             {/* Header del slide */}
             {slide.title && (
-              <div className="mb-8 md:mb-12 text-center md:text-left">
-                {slide.icon && (
-                  <div className="mb-4 flex justify-center md:justify-start">{slide.icon}</div>
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="mb-10 md:mb-16 text-center md:text-left flex flex-col md:flex-row items-center md:items-start gap-6"
+              >
+                {slide.logo && (
+                  <div className="relative w-40 h-40 md:w-48 md:h-48 shrink-0 bg-white/10 rounded-full p-4 backdrop-blur-md shadow-2xl border border-white/20">
+                    <Image
+                      src={slide.logo}
+                      alt="Logo"
+                      fill
+                      className="object-contain p-4 drop-shadow-xl"
+                      priority
+                    />
+                  </div>
                 )}
-                <h1
-                  className={`text-4xl md:text-6xl font-black mb-4 ${slide.bgImage ? 'text-white' : 'text-text-primary'}`}
-                >
-                  {slide.title}
-                </h1>
-                {slide.subtitle && (
-                  <p
-                    className={`text-xl md:text-3xl font-medium ${slide.bgImage ? 'text-gray-200' : 'text-accent'}`}
+                <div className="flex flex-col justify-center">
+                  {slide.icon && (
+                    <div className="mb-4 flex justify-center md:justify-start">{slide.icon}</div>
+                  )}
+                  <h1
+                    className={`text-4xl md:text-5xl md:text-6xl font-black mb-6 ${slide.bgImage ? 'text-white drop-shadow-lg' : 'text-text-primary'}`}
                   >
-                    {slide.subtitle}
-                  </p>
-                )}
-              </div>
+                    {slide.title}
+                  </h1>
+                  {slide.subtitle && (
+                    <p
+                      className={`text-2xl md:text-3xl font-medium leading-snug ${slide.bgImage ? 'text-gray-200 drop-shadow-md' : 'text-accent'}`}
+                    >
+                      {slide.subtitle}
+                    </p>
+                  )}
+                </div>
+              </motion.div>
             )}
 
             {/* Cuerpo principal */}
             <div
-              className={`flex-1 flex ${slide.imagePosition === 'left' ? 'flex-col md:flex-row-reverse' : 'flex-col md:flex-row'} items-center gap-12 w-full max-h-full`}
+              className={`flex-1 flex ${slide.imagePosition === 'left' ? 'flex-col md:flex-row-reverse' : 'flex-col md:flex-row'} items-center gap-10 w-full max-h-full`}
             >
-              {slide.content && <div className="flex-1 w-full">{slide.content}</div>}
+              {slide.content && (
+                <div className="flex-1 w-full flex flex-col justify-center">{slide.content}</div>
+              )}
 
               {slide.image && (
                 <motion.div
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ delay: 0.2, duration: 0.5 }}
-                  className="flex-1 relative w-full min-h-[40vh] md:min-h-[60vh] rounded-2xl overflow-hidden shadow-2xl border-4 border-surface2"
+                  initial={{ x: slide.imagePosition === 'left' ? -50 : 50, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ delay: 0.3, duration: 0.8, type: 'spring', bounce: 0.3 }}
+                  whileHover={{ scale: 1.02 }}
+                  className="flex-1 relative w-full min-h-[35vh] md:min-h-[50vh] rounded-3xl overflow-hidden shadow-2xl border-8 border-surface2/50 backdrop-blur-sm bg-surface2/30"
                 >
                   <Image
                     src={slide.image}
                     alt={slide.title || 'Slide image'}
                     fill
-                    className="object-contain bg-surface2"
+                    className="object-contain p-2"
+                    priority={current < 12}
                   />
                 </motion.div>
               )}
@@ -464,25 +636,25 @@ export function Slideshow() {
       </AnimatePresence>
 
       {/* Controles flotantes */}
-      <div className="absolute bottom-8 right-8 flex gap-4 z-50">
+      <div className="absolute bottom-10 right-10 flex gap-6 z-50">
         <button
           onClick={prev}
           disabled={current === 0}
-          className="p-4 rounded-full bg-surface2 text-text-primary hover:bg-surface3 disabled:opacity-30 transition-all shadow-lg"
+          className="p-5 rounded-full bg-surface2 text-text-primary hover:bg-surface3 disabled:opacity-30 transition-all shadow-xl hover:scale-110 active:scale-95"
         >
-          <ChevronLeft className="w-8 h-8" />
+          <ChevronLeft className="w-10 h-10" />
         </button>
         <button
           onClick={next}
           disabled={current === SLIDES.length - 1}
-          className="p-4 rounded-full bg-accent text-white hover:brightness-110 disabled:opacity-30 transition-all shadow-lg"
+          className="p-5 rounded-full bg-accent text-white hover:brightness-110 disabled:opacity-30 transition-all shadow-xl hover:scale-110 active:scale-95"
         >
-          <ChevronRight className="w-8 h-8" />
+          <ChevronRight className="w-10 h-10" />
         </button>
       </div>
 
       {/* Indicador de número */}
-      <div className="absolute bottom-8 left-8 text-text-muted font-bold text-xl z-50 bg-surface1/80 px-4 py-2 rounded-full shadow-lg backdrop-blur-sm">
+      <div className="absolute bottom-12 left-12 text-text-primary font-black text-2xl z-50 bg-surface1/90 px-6 py-3 rounded-full shadow-xl backdrop-blur-md border border-surface3">
         {current + 1} / {SLIDES.length}
       </div>
     </div>
