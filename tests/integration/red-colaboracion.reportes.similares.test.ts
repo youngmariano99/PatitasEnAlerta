@@ -3,7 +3,11 @@
  */
 import { NextRequest } from 'next/server';
 import { container } from '@aplicacion/contenedor-di';
-import type { CriteriosBusquedaSemantica, IRepositorioReportes, ReporteSimilar } from '@dominio/puertos/IRepositorioReportes';
+import type {
+  CriteriosBusquedaSemantica,
+  IRepositorioReportes,
+  ReporteSimilar,
+} from '@dominio/puertos/IRepositorioReportes';
 import type { IGeneradorEmbeddings } from '@dominio/puertos/IGeneradorEmbeddings';
 import type { IRepositorioPerfil, ResumenPerfilPropio } from '@dominio/puertos/IRepositorioPerfil';
 import { ServicioExternoNoDisponibleError } from '@dominio/errores/erroresTransversales';
@@ -36,7 +40,9 @@ const reporteDeEjemplo: ReporteSimilar = {
 };
 
 class RepositorioReportesFalso implements IRepositorioReportes {
-  async obtenerPorId(id: string): Promise<any> { return null; }
+  async obtenerPorId(_id: string): Promise<any> {
+    return null;
+  }
   public ultimosCriterios: CriteriosBusquedaSemantica | null = null;
 
   async crear(): Promise<never> {
@@ -67,7 +73,9 @@ class RepositorioReportesFalso implements IRepositorioReportes {
     throw new Error('no usado en este test');
   }
 
-  async buscarPorSimilitudSemantica(criterios: CriteriosBusquedaSemantica): Promise<ReporteSimilar[]> {
+  async buscarPorSimilitudSemantica(
+    criterios: CriteriosBusquedaSemantica,
+  ): Promise<ReporteSimilar[]> {
     this.ultimosCriterios = criterios;
     return [reporteDeEjemplo];
   }
@@ -86,13 +94,21 @@ class RepositorioPerfilFalso implements IRepositorioPerfil {
   public rol = 'organizacion';
 
   async obtenerPerfilPropio(usuarioId: string): Promise<ResumenPerfilPropio | null> {
-    return { id: usuarioId, email: 'solicitante@ejemplo.test', rol: this.rol, estadoVerificacion: 'verificado', verificadoEn: null };
+    return {
+      id: usuarioId,
+      email: 'solicitante@ejemplo.test',
+      rol: this.rol,
+      estadoVerificacion: 'verificado',
+      verificadoEn: null,
+    };
   }
 }
 
 function autenticarComo(usuarioId: string | null) {
   getUserMock.mockResolvedValue(
-    usuarioId ? { data: { user: { id: usuarioId } }, error: null } : { data: { user: null }, error: { message: 'sin sesión' } },
+    usuarioId
+      ? { data: { user: { id: usuarioId } }, error: null }
+      : { data: { user: null }, error: { message: 'sin sesión' } },
   );
 }
 
@@ -128,16 +144,19 @@ describe('GET /api/red-colaboracion/reportes/similares (Búsqueda híbrida pgvec
     expect(cuerpo.codigo).toBe('PEA-SIS-001');
   });
 
-  it.each(['dueño', 'comerciante'])('rechaza con 403 / PEA-SIS-002 para un usuario con rol %s', async (rol) => {
-    autenticarComo('usuario-1');
-    repositorioPerfil.rol = rol;
+  it.each(['dueño', 'comerciante'])(
+    'rechaza con 403 / PEA-SIS-002 para un usuario con rol %s',
+    async (rol) => {
+      autenticarComo('usuario-1');
+      repositorioPerfil.rol = rol;
 
-    const respuesta = await GET(crearRequest({ consulta: 'gato asustadizo' }));
+      const respuesta = await GET(crearRequest({ consulta: 'gato asustadizo' }));
 
-    expect(respuesta.status).toBe(403);
-    const cuerpo = await respuesta.json();
-    expect(cuerpo.codigo).toBe('PEA-SIS-002');
-  });
+      expect(respuesta.status).toBe(403);
+      const cuerpo = await respuesta.json();
+      expect(cuerpo.codigo).toBe('PEA-SIS-002');
+    },
+  );
 
   it.each(['organizacion', 'veterinario', 'rescatista', 'municipio', 'administrador'])(
     'permite el acceso (200) a un usuario con rol %s',
@@ -167,7 +186,14 @@ describe('GET /api/red-colaboracion/reportes/similares (Búsqueda híbrida pgvec
   it('propaga los filtros exactos de la query al caso de uso', async () => {
     autenticarComo('ong-1');
 
-    await GET(crearRequest({ consulta: 'foco sanitario', tipo: 'problematica', estado: 'en_revision', especie: 'perro' }));
+    await GET(
+      crearRequest({
+        consulta: 'foco sanitario',
+        tipo: 'problematica',
+        estado: 'en_revision',
+        especie: 'perro',
+      }),
+    );
 
     expect(repositorioReportes.ultimosCriterios?.tipo).toBe('problematica');
     expect(repositorioReportes.ultimosCriterios?.estado).toBe('en_revision');

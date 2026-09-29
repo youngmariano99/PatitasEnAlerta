@@ -3,7 +3,10 @@
  */
 import { NextRequest } from 'next/server';
 import { container } from '@aplicacion/contenedor-di';
-import type { HistorialEstadoItem, IRepositorioReportes } from '@dominio/puertos/IRepositorioReportes';
+import type {
+  HistorialEstadoItem,
+  IRepositorioReportes,
+} from '@dominio/puertos/IRepositorioReportes';
 import type { IRepositorioPerfil, ResumenPerfilPropio } from '@dominio/puertos/IRepositorioPerfil';
 
 const getUserMock = jest.fn();
@@ -19,12 +22,26 @@ const DUENO_ID = '22222222-2222-2222-2222-222222222222';
 const AJENO_ID = '33333333-3333-3333-3333-333333333333';
 
 const HISTORIAL: HistorialEstadoItem[] = [
-  { id: 'h1', estadoAnterior: 'reportado', estadoNuevo: 'en_revision', usuarioId: 'municipio-1', registradoEn: new Date('2026-08-01T10:00:00.000Z') },
-  { id: 'h2', estadoAnterior: 'en_revision', estadoNuevo: 'en_atencion', usuarioId: 'municipio-1', registradoEn: new Date('2026-08-02T10:00:00.000Z') },
+  {
+    id: 'h1',
+    estadoAnterior: 'reportado',
+    estadoNuevo: 'en_revision',
+    usuarioId: 'municipio-1',
+    registradoEn: new Date('2026-08-01T10:00:00.000Z'),
+  },
+  {
+    id: 'h2',
+    estadoAnterior: 'en_revision',
+    estadoNuevo: 'en_atencion',
+    usuarioId: 'municipio-1',
+    registradoEn: new Date('2026-08-02T10:00:00.000Z'),
+  },
 ];
 
 class RepositorioReportesFalso implements IRepositorioReportes {
-  async obtenerPorId(id: string): Promise<any> { return null; }
+  async obtenerPorId(_id: string): Promise<any> {
+    return null;
+  }
   public propietarioId: string | null = DUENO_ID;
 
   async crear(): Promise<never> {
@@ -58,13 +75,21 @@ class RepositorioPerfilFalso implements IRepositorioPerfil {
   public rol = 'dueño';
 
   async obtenerPerfilPropio(usuarioId: string): Promise<ResumenPerfilPropio | null> {
-    return { id: usuarioId, email: 'usuario@ejemplo.test', rol: this.rol, estadoVerificacion: 'verificado', verificadoEn: null };
+    return {
+      id: usuarioId,
+      email: 'usuario@ejemplo.test',
+      rol: this.rol,
+      estadoVerificacion: 'verificado',
+      verificadoEn: null,
+    };
   }
 }
 
 function autenticarComo(usuarioId: string | null) {
   getUserMock.mockResolvedValue(
-    usuarioId ? { data: { user: { id: usuarioId } }, error: null } : { data: { user: null }, error: { message: 'sin sesión' } },
+    usuarioId
+      ? { data: { user: { id: usuarioId } }, error: null }
+      : { data: { user: null }, error: { message: 'sin sesión' } },
   );
 }
 
@@ -102,18 +127,23 @@ describe('GET /api/reportes/[id]/historial (Historial de cambios de estado)', ()
     expect(respuesta.status).toBe(200);
     const cuerpo = await respuesta.json();
     expect(cuerpo).toHaveLength(2);
-    expect(new Date(cuerpo[0].registradoEn).getTime()).toBeLessThan(new Date(cuerpo[1].registradoEn).getTime());
+    expect(new Date(cuerpo[0].registradoEn).getTime()).toBeLessThan(
+      new Date(cuerpo[1].registradoEn).getTime(),
+    );
   });
 
-  it.each(['municipio', 'administrador'])('rol %s accede al historial aunque no sea el dueño', async (rol) => {
-    autenticarComo(AJENO_ID);
-    repositorioReportes.propietarioId = DUENO_ID;
-    repositorioPerfil.rol = rol;
+  it.each(['municipio', 'administrador'])(
+    'rol %s accede al historial aunque no sea el dueño',
+    async (rol) => {
+      autenticarComo(AJENO_ID);
+      repositorioReportes.propietarioId = DUENO_ID;
+      repositorioPerfil.rol = rol;
 
-    const respuesta = await GET(crearRequest(REPORTE_ID), { params: { id: REPORTE_ID } });
+      const respuesta = await GET(crearRequest(REPORTE_ID), { params: { id: REPORTE_ID } });
 
-    expect(respuesta.status).toBe(200);
-  });
+      expect(respuesta.status).toBe(200);
+    },
+  );
 
   // Paso 4 del checklist: test de integración que confirma 403 para un usuario ajeno al reporte.
   it('rechaza con 403 / PEA-SIS-002 a un usuario ajeno al reporte (ni dueño ni municipio/administrador)', async () => {
