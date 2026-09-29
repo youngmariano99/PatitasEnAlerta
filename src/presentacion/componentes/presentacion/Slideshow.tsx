@@ -385,6 +385,8 @@ export function Slideshow() {
 
   const slide = SLIDES[current];
 
+  if (!slide) return null;
+
   return (
     <div className="fixed inset-0 bg-surface1 text-text-primary overflow-hidden flex flex-col z-[9999]">
       {/* Barra de progreso */}
