@@ -41,6 +41,8 @@ function normalizarEspecie(especie: string | null | undefined): 'perro' | 'gato'
   return '';
 }
 
+import { optimizarImagenCloudinary, PRESETS_IMAGEN } from '@presentacion/lib/optimizacionImagenes';
+
 function iconoPorTipoYEspecie(tipo: string, especieNormalizada: string): LucideIcon {
   if (tipo === 'problematica') return TriangleAlert;
   if (especieNormalizada === 'perro') return Dog;
@@ -52,20 +54,51 @@ export function obtenerIconoReporte(
   tipo: string,
   estado: string,
   especie?: string | null,
+  fotoUrl?: string | null,
 ): L.DivIcon {
   const especieNormalizada = normalizarEspecie(especie);
+  const color = COLOR_POR_TIPO[tipo] ?? '#5B6470';
+  const IconoComponente = iconoPorTipoYEspecie(tipo, especieNormalizada);
+  const svgFallbackMarkup = renderToStaticMarkup(
+    createElement(IconoComponente, { size: 20, color }),
+  );
+
+  if (fotoUrl && fotoUrl.trim().length > 0) {
+    const urlOptimizada = optimizarImagenCloudinary(fotoUrl, PRESETS_IMAGEN.pinMapa);
+    const clave = `foto:${tipo}:${especieNormalizada}:${urlOptimizada}`;
+    const cacheado = CACHE_ICONOS.get(clave);
+    if (cacheado) return cacheado;
+
+    const htmlFoto = `
+      <div style="position:relative;width:38px;height:38px;border-radius:9999px;border:3px solid ${color};box-shadow:0 2px 6px rgba(0,0,0,0.35);background:#fff;overflow:hidden;display:flex;align-items:center;justify-content:center;">
+        <img src="${urlOptimizada}" alt="${tipo}" style="position:relative;width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+        <div style="display:none;align-items:center;justify-content:center;width:100%;height:100%;">
+          ${svgFallbackMarkup}
+        </div>
+      </div>
+      ${tipo === 'problematica' ? `<div style="position:absolute;bottom:-4px;right:-4px;width:18px;height:18px;border-radius:9999px;background:${color};border:2px solid #fff;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,0.4);">${renderToStaticMarkup(createElement(TriangleAlert, { size: 10, color: '#fff' }))}</div>` : ''}
+    `;
+
+    const icono = L.divIcon({
+      className: 'icono-reporte-foto',
+      html: `<div style="position:relative;width:38px;height:38px;">${htmlFoto}</div>`,
+      iconSize: [38, 38],
+      iconAnchor: [19, 19],
+    });
+
+    CACHE_ICONOS.set(clave, icono);
+    return icono;
+  }
+
   const clave = `${tipo}:${estado}:${especieNormalizada}`;
   const cacheado = CACHE_ICONOS.get(clave);
   if (cacheado) return cacheado;
-
-  const IconoComponente = iconoPorTipoYEspecie(tipo, especieNormalizada);
   // Blanco fijo (no un token del sistema de diseño): es un glyph dentro de un
   // marcador Leaflet, renderizado fuera del árbol de React vía `L.divIcon`,
   // no un elemento de UI temático — no aplica la regla de "sin colores nuevos".
   const svgMarkup = renderToStaticMarkup(
     createElement(IconoComponente, { size: 16, color: '#fff' }),
   );
-  const color = COLOR_POR_TIPO[tipo] ?? '#5B6470';
   const icono = L.divIcon({
     className: 'icono-reporte-flyweight',
     html: `<span style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:9999px;background:${color};box-shadow:0 1px 3px rgba(0,0,0,0.4);border:2px solid #fff;">${svgMarkup}</span>`,

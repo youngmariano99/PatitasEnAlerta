@@ -16,6 +16,9 @@ import type {
 import { GET } from '@app/api/reportes/route';
 
 class RepositorioReportesFalso implements IRepositorioReportes {
+  async obtenerPorId(_id: string): Promise<any> {
+    return null;
+  }
   public llamadas: { filtros: FiltrosListadoReportes; pagina: number; porPagina: number }[] = [];
   public paginaARetornar: PaginaReportes = { items: [], total: 0, pagina: 1, porPagina: 50 };
 
@@ -27,7 +30,11 @@ class RepositorioReportesFalso implements IRepositorioReportes {
     throw new Error('no usado en este test');
   }
 
-  async listar(filtros: FiltrosListadoReportes, pagina: number, porPagina: number): Promise<PaginaReportes> {
+  async listar(
+    filtros: FiltrosListadoReportes,
+    pagina: number,
+    porPagina: number,
+  ): Promise<PaginaReportes> {
     this.llamadas.push({ filtros, pagina, porPagina });
     return this.paginaARetornar;
   }
@@ -91,7 +98,13 @@ describe('GET /api/reportes (Listado y mapa de reportes activos, ListarReportes)
   it('sin `pagina`/`porPagina`, pide la primera página con el tope de 50', async () => {
     await GET(crearRequest(''));
 
-    expect(repositorioReportes.llamadas).toEqual([{ filtros: { tipo: undefined, estado: undefined, zona: undefined }, pagina: 1, porPagina: 50 }]);
+    expect(repositorioReportes.llamadas).toEqual([
+      {
+        filtros: { tipo: undefined, estado: undefined, zona: undefined },
+        pagina: 1,
+        porPagina: 50,
+      },
+    ]);
   });
 
   it('nunca deja pedir más de 50 por página aunque el cliente lo solicite', async () => {
@@ -101,11 +114,17 @@ describe('GET /api/reportes (Listado y mapa de reportes activos, ListarReportes)
   });
 
   it('combina simultáneamente los filtros de tipo, estado y zona', async () => {
-    await GET(crearRequest('?tipo=perdido&estado=en_atencion&latitud=-37.9989&longitud=-61.3565&radioKm=5'));
+    await GET(
+      crearRequest('?tipo=perdido&estado=en_atencion&latitud=-37.9989&longitud=-61.3565&radioKm=5'),
+    );
 
     expect(repositorioReportes.llamadas).toEqual([
       {
-        filtros: { tipo: 'perdido', estado: 'en_atencion', zona: { latitud: -37.9989, longitud: -61.3565, radioKm: 5 } },
+        filtros: {
+          tipo: 'perdido',
+          estado: 'en_atencion',
+          zona: { latitud: -37.9989, longitud: -61.3565, radioKm: 5 },
+        },
         pagina: 1,
         porPagina: 50,
       },
@@ -125,7 +144,11 @@ describe('GET /api/reportes (Listado y mapa de reportes activos, ListarReportes)
     const respuesta = await GET(crearRequest('?tipo=urgencia_vial&estado=en_llamas'));
 
     expect(respuesta.status).toBe(200);
-    expect(repositorioReportes.llamadas[0]?.filtros).toEqual({ tipo: undefined, estado: undefined, zona: undefined });
+    expect(repositorioReportes.llamadas[0]?.filtros).toEqual({
+      tipo: undefined,
+      estado: undefined,
+      zona: undefined,
+    });
   });
 
   it('devuelve los items, total y metadatos de paginación tal como los entrega el caso de uso', async () => {
@@ -147,7 +170,9 @@ describe('GET /api/reportes (Listado y mapa de reportes activos, ListarReportes)
 
   it('given más de 50 reportes activos, retorna únicamente la página solicitada (≤50 registros)', async () => {
     repositorioReportes.paginaARetornar = {
-      items: Array.from({ length: 50 }, (_, indice) => crearReporteListado({ id: `reporte-${indice}` })),
+      items: Array.from({ length: 50 }, (_, indice) =>
+        crearReporteListado({ id: `reporte-${indice}` }),
+      ),
       total: 220,
       pagina: 1,
       porPagina: 50,

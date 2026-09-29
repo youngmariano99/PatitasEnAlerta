@@ -22,9 +22,15 @@ import type {
 } from '@dominio/puertos/IRepositorioReportes';
 import type { IAlmacenamientoImagenes } from '@dominio/puertos/IAlmacenamientoImagenes';
 import type { IControlDeTasa } from '@dominio/puertos/IControlDeTasa';
-import type { IControlDeTasaConReintento, ResultadoControlDeTasa } from '@dominio/puertos/IControlDeTasaConReintento';
+import type {
+  IControlDeTasaConReintento,
+  ResultadoControlDeTasa,
+} from '@dominio/puertos/IControlDeTasaConReintento';
 import type { IRepositorioPerfil, ResumenPerfilPropio } from '@dominio/puertos/IRepositorioPerfil';
-import type { DatosNotificacion, INotificacionesRepositorio } from '@dominio/puertos/INotificacionesRepositorio';
+import type {
+  DatosNotificacion,
+  INotificacionesRepositorio,
+} from '@dominio/puertos/INotificacionesRepositorio';
 import type { DatosReporte } from '@dominio/entidades/Reporte';
 import { ESTADOS_REPORTE_ACTIVOS, Reporte } from '@dominio/entidades/Reporte';
 
@@ -46,6 +52,9 @@ function distanciaAproximadaKm(lat1: number, lon1: number, lat2: number, lon2: n
 
 /** Filtra de verdad (tipo/estado/especie/radio) sobre lo que se creó — no un resultado fijo. */
 class RepositorioReportesEnMemoria implements IRepositorioReportes {
+  async obtenerPorId(_id: string): Promise<any> {
+    return null;
+  }
   private reportes: Array<DatosNuevoReporte & { id: string; estado: string }> = [];
   private contador = 0;
 
@@ -57,7 +66,9 @@ class RepositorioReportesEnMemoria implements IRepositorioReportes {
     return Reporte.reconstruir(id, entidad, new Date('2026-08-01T12:00:00.000Z'));
   }
 
-  async buscarPerdidosActivosPorZonaYEspecie(criterios: CriteriosCoincidenciaReporte): Promise<ReporteActivoResumen[]> {
+  async buscarPerdidosActivosPorZonaYEspecie(
+    criterios: CriteriosCoincidenciaReporte,
+  ): Promise<ReporteActivoResumen[]> {
     return this.reportes
       .filter(
         (r) =>
@@ -65,12 +76,17 @@ class RepositorioReportesEnMemoria implements IRepositorioReportes {
           ([...ESTADOS_REPORTE_ACTIVOS] as string[]).includes(r.estado) &&
           r.especie?.toLowerCase() === criterios.especie.toLowerCase() &&
           r.id !== criterios.excluirReporteId &&
-          distanciaAproximadaKm(r.latitud, r.longitud, criterios.latitud, criterios.longitud) <= criterios.radioKm,
+          distanciaAproximadaKm(r.latitud, r.longitud, criterios.latitud, criterios.longitud) <=
+            criterios.radioKm,
       )
       .map((r) => ({ id: r.id, reportadoPor: r.reportadoPor }));
   }
 
-  async listar(_filtros: FiltrosListadoReportes, _pagina: number, _porPagina: number): Promise<PaginaReportes> {
+  async listar(
+    _filtros: FiltrosListadoReportes,
+    _pagina: number,
+    _porPagina: number,
+  ): Promise<PaginaReportes> {
     throw new Error('no usado en este test');
   }
 
@@ -143,7 +159,13 @@ class ControlDeTasaAntiSaturacionFalso implements IControlDeTasaConReintento {
 
 class RepositorioPerfilFalso implements IRepositorioPerfil {
   async obtenerPerfilPropio(usuarioId: string): Promise<ResumenPerfilPropio | null> {
-    return { id: usuarioId, email: 'usuario@ejemplo.test', rol: 'dueño', estadoVerificacion: 'verificado', verificadoEn: null };
+    return {
+      id: usuarioId,
+      email: 'usuario@ejemplo.test',
+      rol: 'dueño',
+      estadoVerificacion: 'verificado',
+      verificadoEn: null,
+    };
   }
 }
 
@@ -186,11 +208,20 @@ describe('Job de coincidencia zona/especie y generación de notificación (integ
     repositorioNotificaciones = new NotificacionesRepositorioFalso();
     container.reset();
     container.registerInstance<IRepositorioReportes>('IRepositorioReportes', repositorioReportes);
-    container.registerInstance<INotificacionesRepositorio>('INotificacionesRepositorio', repositorioNotificaciones);
+    container.registerInstance<INotificacionesRepositorio>(
+      'INotificacionesRepositorio',
+      repositorioNotificaciones,
+    );
     container.registerSingleton<IControlDeTasa>('IControlDeTasa', ControlDeTasaFalso);
-    container.registerSingleton<IControlDeTasaConReintento>('IControlDeTasaConReintento', ControlDeTasaAntiSaturacionFalso);
+    container.registerSingleton<IControlDeTasaConReintento>(
+      'IControlDeTasaConReintento',
+      ControlDeTasaAntiSaturacionFalso,
+    );
     container.registerSingleton<IRepositorioPerfil>('IRepositorioPerfil', RepositorioPerfilFalso);
-    container.registerSingleton<IAlmacenamientoImagenes>('IAlmacenamientoImagenes', AlmacenamientoImagenesFalso);
+    container.registerSingleton<IAlmacenamientoImagenes>(
+      'IAlmacenamientoImagenes',
+      AlmacenamientoImagenesFalso,
+    );
   });
 
   it('un "encontrado" de la misma especie y dentro del radio genera reporte_coincidente para el dueño del "perdido"', async () => {
@@ -273,9 +304,9 @@ describe('Job de coincidencia zona/especie y generación de notificación (integ
     // Simula que el municipio ya lo cerró — el fake permite mutar el estado
     // directamente para no depender de un caso de uso de cambio de estado
     // que todavía no existe en este módulo.
-    (repositorioReportes as unknown as { reportes: Array<{ id: string; estado: string }> }).reportes.find(
-      (r) => r.id === cuerpoPerdido.id,
-    )!.estado = 'resuelto';
+    (
+      repositorioReportes as unknown as { reportes: Array<{ id: string; estado: string }> }
+    ).reportes.find((r) => r.id === cuerpoPerdido.id)!.estado = 'resuelto';
 
     autenticarComo('vecino-encontro');
     await POST(

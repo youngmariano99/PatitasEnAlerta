@@ -55,6 +55,13 @@ WHERE comprador_id IN (SELECT id FROM tmp_seed_usuarios)
    OR producto_id IN (SELECT id FROM productos_veterinario WHERE veterinario_id IN (SELECT id FROM tmp_seed_usuarios));
 DELETE FROM productos_veterinario WHERE veterinario_id IN (SELECT id FROM tmp_seed_usuarios);
 
+DELETE FROM colaboraciones_historial_estado
+WHERE colaboracion_id IN (
+  SELECT id FROM colaboraciones
+  WHERE stakeholder_id IN (SELECT id FROM tmp_seed_usuarios)
+     OR solicitud_id IN (SELECT id FROM solicitudes_recurso WHERE organizacion_id IN (SELECT id FROM tmp_seed_usuarios))
+);
+
 DELETE FROM colaboraciones
 WHERE stakeholder_id IN (SELECT id FROM tmp_seed_usuarios)
    OR solicitud_id IN (SELECT id FROM solicitudes_recurso WHERE organizacion_id IN (SELECT id FROM tmp_seed_usuarios));

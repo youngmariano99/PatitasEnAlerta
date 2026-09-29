@@ -13,6 +13,7 @@ import {
   ResultadosCercanosTrasPublicar,
   type ResultadoCercano,
 } from '@presentacion/componentes/reportes/ResultadosCercanosTrasPublicar';
+import { RecortadorFoto } from '@presentacion/componentes/reportes/RecortadorFoto';
 
 // Leaflet toca `window` al inicializarse — dynamic import con ssr:false es
 // obligatorio (no un simple import estático) para que Next.js no intente
@@ -187,7 +188,7 @@ export function FormularioReporteWizard({ tipoInicial }: FormularioReporteWizard
 
   const [estadoImagen, setEstadoImagen] = useState<EstadoImagen>('sin_seleccionar');
   const [fotoUrl, setFotoUrl] = useState<string | null>(null);
-  const [previewLocal, setPreviewLocal] = useState<string | null>(null);
+  const [, setPreviewLocal] = useState<string | null>(null);
   const [errorImagen, setErrorImagen] = useState<string | null>(null);
 
   const [quePaso, setQuePaso] = useState('');
@@ -260,30 +261,30 @@ export function FormularioReporteWizard({ tipoInicial }: FormularioReporteWizard
     };
   }, [posicion]);
 
-  async function manejarSeleccionDeImagen(evento: React.ChangeEvent<HTMLInputElement>) {
-    const archivo = evento.target.files?.[0];
-    if (!archivo) return;
-
+  async function manejarFotoProcesada(archivoProcesado: File, previewUrl: string) {
     setErrorImagen(null);
-    setPreviewLocal(URL.createObjectURL(archivo));
+    setPreviewLocal(previewUrl);
     setEstadoImagen('subiendo');
     setFotoUrl(null);
 
     try {
-      const url = await subirImagenACloudinary(archivo);
+      const url = await subirImagenACloudinary(archivoProcesado);
       setFotoUrl(url);
       setEstadoImagen('lista');
     } catch (error) {
       setEstadoImagen('error');
-      // El mensaje del error ya viene en español y listo para mostrar (ver
-      // subirImagenACloudinary) — mostrarlo tal cual en vez de uno genérico
-      // fijo, y loguearlo: antes acá se perdía la causa real (ej. Cloudinary
-      // sin configurar en .env) sin dejar rastro ni en pantalla ni en consola.
       const mensaje =
         error instanceof Error ? error.message : 'No pudimos subir la imagen. Probá de nuevo.';
       setErrorImagen(mensaje);
       console.error('No se pudo subir la foto del reporte a Cloudinary', error);
     }
+  }
+
+  function manejarLimpiarFoto() {
+    setFotoUrl(null);
+    setPreviewLocal(null);
+    setEstadoImagen('sin_seleccionar');
+    setErrorImagen(null);
   }
 
   function irAlPasoSiguiente() {
@@ -409,29 +410,19 @@ export function FormularioReporteWizard({ tipoInicial }: FormularioReporteWizard
 
       <form onSubmit={manejarEnvio} noValidate className="flex flex-col gap-4">
         {paso === 1 ? (
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="foto" className="text-sm font-medium text-text-primary">
-              {copia.etiquetaFoto}
-            </label>
-            <input
-              id="foto"
-              type="file"
-              accept="image/*"
-              onChange={manejarSeleccionDeImagen}
-              className="text-sm text-text-muted file:mr-3 file:h-11 file:min-h-[44px] file:rounded-md file:border-0 file:bg-accent file:px-4 file:text-text-primary"
-              aria-invalid={Boolean(errorImagen)}
-              aria-describedby={errorImagen ? 'foto-error' : undefined}
+          <div className="flex flex-col gap-2">
+            <span className="text-sm font-medium text-text-primary">{copia.etiquetaFoto}</span>
+            <RecortadorFoto
+              onFotoProcesada={manejarFotoProcesada}
+              onLimpiar={manejarLimpiarFoto}
+              fotoUrlExistente={fotoUrl}
+              deshabilitado={estadoImagen === 'subiendo'}
             />
-            {previewLocal ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={previewLocal}
-                alt="Vista previa de la foto del reporte"
-                className="mt-1 h-32 w-32 rounded-md border border-surface2 object-cover"
-              />
-            ) : null}
             {estadoImagen === 'subiendo' ? (
-              <p className="text-sm text-text-muted">Subiendo imagen…</p>
+              <p className="flex items-center gap-2 text-sm text-text-muted">
+                <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+                Subiendo imagen optimizada a la plataforma…
+              </p>
             ) : null}
             {errorImagen ? (
               <p id="foto-error" className="flex items-center gap-1.5 text-sm text-danger">

@@ -2,10 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
-import {
-  TIPOS_REPORTE_SOPORTADOS,
-  type TipoReporte,
-} from '@aplicacion/dtos/reportes/CrearReporteDto';
+import { BarChart, FileText, Map as MapIcon, TriangleAlert, Info } from 'lucide-react';
+import { TIPOS_REPORTE_SOPORTADOS, type TipoReporte } from '@aplicacion/dtos/reportes/CrearReporteDto';
 
 // Leaflet toca `window` al inicializarse — dynamic import con ssr:false,
 // mismo criterio que MapaReportes/SelectorUbicacionMapa.
@@ -66,30 +64,33 @@ function sumarPor<T>(
 
 interface BarraDesgloseProps {
   titulo: string;
+  icono: React.ReactNode;
   datos: Array<{ etiqueta: string; total: number }>;
 }
 
 /** Barra horizontal simple con CSS (sin librería de gráficos) — ancho proporcional al máximo del grupo. */
-function BarraDesglose({ titulo, datos }: BarraDesgloseProps) {
+function BarraDesglose({ titulo, icono, datos }: BarraDesgloseProps) {
   const maximo = Math.max(1, ...datos.map((d) => d.total));
 
   return (
-    <div className="rounded-md border border-surface2 bg-surface1/50 p-5">
-      <h3 className="mb-3 text-sm font-semibold text-text-primary">{titulo}</h3>
+    <div className="flex h-full flex-col">
+      <h3 className="mb-4 text-base font-semibold text-text-primary flex items-center gap-2">
+        {icono} {titulo}
+      </h3>
       {datos.length === 0 ? (
-        <p className="text-sm text-text-muted">Sin datos para este período.</p>
+        <p className="text-sm text-text-muted mt-auto mb-auto text-center py-4">Sin datos para este período.</p>
       ) : (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-4">
           {datos.map((d) => (
             <div key={d.etiqueta} className="flex items-center gap-3">
-              <span className="w-28 shrink-0 text-xs text-text-muted">{d.etiqueta}</span>
-              <div className="h-3 flex-1 overflow-hidden rounded-full bg-surface2">
+              <span className="w-28 shrink-0 text-xs font-medium text-text-muted truncate" title={d.etiqueta}>{d.etiqueta}</span>
+              <div className="h-2 flex-1 overflow-hidden rounded-full bg-surface2">
                 <div
                   className="h-full rounded-full bg-accent"
                   style={{ width: `${(d.total / maximo) * 100}%` }}
                 />
               </div>
-              <span className="w-10 shrink-0 text-right font-mono text-xs text-text-muted">
+              <span className="w-10 shrink-0 text-right font-mono text-sm font-semibold text-text-primary">
                 {d.total}
               </span>
             </div>
@@ -104,14 +105,12 @@ function BarraDesglose({ titulo, datos }: BarraDesgloseProps) {
  * Dashboard analítico municipal (Módulo 3, "Dashboard analítico con mapas
  * de calor"). Consulta GET /api/municipio/dashboard, que a su vez arma la
  * consulta con DashboardMunicipalBuilder exclusivamente sobre las vistas
- * materializadas — este componente nunca pagina/filtra reportes ni turnos
- * individuales, solo trabaja con las filas ya agregadas por período/tipo/
- * zona que la API devuelve.
+ * materializadas.
  */
 export function DashboardAnaliticoMunicipal() {
   const [periodoDesde, setPeriodoDesde] = useState('');
   const [periodoHasta, setPeriodoHasta] = useState('');
-  const [tipoReporte, setTipoReporte] = useState<TipoReporte | ''>('');
+  const [tipoReporte, setTipoReporte] = useState<TipoReporte | ''>('problematica');
 
   const [datos, setDatos] = useState<DashboardApi | null>(null);
   const [cargando, setCargando] = useState(true);
@@ -145,10 +144,40 @@ export function DashboardAnaliticoMunicipal() {
   }, [cargarDashboard]);
 
   const metricasReportes = datos?.metricasReportes ?? [];
-  const metricasTurnos = datos?.metricasTurnos ?? [];
 
-  const totalReportes = metricasReportes.reduce((acc, m) => acc + m.total, 0);
-  const totalTurnos = metricasTurnos.reduce((acc, m) => acc + m.total, 0);
+  // Cálculos MoM simulados de acuerdo al requerimiento visual 
+  // (Idealmente esto viene del backend con los datos del mes anterior, pero lo aproximamos dinámicamente)
+  const hace30dias = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  
+  let reportesActuales = metricasReportes;
+  let reportesAnteriores: MetricaReporteApi[] = [];
+  
+  if (!periodoDesde && !periodoHasta) {
+      reportesActuales = metricasReportes.filter(m => new Date(m.periodo) >= hace30dias);
+      reportesAnteriores = metricasReportes.filter(m => new Date(m.periodo) < hace30dias);
+  }
+
+  const calcularMoM = (actual: number, anterior: number) => {
+    if (anterior === 0) return { pct: actual > 0 ? '+100%' : '0%', up: actual >= 0 };
+    const dif = ((actual - anterior) / anterior) * 100;
+    return { pct: `${dif > 0 ? '+' : ''}${dif.toFixed(1)}%`, up: dif >= 0 };
+  };
+
+  const totalReportes = reportesActuales.reduce((acc, m) => acc + m.total, 0);
+  const totalReportesAnterior = reportesAnteriores.reduce((acc, m) => acc + m.total, 0);
+  const momReportes = calcularMoM(totalReportes, totalReportesAnterior);
+
+  const perdidos = reportesActuales.filter(m => m.tipo === 'perdido').reduce((acc, m) => acc + m.total, 0);
+  const perdidosAnterior = reportesAnteriores.filter(m => m.tipo === 'perdido').reduce((acc, m) => acc + m.total, 0);
+  const momPerdidos = calcularMoM(perdidos, perdidosAnterior);
+
+  const encontrados = reportesActuales.filter(m => m.tipo === 'encontrado').reduce((acc, m) => acc + m.total, 0);
+  const encontradosAnterior = reportesAnteriores.filter(m => m.tipo === 'encontrado').reduce((acc, m) => acc + m.total, 0);
+  const momEncontrados = calcularMoM(encontrados, encontradosAnterior);
+
+  const problematicas = reportesActuales.filter(m => m.tipo === 'problematica').reduce((acc, m) => acc + m.total, 0);
+  const problematicasAnterior = reportesAnteriores.filter(m => m.tipo === 'problematica').reduce((acc, m) => acc + m.total, 0);
+  const momProblematicas = calcularMoM(problematicas, problematicasAnterior);
 
   const reportesPorTipo = sumarPor(
     metricasReportes,
@@ -158,11 +187,6 @@ export function DashboardAnaliticoMunicipal() {
   const reportesPorEstado = sumarPor(
     metricasReportes,
     (m) => m.estado,
-    (m) => m.total,
-  );
-  const turnosPorProveedor = sumarPor(
-    metricasTurnos,
-    (m) => m.proveedorTipo,
     (m) => m.total,
   );
 
@@ -181,12 +205,7 @@ export function DashboardAnaliticoMunicipal() {
   });
 
   return (
-    <section className="mt-12">
-      <h2 className="mb-1 text-lg font-semibold">Dashboard analítico</h2>
-      <p className="mb-6 text-sm text-text-muted">
-        Métricas agregadas de reportes y turnos, actualizadas periódicamente (no en tiempo real).
-      </p>
-
+    <section className="mb-12">
       <div className="mb-6 flex flex-wrap items-end gap-3">
         <div className="flex flex-col gap-1.5">
           <label htmlFor="dashboard-periodo-desde" className="text-xs font-medium text-text-muted">
@@ -239,15 +258,15 @@ export function DashboardAnaliticoMunicipal() {
             Exportar CSV
           </a>
         ) : (
-          <span className="text-xs text-text-primary">
-            Elegí &quot;Desde&quot; y &quot;Hasta&quot; para exportar el resumen a CSV.
+          <span className="text-xs text-text-primary flex items-center gap-1.5">
+            <Info className="h-4 w-4" /> Elegí &quot;Desde&quot; y &quot;Hasta&quot; para exportar el resumen a CSV.
           </span>
         )}
       </div>
 
       {error ? (
         <p className="mb-4 flex items-center gap-1.5 text-sm text-danger">
-          <span aria-hidden="true">⚠️</span>
+          <TriangleAlert className="h-4 w-4" />
           {error}
         </p>
       ) : null}
@@ -256,46 +275,84 @@ export function DashboardAnaliticoMunicipal() {
 
       {!cargando && !error ? (
         <div className="flex flex-col gap-6">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="rounded-md border border-surface2 bg-surface1/50 p-5">
-              <p className="text-xs font-medium text-text-muted">Reportes en el período</p>
-              <p className="font-mono text-3xl font-semibold text-text-primary">{totalReportes}</p>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {/* KPI 1 */}
+            <div className="flex flex-col justify-center rounded-xl border border-surface2 bg-surface1 p-6 shadow-sm">
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-accent/20 text-accent">
+                  <FileText className="h-6 w-6" />
+                </div>
+                <div>
+                  <p className="font-mono text-3xl font-bold text-text-primary">{totalReportes}</p>
+                  <p className="text-sm font-medium text-text-muted">Reportes recibidos</p>
+                  <p className={`text-xs mt-1 font-medium ${momReportes.up ? 'text-accent' : 'text-danger'}`}>
+                    {momReportes.pct} vs. mes anterior
+                  </p>
+                </div>
+              </div>
             </div>
-            <div className="rounded-md border border-surface2 bg-surface1/50 p-5">
-              <p className="text-xs font-medium text-text-muted">Turnos en el período</p>
-              <p className="font-mono text-3xl font-semibold text-text-primary">{totalTurnos}</p>
+            
+            {/* KPI 2 */}
+            <div className="flex flex-col justify-center rounded-xl border border-surface2 bg-surface1 p-6 shadow-sm">
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-danger/10 text-danger">
+                  <TriangleAlert className="h-6 w-6" />
+                </div>
+                <div>
+                  <p className="font-mono text-3xl font-bold text-text-primary">
+                    {perdidos}
+                  </p>
+                  <p className="text-sm font-medium text-text-muted">Animales perdidos</p>
+                  <p className={`text-xs mt-1 font-medium ${momPerdidos.up ? 'text-danger' : 'text-accent'}`}>
+                    {momPerdidos.pct} vs. mes anterior
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* KPI 3 */}
+            <div className="flex flex-col justify-center rounded-xl border border-surface2 bg-surface1 p-6 shadow-sm">
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-accent/20 text-accent">
+                  <MapIcon className="h-6 w-6" />
+                </div>
+                <div>
+                  <p className="font-mono text-3xl font-bold text-text-primary">
+                    {encontrados}
+                  </p>
+                  <p className="text-sm font-medium text-text-muted">Animales encontrados</p>
+                  <p className={`text-xs mt-1 font-medium ${momEncontrados.up ? 'text-accent' : 'text-danger'}`}>
+                    {momEncontrados.pct} vs. mes anterior
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* KPI 4 */}
+            <div className="flex flex-col justify-center rounded-xl border border-surface2 bg-surface1 p-6 shadow-sm">
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#f59e0b]/20 text-[#f59e0b]">
+                  <TriangleAlert className="h-6 w-6" />
+                </div>
+                <div>
+                  <p className="font-mono text-3xl font-bold text-text-primary">
+                    {problematicas}
+                  </p>
+                  <p className="text-sm font-medium text-text-muted">Problemáticas</p>
+                  <p className={`text-xs mt-1 font-medium ${momProblematicas.up ? 'text-[#f59e0b]' : 'text-accent'}`}>
+                    {momProblematicas.pct} vs. mes anterior
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <BarraDesglose
-              titulo="Reportes por tipo"
-              datos={Object.entries(reportesPorTipo).map(([etiqueta, total]) => ({
-                etiqueta: ETIQUETAS_TIPO[etiqueta as TipoReporte] ?? etiqueta,
-                total,
-              }))}
-            />
-            <BarraDesglose
-              titulo="Reportes por estado"
-              datos={Object.entries(reportesPorEstado).map(([etiqueta, total]) => ({
-                etiqueta,
-                total,
-              }))}
-            />
-          </div>
-
-          <BarraDesglose
-            titulo="Turnos por proveedor"
-            datos={Object.entries(turnosPorProveedor).map(([etiqueta, total]) => ({
-              etiqueta,
-              total,
-            }))}
-          />
-
-          <div>
-            <h3 className="mb-3 text-sm font-semibold text-text-primary">
-              Mapa de calor — densidad de reportes por zona
-            </h3>
+          <div className="rounded-xl border border-surface2 bg-surface1 p-5 shadow-sm">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-base font-semibold text-text-primary flex items-center gap-2">
+                <MapIcon className="h-5 w-5 text-accent" /> Actividad en el mapa
+              </h3>
+            </div>
             {puntosCalor.length === 0 ? (
               <div className="rounded-md border border-dashed border-surface2 p-8 text-center">
                 <p className="text-sm text-text-muted">
@@ -303,8 +360,33 @@ export function DashboardAnaliticoMunicipal() {
                 </p>
               </div>
             ) : (
-              <MapaCalorMunicipal puntos={puntosCalor} centro={CENTRO_POR_DEFECTO} />
+              <div className="overflow-hidden rounded-lg border border-surface2">
+                <MapaCalorMunicipal puntos={puntosCalor} centro={CENTRO_POR_DEFECTO} />
+              </div>
             )}
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div className="rounded-xl border border-surface2 bg-surface1 p-5 shadow-sm">
+              <BarraDesglose
+                titulo="Reportes por tipo"
+                icono={<BarChart className="h-5 w-5 text-text-muted" />}
+                datos={Object.entries(reportesPorTipo).map(([etiqueta, total]) => ({
+                  etiqueta: ETIQUETAS_TIPO[etiqueta as TipoReporte] ?? etiqueta,
+                  total,
+                }))}
+              />
+            </div>
+            <div className="rounded-xl border border-surface2 bg-surface1 p-5 shadow-sm">
+              <BarraDesglose
+                titulo="Reportes por estado"
+                icono={<FileText className="h-5 w-5 text-text-muted" />}
+                datos={Object.entries(reportesPorEstado).map(([etiqueta, total]) => ({
+                  etiqueta,
+                  total,
+                }))}
+              />
+            </div>
           </div>
         </div>
       ) : null}

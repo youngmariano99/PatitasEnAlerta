@@ -9,9 +9,15 @@ import type {
 } from '@dominio/puertos/IRepositorioReportes';
 import type { IAlmacenamientoImagenes } from '@dominio/puertos/IAlmacenamientoImagenes';
 import type { IControlDeTasa } from '@dominio/puertos/IControlDeTasa';
-import type { IControlDeTasaConReintento, ResultadoControlDeTasa } from '@dominio/puertos/IControlDeTasaConReintento';
+import type {
+  IControlDeTasaConReintento,
+  ResultadoControlDeTasa,
+} from '@dominio/puertos/IControlDeTasaConReintento';
 import type { IRepositorioPerfil, ResumenPerfilPropio } from '@dominio/puertos/IRepositorioPerfil';
-import type { DatosNotificacion, INotificacionesRepositorio } from '@dominio/puertos/INotificacionesRepositorio';
+import type {
+  DatosNotificacion,
+  INotificacionesRepositorio,
+} from '@dominio/puertos/INotificacionesRepositorio';
 import type { DatosReporte } from '@dominio/entidades/Reporte';
 import { Reporte } from '@dominio/entidades/Reporte';
 
@@ -24,6 +30,9 @@ import { Reporte } from '@dominio/entidades/Reporte';
  * Sin describe/it acá: Jest no lo toma como suite propia.
  */
 export class RepositorioReportesFalso implements IRepositorioReportes {
+  async obtenerPorId(_id: string): Promise<any> {
+    return null;
+  }
   public creados: DatosNuevoReporte[] = [];
   public llamadasBusquedaCoincidencias: CriteriosCoincidenciaReporte[] = [];
   public coincidenciasARetornar: ReporteActivoResumen[] = [];
@@ -31,15 +40,25 @@ export class RepositorioReportesFalso implements IRepositorioReportes {
   async crear(datos: DatosNuevoReporte): Promise<Reporte> {
     this.creados.push(datos);
     const entidad: DatosReporte = { ...datos, estado: 'reportado' };
-    return Reporte.reconstruir(`reporte-${this.creados.length}`, entidad, new Date('2026-08-01T12:00:00.000Z'));
+    return Reporte.reconstruir(
+      `reporte-${this.creados.length}`,
+      entidad,
+      new Date('2026-08-01T12:00:00.000Z'),
+    );
   }
 
-  async buscarPerdidosActivosPorZonaYEspecie(criterios: CriteriosCoincidenciaReporte): Promise<ReporteActivoResumen[]> {
+  async buscarPerdidosActivosPorZonaYEspecie(
+    criterios: CriteriosCoincidenciaReporte,
+  ): Promise<ReporteActivoResumen[]> {
     this.llamadasBusquedaCoincidencias.push(criterios);
     return this.coincidenciasARetornar;
   }
 
-  async listar(_filtros: FiltrosListadoReportes, _pagina: number, _porPagina: number): Promise<PaginaReportes> {
+  async listar(
+    _filtros: FiltrosListadoReportes,
+    _pagina: number,
+    _porPagina: number,
+  ): Promise<PaginaReportes> {
     throw new Error('no usado en este test — ver tests/integration/reportes.listar.test.ts');
   }
 
@@ -126,13 +145,21 @@ export class RepositorioPerfilFalso implements IRepositorioPerfil {
   public estadoVerificacion = 'no_requerido';
 
   async obtenerPerfilPropio(usuarioId: string): Promise<ResumenPerfilPropio | null> {
-    return { id: usuarioId, email: 'usuario@ejemplo.test', rol: 'dueño', estadoVerificacion: this.estadoVerificacion, verificadoEn: null };
+    return {
+      id: usuarioId,
+      email: 'usuario@ejemplo.test',
+      rol: 'dueño',
+      estadoVerificacion: this.estadoVerificacion,
+      verificadoEn: null,
+    };
   }
 }
 
 export function autenticarComo(getUserMock: jest.Mock, usuarioId: string | null) {
   getUserMock.mockResolvedValue(
-    usuarioId ? { data: { user: { id: usuarioId } }, error: null } : { data: { user: null }, error: { message: 'sin sesión' } },
+    usuarioId
+      ? { data: { user: { id: usuarioId } }, error: null }
+      : { data: { user: null }, error: { message: 'sin sesión' } },
   );
 }
 
@@ -144,7 +171,8 @@ export function crearRequest(body: unknown): NextRequest {
   });
 }
 
-export const fotoValida = 'https://res.cloudinary.com/patitas-en-alerta/image/upload/v1/reportes/toby.jpg';
+export const fotoValida =
+  'https://res.cloudinary.com/patitas-en-alerta/image/upload/v1/reportes/toby.jpg';
 export const reporteValido = {
   tipo: 'perdido',
   descripcion: 'Se perdió cerca de la plaza, responde a su nombre.',

@@ -140,4 +140,6 @@ export interface IRepositorioReportes {
    * sin embedding poblado todavía.
    */
   buscarPorSimilitudSemantica(criterios: CriteriosBusquedaSemantica): Promise<ReporteSimilar[]>;
+  /** Obtiene un reporte por su ID para mostrar el detalle completo. */
+  obtenerPorId(id: string): Promise<ReporteListado | null>;
 }

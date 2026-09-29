@@ -273,4 +273,12 @@ export class PrismaReporteRepositorio implements IRepositorioReportes {
 
     return filas.map((fila) => ({ ...fila, similitud: Number(fila.similitud) }));
   }
+
+  async obtenerPorId(id: string): Promise<ReporteListado | null> {
+    const fila = await prisma.reporte.findFirst({
+      where: { id, deletedAt: null },
+      select: SELECT_REPORTE_LISTADO,
+    });
+    return fila;
+  }
 }

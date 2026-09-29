@@ -4,12 +4,12 @@ import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Megaphone, Calendar, Home, Store } from 'lucide-react';
 import { Boton } from '@presentacion/componentes/ui/Boton';
 import { Tarjeta } from '@presentacion/componentes/ui/Tarjeta';
 import { Badge } from '@presentacion/componentes/ui/Badge';
 import { EstadisticasComunidad } from '@presentacion/componentes/home/EstadisticasComunidad';
 import { TONO_POR_TIPO_REPORTE } from '@presentacion/config/tonosReporte';
+import { optimizarImagenCloudinary, PRESETS_IMAGEN } from '@presentacion/lib/optimizacionImagenes';
 
 // Leaflet toca `window` al inicializarse — dynamic import con ssr:false,
 // mismo criterio que app/reportes/page.tsx.
@@ -28,6 +28,7 @@ interface ReporteApi {
   latitud: number;
   longitud: number;
   especie: string | null;
+  fotoUrl?: string;
 }
 
 interface EventoApi {
@@ -48,31 +49,23 @@ interface RespuestaListado<T> {
 const ACCESOS_RAPIDOS = [
   {
     href: '/reportes/nuevo',
-    etiqueta: 'Reportar',
-    descripcion: 'Ayudá a que vuelvan a casa',
-    icono: Megaphone,
-    imagen: '/animales/Reportar-mascota -perdida.png',
+    etiqueta: 'Reportar mascota',
+    imagen: '/acceso-rapido/Reportar-encontrado-perdido.png',
   },
   {
     href: '/municipio/eventos',
-    etiqueta: 'Ver operativos',
-    descripcion: 'Castración, desparasitación y más',
-    icono: Calendar,
-    imagen: '/animales/Datos y turnos del municipio.png',
+    etiqueta: 'Operativos',
+    imagen: '/acceso-rapido/Operativos.png',
   },
   {
     href: '/adopciones',
-    etiqueta: 'Adopción',
-    descripcion: 'Dale una segunda oportunidad',
-    icono: Home,
-    imagen: '/animales/Éxito-Confirmación.png',
+    etiqueta: 'Adopciones',
+    imagen: '/acceso-rapido/Adopciones.png',
   },
   {
     href: '/comercios',
-    etiqueta: 'Veterinarios y comercios',
-    descripcion: 'Productos y servicios verificados',
-    icono: Store,
-    imagen: '/animales/Veterinarias  gestión y registros clínicos.png',
+    etiqueta: 'Veterinarias y comercios',
+    imagen: '/acceso-rapido/Comercios-Veterinarios.png',
   },
 ];
 
@@ -123,6 +116,7 @@ export default function HomePage() {
     latitud: r.latitud,
     longitud: r.longitud,
     especie: r.especie,
+    fotoUrl: r.fotoUrl,
   }));
   const marcadoresEventos = eventos?.items ?? [];
 
@@ -197,6 +191,28 @@ export default function HomePage() {
               centro={CENTRO_PRINGLES}
             />
           )}
+
+          <div className="mt-8">
+            <h2 className="mb-4 font-display text-xl font-bold text-text-primary">Accesos rápidos</h2>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {ACCESOS_RAPIDOS.map((acceso) => (
+                <Link
+                  key={acceso.href}
+                  href={acceso.href}
+                  aria-label={acceso.etiqueta}
+                  className="group relative block aspect-[16/7] min-h-[110px] w-full overflow-hidden rounded-xl border-2 border-surface2 bg-surface1 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-accent hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                >
+                  <Image
+                    src={acceso.imagen}
+                    alt={acceso.etiqueta}
+                    fill
+                    sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                    className="object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                </Link>
+              ))}
+            </div>
+          </div>
         </div>
 
         <div className="flex flex-col gap-6">
@@ -215,26 +231,66 @@ export default function HomePage() {
               <p className="text-sm text-text-muted">No hay reportes activos por el momento.</p>
             ) : null}
             {reportes && reportes.items.length > 0 ? (
-              <ul className="flex flex-col gap-2">
-                {reportes.items.map((reporte) => (
-                  <li key={reporte.id}>
-                    <Link href={`/reportes/${reporte.id}`}>
-                      <Tarjeta className="hover:border-accent">
-                        <Badge
-                          tono={
-                            TONO_POR_TIPO_REPORTE[
-                              reporte.tipo as keyof typeof TONO_POR_TIPO_REPORTE
-                            ] ?? 'neutro'
-                          }
-                        >
-                          {reporte.tipo}
-                        </Badge>
-                        <p className="mt-1 text-sm text-text-primary">{reporte.descripcion}</p>
-                      </Tarjeta>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+              <>
+                <ul className="flex flex-col gap-2">
+                  {reportes.items.slice(0, 4).map((reporte) => (
+                    <li key={reporte.id}>
+                      <Link href={`/reportes/${reporte.id}`} className="block">
+                        <Tarjeta className="flex items-center gap-3 p-2.5 hover:border-accent">
+                          <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-md border border-surface2 bg-surface2">
+                            <span className="text-xl" aria-hidden="true">
+                              {reporte.especie?.toLowerCase() === 'gato' ? '🐱' : reporte.especie?.toLowerCase() === 'perro' ? '🐶' : '🐾'}
+                            </span>
+                            {reporte.fotoUrl ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={optimizarImagenCloudinary(
+                                  reporte.fotoUrl,
+                                  PRESETS_IMAGEN.miniatura,
+                                )}
+                                alt={reporte.descripcion}
+                                className="absolute inset-0 h-full w-full object-cover"
+                                loading="lazy"
+                                onError={(e) => {
+                                  (e.currentTarget as HTMLElement).style.display = 'none';
+                                }}
+                              />
+                            ) : null}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-1.5">
+                              <Badge
+                                tono={
+                                  TONO_POR_TIPO_REPORTE[
+                                    reporte.tipo as keyof typeof TONO_POR_TIPO_REPORTE
+                                  ] ?? 'neutro'
+                                }
+                              >
+                                {reporte.tipo}
+                              </Badge>
+                              {reporte.especie ? (
+                                <span className="text-xs capitalize text-text-muted">
+                                  · {reporte.especie}
+                                </span>
+                              ) : null}
+                            </div>
+                            <p className="mt-1 line-clamp-2 text-sm text-text-primary">
+                              {reporte.descripcion}
+                            </p>
+                          </div>
+                        </Tarjeta>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-3">
+                  <Link href="/reportes" className="block">
+                    <Boton variante="secundaria" className="w-full text-sm">
+                      Ver todos los reportes {reportes.total > 0 ? `(${reportes.total})` : ''}
+                    </Boton>
+                  </Link>
+                </div>
+              </>
             ) : null}
           </div>
 
@@ -253,48 +309,31 @@ export default function HomePage() {
               <p className="text-sm text-text-muted">No hay operativos próximos por el momento.</p>
             ) : null}
             {eventos && eventos.items.length > 0 ? (
-              <ul className="flex flex-col gap-2">
-                {eventos.items.map((evento) => (
-                  <li key={evento.id}>
-                    <Tarjeta>
-                      <p className="font-medium text-text-primary">{evento.titulo}</p>
-                      <p className="text-sm text-text-muted">
-                        {formatearFecha(evento.fecha)} · {evento.direccion}
-                      </p>
-                    </Tarjeta>
-                  </li>
-                ))}
-              </ul>
+              <>
+                <ul className="flex flex-col gap-2">
+                  {eventos.items.slice(0, 3).map((evento) => (
+                    <li key={evento.id}>
+                      <Link href="/municipio/eventos">
+                        <Tarjeta className="hover:border-accent">
+                          <p className="font-medium text-text-primary">{evento.titulo}</p>
+                          <p className="text-sm text-text-muted">
+                            {formatearFecha(evento.fecha)} · {evento.direccion}
+                          </p>
+                        </Tarjeta>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-3">
+                  <Link href="/municipio/eventos" className="block">
+                    <Boton variante="secundaria" className="w-full text-sm">
+                      Ver calendario completo {eventos.total > 0 ? `(${eventos.total})` : ''}
+                    </Boton>
+                  </Link>
+                </div>
+              </>
             ) : null}
           </div>
-        </div>
-      </section>
-
-      <section>
-        <h2 className="mb-3 font-display text-lg font-semibold">Accesos rápidos</h2>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-          {ACCESOS_RAPIDOS.map((acceso) => (
-            <Link key={acceso.href} href={acceso.href}>
-              <div className="flex h-full flex-col overflow-hidden rounded-lg border border-surface2 bg-surface1 shadow-sm hover:border-accent">
-                <div className="relative h-24 w-full sm:h-28">
-                  <Image
-                    src={acceso.imagen}
-                    alt=""
-                    fill
-                    sizes="(min-width: 640px) 25vw, 50vw"
-                    className="object-cover"
-                  />
-                </div>
-                <div className="flex flex-col gap-1 p-3">
-                  <div className="flex items-center gap-1.5">
-                    <acceso.icono aria-hidden="true" className="h-4 w-4 shrink-0 text-primary" />
-                    <p className="text-sm font-medium text-text-primary">{acceso.etiqueta}</p>
-                  </div>
-                  <p className="text-sm text-text-muted">{acceso.descripcion}</p>
-                </div>
-              </div>
-            </Link>
-          ))}
         </div>
       </section>
     </main>

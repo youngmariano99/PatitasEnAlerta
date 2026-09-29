@@ -1,12 +1,25 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
+import { Badge } from '@presentacion/componentes/ui/Badge';
+import { optimizarImagenCloudinary, PRESETS_IMAGEN } from '@presentacion/lib/optimizacionImagenes';
+import { 
+  Filter, CheckCircle, Calendar, Grid, Map as MapIcon, 
+  AlertCircle, Loader2, ImageOff, Clock, ExternalLink, 
+  ChevronLeft, ChevronRight, CheckCircle2, Clock3
+} from 'lucide-react';
 import {
   TIPOS_REPORTE_SOPORTADOS,
   type TipoReporte,
 } from '@aplicacion/dtos/reportes/CrearReporteDto';
 import { ESTADOS_REPORTE_SOPORTADOS, type EstadoReporte } from '@dominio/entidades/Reporte';
 import { ReporteEstado } from '@dominio/estados/ReporteEstado';
+
+const MapaReportes = dynamic(
+  () => import('@presentacion/componentes/mapas/MapaReportes').then((mod) => mod.MapaReportes),
+  { ssr: false, loading: () => <p className="text-sm text-text-muted">Cargando mapa…</p> },
+);
 
 const POR_PAGINA = 50;
 const ROLES_CON_CONTROL_DE_ESTADO = ['municipio', 'administrador'];
@@ -17,12 +30,13 @@ const ETIQUETAS_TIPO: Record<TipoReporte, string> = {
   problematica: 'Problemática',
 };
 
-const ETIQUETAS_ESTADO: Record<EstadoReporte, { texto: string; icono: string }> = {
-  reportado: { texto: 'Reportado', icono: '📢' },
-  en_revision: { texto: 'En revisión', icono: '🔍' },
-  en_atencion: { texto: 'En atención', icono: '🔍' },
-  resuelto: { texto: 'Resuelto', icono: '✅' },
-  cerrado: { texto: 'Cerrado', icono: '⏹️' },
+const ETIQUETAS_ESTADO: Record<EstadoReporte, { texto: string; icono: React.ReactNode }> = {
+  reportado: { texto: 'Reportado', icono: <AlertCircle className="h-4 w-4" /> },
+  en_revision: { texto: 'En revisión', icono: <Clock3 className="h-4 w-4" /> },
+  en_atencion: { texto: 'En atención', icono: <Loader2 className="h-4 w-4" /> },
+  atendido: { texto: 'Atendido', icono: <CheckCircle2 className="h-4 w-4" /> },
+  resuelto: { texto: 'Resuelto', icono: <CheckCircle2 className="h-4 w-4" /> },
+  cerrado: { texto: 'Cerrado', icono: <CheckCircle className="h-4 w-4" /> },
 };
 
 interface ReporteApi {
@@ -54,12 +68,13 @@ function formatearFecha(iso: string): string {
   return new Date(iso).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' });
 }
 
-function badgeEstado(estado: string) {
-  const info = ETIQUETAS_ESTADO[estado as EstadoReporte] ?? { texto: estado, icono: '•' };
+function badgeEstado(estado: string, tipo?: string) {
+  const info = ETIQUETAS_ESTADO[estado as EstadoReporte] ?? { texto: estado, icono: <AlertCircle className="h-4 w-4" /> };
+  const textoReal = estado === 'resuelto' && tipo === 'problematica' ? 'Atendido' : info.texto;
   return (
-    <span className="flex items-center gap-1.5">
-      <span aria-hidden="true">{info.icono}</span>
-      {info.texto}
+    <span className="flex items-center gap-1.5 text-sm font-medium text-text-muted">
+      <span aria-hidden="true" className="text-accent">{info.icono}</span>
+      {textoReal}
     </span>
   );
 }
@@ -150,8 +165,9 @@ interface PanelReportesMunicipioProps {
 export function PanelReportesMunicipio({ rol }: PanelReportesMunicipioProps) {
   const puedeCambiarEstado = ROLES_CON_CONTROL_DE_ESTADO.includes(rol);
 
-  const [tipo, setTipo] = useState<TipoReporte | ''>('');
-  const [estado, setEstado] = useState<EstadoReporte | ''>('');
+  // Por defecto, mostrar solo problemáticas en estado reportado
+  const [tipo, setTipo] = useState<TipoReporte | ''>('problematica');
+  const [estado, setEstado] = useState<EstadoReporte | ''>('reportado');
   const [fechaDesde, setFechaDesde] = useState('');
   const [fechaHasta, setFechaHasta] = useState('');
 
@@ -161,14 +177,16 @@ export function PanelReportesMunicipio({ rol }: PanelReportesMunicipioProps) {
   const [cargando, setCargando] = useState(true);
   const [errorCarga, setErrorCarga] = useState<string | null>(null);
 
+  const [vista, setVista] = useState<'lista' | 'mapa'>('lista');
+
   const cargarPagina = useCallback(
     async (paginaSolicitada: number) => {
       setCargando(true);
       setErrorCarga(null);
       try {
         const params = new URLSearchParams({
-          pagina: String(paginaSolicitada),
-          porPagina: String(POR_PAGINA),
+          pagina: String(vista === 'mapa' ? 1 : paginaSolicitada),
+          porPagina: String(vista === 'mapa' ? 1000 : POR_PAGINA),
         });
         if (tipo) params.set('tipo', tipo);
         if (estado) params.set('estado', estado);
@@ -193,7 +211,7 @@ export function PanelReportesMunicipio({ rol }: PanelReportesMunicipioProps) {
         setCargando(false);
       }
     },
-    [tipo, estado, fechaDesde, fechaHasta],
+    [tipo, estado, fechaDesde, fechaHasta, vista],
   );
 
   useEffect(() => {
@@ -223,102 +241,141 @@ export function PanelReportesMunicipio({ rol }: PanelReportesMunicipioProps) {
   }
 
   const hayFiltrosActivos = Boolean(tipo || estado || fechaDesde || fechaHasta);
-  const totalPaginas = Math.max(1, Math.ceil(total / POR_PAGINA));
+  const totalPaginas = Math.max(1, Math.ceil(total / (vista === 'mapa' ? 1000 : POR_PAGINA)));
+
+  // Preparar marcadores para el mapa
+  const marcadores = items.map((item) => ({
+    id: item.id,
+    tipo: item.tipo as TipoReporte,
+    estado: item.estado as EstadoReporte,
+    especie: item.especie,
+    latitud: item.latitud,
+    longitud: item.longitud,
+    fotoUrl: item.fotoUrl,
+    descripcion: item.descripcion,
+  }));
+
+  // Centro aproximado de la ciudad
+  const centroMapa: [number, number] = [-37.9833, -61.35];
 
   return (
     <div>
-      <div className="mb-4 flex flex-wrap items-end gap-3">
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="filtro-tipo" className="text-xs font-medium text-text-muted">
-            Tipo
-          </label>
-          <select
-            id="filtro-tipo"
-            value={tipo}
-            onChange={(evento) => setTipo(evento.target.value as TipoReporte | '')}
-            className="h-11 min-h-[44px] rounded-md border border-surface2 bg-surface1 px-3 text-[15px] text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
-          >
-            <option value="">Todos</option>
-            {TIPOS_REPORTE_SOPORTADOS.map((valor) => (
-              <option key={valor} value={valor}>
-                {ETIQUETAS_TIPO[valor]}
-              </option>
-            ))}
-          </select>
-        </div>
+      <div className="mb-6 rounded-xl border border-surface2 bg-surface1 p-5 shadow-sm">
+        <div className="flex flex-wrap items-end gap-4">
+          <div className="flex flex-col gap-1.5 flex-1 min-w-[150px]">
+            <label htmlFor="filtro-tipo" className="text-xs font-medium text-text-muted flex items-center gap-1">
+              <Filter className="h-3 w-3" /> Tipo
+            </label>
+            <select
+              id="filtro-tipo"
+              value={tipo}
+              onChange={(evento) => setTipo(evento.target.value as TipoReporte | '')}
+              className="h-11 min-h-[44px] w-full rounded-md border border-surface2 bg-surface1 px-3 text-[15px] text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+            >
+              <option value="">Todos los tipos</option>
+              {TIPOS_REPORTE_SOPORTADOS.map((valor) => (
+                <option key={valor} value={valor}>
+                  {ETIQUETAS_TIPO[valor]}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="filtro-estado" className="text-xs font-medium text-text-muted">
-            Estado
-          </label>
-          <select
-            id="filtro-estado"
-            value={estado}
-            onChange={(evento) => setEstado(evento.target.value as EstadoReporte | '')}
-            className="h-11 min-h-[44px] rounded-md border border-surface2 bg-surface1 px-3 text-[15px] text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
-          >
-            <option value="">Activos</option>
-            {ESTADOS_REPORTE_SOPORTADOS.map((valor) => (
-              <option key={valor} value={valor}>
-                {ETIQUETAS_ESTADO[valor].texto}
-              </option>
-            ))}
-          </select>
-        </div>
+          <div className="flex flex-col gap-1.5 flex-1 min-w-[150px]">
+            <label htmlFor="filtro-estado" className="text-xs font-medium text-text-muted flex items-center gap-1">
+              <CheckCircle className="h-3 w-3" /> Estado
+            </label>
+            <select
+              id="filtro-estado"
+              value={estado}
+              onChange={(evento) => setEstado(evento.target.value as EstadoReporte | '')}
+              className="h-11 min-h-[44px] w-full rounded-md border border-surface2 bg-surface1 px-3 text-[15px] text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+            >
+              <option value="">Todos los activos</option>
+              {ESTADOS_REPORTE_SOPORTADOS.map((valor) => (
+                <option key={valor} value={valor}>
+                  {valor === 'resuelto' && tipo === 'problematica' ? 'Atendido' : ETIQUETAS_ESTADO[valor].texto}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="filtro-fecha-desde" className="text-xs font-medium text-text-muted">
-            Desde
-          </label>
-          <input
-            id="filtro-fecha-desde"
-            type="date"
-            value={fechaDesde}
-            onChange={(evento) => setFechaDesde(evento.target.value)}
-            className="h-11 min-h-[44px] rounded-md border border-surface2 bg-surface1 px-3 text-[15px] text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
-          />
-        </div>
+          <div className="flex flex-col gap-1.5 flex-1 min-w-[150px]">
+            <label htmlFor="filtro-fecha-desde" className="text-xs font-medium text-text-muted flex items-center gap-1">
+              <Calendar className="h-3 w-3" /> Desde
+            </label>
+            <input
+              id="filtro-fecha-desde"
+              type="date"
+              value={fechaDesde}
+              onChange={(evento) => setFechaDesde(evento.target.value)}
+              className="h-11 min-h-[44px] w-full rounded-md border border-surface2 bg-surface1 px-3 text-[15px] text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+            />
+          </div>
 
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="filtro-fecha-hasta" className="text-xs font-medium text-text-muted">
-            Hasta
-          </label>
-          <input
-            id="filtro-fecha-hasta"
-            type="date"
-            value={fechaHasta}
-            onChange={(evento) => setFechaHasta(evento.target.value)}
-            className="h-11 min-h-[44px] rounded-md border border-surface2 bg-surface1 px-3 text-[15px] text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
-          />
-        </div>
+          <div className="flex flex-col gap-1.5 flex-1 min-w-[150px]">
+            <label htmlFor="filtro-fecha-hasta" className="text-xs font-medium text-text-muted flex items-center gap-1">
+              <Calendar className="h-3 w-3" /> Hasta
+            </label>
+            <input
+              id="filtro-fecha-hasta"
+              type="date"
+              value={fechaHasta}
+              onChange={(evento) => setFechaHasta(evento.target.value)}
+              className="h-11 min-h-[44px] w-full rounded-md border border-surface2 bg-surface1 px-3 text-[15px] text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+            />
+          </div>
 
-        {hayFiltrosActivos ? (
+          {hayFiltrosActivos ? (
+            <button
+              type="button"
+              onClick={limpiarFiltros}
+              className="h-11 min-h-[44px] rounded-md border border-surface2 px-4 text-[15px] font-medium text-text-muted hover:bg-surface2 transition-colors"
+            >
+              Limpiar
+            </button>
+          ) : null}
+        </div>
+      </div>
+
+      <div className="mb-6 flex justify-between items-center border-b border-surface2 pb-4">
+        <h3 className="text-sm font-semibold text-text-primary">
+          Mostrando {total} resultados
+        </h3>
+        <div className="flex rounded-md border border-surface2 p-1">
           <button
             type="button"
-            onClick={limpiarFiltros}
-            className="h-11 min-h-[44px] rounded-md border border-surface2 px-4 text-[15px] font-medium text-text-muted"
+            onClick={() => setVista('lista')}
+            className={`flex items-center gap-2 rounded-sm px-3 py-1.5 text-sm font-medium transition-colors ${vista === 'lista' ? 'bg-surface2 text-text-primary' : 'text-text-muted hover:text-text-primary'}`}
           >
-            Limpiar filtros
+            <Grid className="h-4 w-4" /> Tarjetas
           </button>
-        ) : null}
+          <button
+            type="button"
+            onClick={() => setVista('mapa')}
+            className={`flex items-center gap-2 rounded-sm px-3 py-1.5 text-sm font-medium transition-colors ${vista === 'mapa' ? 'bg-surface2 text-text-primary' : 'text-text-muted hover:text-text-primary'}`}
+          >
+            <MapIcon className="h-4 w-4" /> Mapa
+          </button>
+        </div>
       </div>
 
       {errorCarga ? (
         <p className="mb-4 flex items-center gap-1.5 text-sm text-danger">
-          <span aria-hidden="true">⚠️</span>
+          <AlertCircle className="h-4 w-4" />
           {errorCarga}
         </p>
       ) : null}
 
-      {cargando ? <p className="text-sm text-text-muted">Cargando…</p> : null}
+      {cargando ? <p className="text-sm text-text-muted py-8 text-center flex items-center justify-center gap-2"><Loader2 className="animate-spin h-4 w-4"/> Cargando reportes…</p> : null}
 
       {!cargando && !errorCarga && items.length === 0 ? (
-        <div className="rounded-md border border-dashed border-surface2 p-8 text-center">
-          <p className="mb-1 text-sm font-medium text-text-primary">
+        <div className="rounded-md border border-dashed border-surface2 p-12 text-center">
+          <p className="mb-2 text-base font-medium text-text-primary">
             No encontramos reportes con estos filtros.
           </p>
-          <p className="mb-4 text-sm text-text-muted">
-            Probá con otra combinación de tipo, estado o rango de fechas.
+          <p className="mb-6 text-sm text-text-muted">
+            Probá con otra combinación de fechas, estado o tipo.
           </p>
           {hayFiltrosActivos ? (
             <button
@@ -332,85 +389,87 @@ export function PanelReportesMunicipio({ rol }: PanelReportesMunicipioProps) {
         </div>
       ) : null}
 
-      {!cargando && !errorCarga && items.length > 0 ? (
-        <div className="overflow-x-auto rounded-md border border-surface2">
-          <table className="w-full min-w-[900px] border-collapse text-left text-sm">
-            <thead>
-              <tr className="border-b border-surface2 bg-surface1 text-xs uppercase tracking-wide text-text-muted">
-                <th scope="col" className="px-4 py-3 font-medium">
-                  ID
-                </th>
-                <th scope="col" className="px-4 py-3 font-medium">
-                  Tipo
-                </th>
-                <th scope="col" className="px-4 py-3 font-medium">
-                  Estado
-                </th>
-                <th scope="col" className="px-4 py-3 font-medium">
-                  Descripción
-                </th>
-                <th scope="col" className="px-4 py-3 font-medium">
-                  Reportado el
-                </th>
-                {puedeCambiarEstado ? (
-                  <th scope="col" className="px-4 py-3 font-medium">
-                    Cambiar estado
-                  </th>
-                ) : null}
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((item) => (
-                <tr key={item.id} className="border-b border-surface2 last:border-b-0">
-                  <td className="px-4 py-3 font-mono text-xs text-text-muted">{item.id}</td>
-                  <td className="px-4 py-3 text-text-muted">
+      {!cargando && !errorCarga && items.length > 0 && vista === 'lista' ? (
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {items.map((item) => (
+            <div key={item.id} className="flex flex-col overflow-hidden rounded-xl border border-surface2 bg-surface1 shadow-sm">
+              <div className="relative aspect-[4/3] w-full bg-surface2">
+                {item.fotoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={optimizarImagenCloudinary(item.fotoUrl, PRESETS_IMAGEN.galeria)}
+                    alt={item.descripcion}
+                    className="absolute inset-0 h-full w-full object-cover"
+                    loading="lazy"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLElement).style.display = 'none';
+                    }}
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-surface2 text-surface3" aria-hidden="true">
+                    <ImageOff className="h-12 w-12" />
+                  </div>
+                )}
+                <div className="absolute top-3 left-3">
+                  <Badge tono={item.tipo === 'perdido' ? 'peligro' : item.tipo === 'encontrado' ? 'exito' : 'alerta'}>
                     {ETIQUETAS_TIPO[item.tipo as TipoReporte] ?? item.tipo}
-                    {item.especie ? (
-                      <span className="text-text-primary"> · {item.especie}</span>
-                    ) : null}
-                  </td>
-                  <td className="px-4 py-3 text-text-muted">{badgeEstado(item.estado)}</td>
-                  <td
-                    className="max-w-xs truncate px-4 py-3 text-text-muted"
-                    title={item.descripcion}
-                  >
-                    {item.descripcion}
-                  </td>
-                  <td className="px-4 py-3 font-mono text-xs text-text-muted">
+                  </Badge>
+                </div>
+              </div>
+              <div className="flex flex-1 flex-col p-5">
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-sm font-semibold text-text-primary">
+                    {item.especie ?? 'Reporte general'}
+                  </span>
+                  {badgeEstado(item.estado, item.tipo)}
+                </div>
+                <p className="mb-4 text-sm leading-relaxed text-text-muted line-clamp-3 flex-1">
+                  {item.descripcion}
+                </p>
+                <div className="mt-auto border-t border-surface2 pt-4">
+                  <div className="mb-3 flex items-center gap-2 text-xs text-text-muted">
+                    <Clock className="h-3.5 w-3.5" />
                     {formatearFecha(item.createdAt)}
-                  </td>
-                  {puedeCambiarEstado ? (
-                    <td className="px-4 py-3">
-                      <ControlCambioEstado reporte={item} onCambiar={cambiarEstado} />
-                    </td>
-                  ) : null}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  </div>
+                  {puedeCambiarEstado && item.tipo === 'problematica' && (
+                    <ControlCambioEstado reporte={item} onCambiar={cambiarEstado} />
+                  )}
+                  <a href={`/reportes/${item.id}`} className="mt-3 flex items-center justify-center gap-2 text-sm font-medium text-accent hover:underline w-full rounded-md border border-surface2 py-2">
+                    <ExternalLink className="h-4 w-4"/> Ver detalle completo
+                  </a>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : null}
+
+      {!cargando && !errorCarga && items.length > 0 && vista === 'mapa' ? (
+        <div className="overflow-hidden rounded-xl border border-surface2 shadow-sm">
+          <MapaReportes reportes={marcadores} centro={centroMapa} />
         </div>
       ) : null}
 
       {total > POR_PAGINA ? (
-        <div className="mt-6 flex items-center justify-between text-sm text-text-muted">
+        <div className="mt-8 flex items-center justify-between border-t border-surface2 pt-6 text-sm text-text-muted">
           <button
             type="button"
             onClick={() => cargarPagina(pagina - 1)}
             disabled={pagina <= 1 || cargando}
-            className="h-11 min-h-[44px] rounded-md border border-surface2 px-4 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex h-11 items-center gap-2 rounded-md border border-surface2 px-4 transition-colors hover:bg-surface2 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Anterior
+            <ChevronLeft className="h-4 w-4"/> Anterior
           </button>
-          <span className="font-mono">
+          <span className="font-medium text-text-primary">
             Página {pagina} de {totalPaginas}
           </span>
           <button
             type="button"
             onClick={() => cargarPagina(pagina + 1)}
             disabled={pagina >= totalPaginas || cargando}
-            className="h-11 min-h-[44px] rounded-md border border-surface2 px-4 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex h-11 items-center gap-2 rounded-md border border-surface2 px-4 transition-colors hover:bg-surface2 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Siguiente
+            Siguiente <ChevronRight className="h-4 w-4"/>
           </button>
         </div>
       ) : null}

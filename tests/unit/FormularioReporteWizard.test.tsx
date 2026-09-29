@@ -65,7 +65,9 @@ function mockearFetch({ respuestaPost, itemsCercanos = [] }: OpcionesMockFetch) 
 async function completarFotoYAvanzar(usuario: ReturnType<typeof userEvent.setup>) {
   const archivo = new File(['contenido'], 'toby.jpg', { type: 'image/jpeg' });
   await usuario.upload(screen.getByLabelText(/Foto/), archivo);
-  await waitFor(() => expect(screen.queryByText('Subiendo imagen…')).not.toBeInTheDocument());
+  const botonConfirmar = await screen.findByRole('button', { name: /Listo, usar esta foto/i });
+  await usuario.click(botonConfirmar);
+  await waitFor(() => expect(screen.queryByText(/Subiendo imagen/i)).not.toBeInTheDocument());
   // La subida a Cloudinary resuelve fotoUrl de forma asincrónica (más allá de
   // que "Subiendo imagen…" ya haya desaparecido) — reintenta el click hasta
   // que fotoUrl esté realmente disponible, en vez de asumir un único click

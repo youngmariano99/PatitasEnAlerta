@@ -44,6 +44,7 @@ function crearFakes(opciones?: { propietarioId?: string | null; rolSolicitante?:
     obtenerPropietario: jest.fn().mockResolvedValue(propietarioId),
     listarHistorialEstado: jest.fn().mockResolvedValue(HISTORIAL),
     buscarPorSimilitudSemantica: jest.fn(),
+    obtenerPorId: jest.fn(),
   };
   const repositorioPerfil: jest.Mocked<IRepositorioPerfil> = {
     obtenerPerfilPropio: jest.fn().mockResolvedValue(crearPerfil(opciones?.rolSolicitante ?? 'dueño')),
