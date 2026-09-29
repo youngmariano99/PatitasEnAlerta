@@ -19,8 +19,8 @@ SELECT
   date_trunc('week', created_at) AS periodo,
   tipo,
   estado,
-  round(latitud::numeric, 2) AS zona_lat,
-  round(longitud::numeric, 2) AS zona_lng,
+  round(latitud::numeric, 4) AS zona_lat,
+  round(longitud::numeric, 4) AS zona_lng,
   count(*)::integer AS total
 FROM reportes
 WHERE deleted_at IS NULL
