@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { RecortadorFoto } from '@presentacion/componentes/reportes/RecortadorFoto';
 
@@ -51,10 +51,7 @@ describe('RecortadorFoto', () => {
 
     await usuario.click(screen.getByRole('button', { name: /Usar foto completa/i }));
 
-    expect(alProcesar).toHaveBeenCalledWith(
-      expect.any(File),
-      expect.stringContaining('blob:'),
-    );
+    expect(alProcesar).toHaveBeenCalledWith(expect.any(File), expect.stringContaining('blob:'));
     expect(screen.getByText(/Foto lista y optimizada/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Cambiar foto/i })).toBeInTheDocument();
   });

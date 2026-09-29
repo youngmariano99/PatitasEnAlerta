@@ -188,7 +188,7 @@ export function FormularioReporteWizard({ tipoInicial }: FormularioReporteWizard
 
   const [estadoImagen, setEstadoImagen] = useState<EstadoImagen>('sin_seleccionar');
   const [fotoUrl, setFotoUrl] = useState<string | null>(null);
-  const [previewLocal, setPreviewLocal] = useState<string | null>(null);
+  const [, setPreviewLocal] = useState<string | null>(null);
   const [errorImagen, setErrorImagen] = useState<string | null>(null);
 
   const [quePaso, setQuePaso] = useState('');
@@ -411,9 +411,7 @@ export function FormularioReporteWizard({ tipoInicial }: FormularioReporteWizard
       <form onSubmit={manejarEnvio} noValidate className="flex flex-col gap-4">
         {paso === 1 ? (
           <div className="flex flex-col gap-2">
-            <span className="text-sm font-medium text-text-primary">
-              {copia.etiquetaFoto}
-            </span>
+            <span className="text-sm font-medium text-text-primary">{copia.etiquetaFoto}</span>
             <RecortadorFoto
               onFotoProcesada={manejarFotoProcesada}
               onLimpiar={manejarLimpiarFoto}
