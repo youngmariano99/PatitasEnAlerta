@@ -201,21 +201,21 @@ const SLIDES = [
     id: 6,
     title: 'Reportes Centralizados',
     subtitle: 'Registro de animales perdidos/encontrados y alertas ciudadanas',
-    image: '/Reportar-encontrado-perdido.png',
+    image: '/acceso-rapido/Reportar-encontrado-perdido.png',
     imagePosition: 'right',
   },
   {
     id: 7,
     title: 'Dashboard para Zoonosis',
     subtitle: 'Transformando datos sueltos en información de calidad y mapas de calor',
-    image: '/Inicio-Dashboard.png',
+    image: '/animales/Inicio-Dashboard.png',
     imagePosition: 'right',
   },
   {
     id: 8,
     title: 'Gestión Inteligente de Turnos',
     subtitle: 'Digitalización de campañas de castración. Reduce tiempos y notifica a ciudadanos.',
-    image: '/Datos y turnos del municipio.png',
+    image: '/animales/Datos y turnos del municipio.png',
     imagePosition: 'left',
   },
   {
@@ -223,14 +223,14 @@ const SLIDES = [
     title: 'Adopción Consciente',
     subtitle:
       'Emparejamiento cruzando el estilo de vida del usuario con las necesidades del animal.',
-    image: '/Adopciones.png',
+    image: '/acceso-rapido/Adopciones.png',
     imagePosition: 'right',
   },
   {
     id: 10,
     title: 'Gestión Veterinaria y Marketplace',
     subtitle: 'Libretas sanitarias digitales y espacio para comerciantes locales.',
-    image: '/Comercios-Veterinarios.png',
+    image: '/acceso-rapido/Comercios-Veterinarios.png',
     imagePosition: 'left',
   },
   {
@@ -238,7 +238,7 @@ const SLIDES = [
     title: 'Asistencia a ONGs',
     subtitle:
       'Herramientas de gestión para aliviar el desgaste físico y mental de los voluntarios.',
-    image: '/ONGs y rescatistas.png',
+    image: '/animales/ONGs y rescatistas.png',
     imagePosition: 'right',
   },
   // FASE 3: Futuro e IA
