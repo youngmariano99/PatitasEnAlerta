@@ -43,15 +43,15 @@ const SLIDES = [
     id: 1,
     title: 'Patitas en Alerta',
     subtitle: 'Conectando a nuestra comunidad para proteger a quienes no tienen voz.',
-    bgImage: '/Banner_inicial.png',
+    bgImage: '/Slides/PortadaInicial.png',
     overlay: true,
     logo: '/logopatitas.png',
   },
   {
     id: 2,
     title: 'El Origen',
-    image: '/Banner_inicial2.png',
-    imagePosition: 'right',
+    bgImage: '/Slides/ElOrigen.png',
+    overlay: true,
     content: (
       <motion.div
         variants={STAGGER_CONTAINER}
@@ -179,7 +179,8 @@ const SLIDES = [
   },
   {
     id: 5,
-    bgImage: '/Banner_inicial2.png',
+    image: '/Slides/Objetivos.png',
+    imagePosition: 'right',
     overlay: true,
     content: (
       <motion.div
