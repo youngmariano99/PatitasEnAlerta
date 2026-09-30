@@ -5,19 +5,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   ChevronLeft,
   ChevronRight,
-  Search,
-  FileText,
   Heart,
   Activity,
-  MapPin,
   ShieldAlert,
-  Users,
   Target,
   BrainCircuit,
-  Database,
   Cpu,
-  Megaphone,
-  Stethoscope,
   MessageSquare,
 } from 'lucide-react';
 import Image from 'next/image';
@@ -41,141 +34,11 @@ const SLIDES = [
   // FASE 1: Introducción
   {
     id: 1,
-    title: 'Patitas en Alerta',
-    subtitle: 'Conectando a nuestra comunidad para proteger a quienes no tienen voz.',
     bgImage: '/Slides/PortadaInicial.png',
-    overlay: true,
-    logo: '/logopatitas.png',
   },
   {
     id: 2,
-    title: 'El Origen',
     bgImage: '/Slides/ElOrigen.png',
-    overlay: true,
-    content: (
-      <motion.div
-        variants={STAGGER_CONTAINER}
-        initial="hidden"
-        animate="show"
-        className="flex flex-col gap-6 text-xl md:text-2xl leading-relaxed"
-      >
-        <motion.p variants={STAGGER_ITEM}>
-          La idea de este proyecto nació de mis ganas de generar un{' '}
-          <strong>impacto positivo en la comunidad</strong> aplicando los conocimientos adquiridos
-          en la Tecnicatura en Programación.
-        </motion.p>
-        <motion.p variants={STAGGER_ITEM}>
-          Quería construir algo que no solo fuera un ejercicio académico, sino una herramienta real
-          para resolver problemas diarios que enfrentamos todos respecto al bienestar animal.
-        </motion.p>
-      </motion.div>
-    ),
-    icon: <Heart className="w-20 h-20 text-accent mb-6" />,
-  },
-  {
-    id: 3,
-    title: 'Benchmarking: ¿Qué hay en el mercado?',
-    content: (
-      <motion.div
-        variants={STAGGER_CONTAINER}
-        initial="hidden"
-        animate="show"
-        className="flex flex-col gap-6 text-xl md:text-2xl leading-relaxed"
-      >
-        <motion.p variants={STAGGER_ITEM}>
-          Investigando apps actuales noté que resuelven problemas de forma{' '}
-          <strong>fragmentada</strong>:
-        </motion.p>
-        <motion.ul variants={STAGGER_ITEM} className="list-disc list-inside space-y-6 ml-6">
-          <li>
-            <strong>VetCard:</strong> Libretas digitales.
-          </li>
-          <li>
-            <strong>appPet:</strong> Gestión Veterinaria.
-          </li>
-          <li>
-            <strong>Snout:</strong> Gestión de refugios.
-          </li>
-          <li>
-            <strong>PetsApp:</strong> Telemedicina.
-          </li>
-        </motion.ul>
-        <motion.div
-          variants={STAGGER_ITEM}
-          className="mt-8 p-6 bg-red-500/10 border-l-8 border-red-500 rounded text-red-700 dark:text-red-300 font-medium"
-        >
-          <strong>Falla principal:</strong> Es inexistente una plataforma que <em>integre</em> a
-          todos los involucrados en el ecosistema local.
-        </motion.div>
-      </motion.div>
-    ),
-    icon: <Search className="w-20 h-20 text-accent mb-6" />,
-  },
-  {
-    id: 4,
-    title: 'Problemáticas Locales',
-    content: (
-      <motion.div
-        variants={STAGGER_CONTAINER}
-        initial="hidden"
-        animate="show"
-        className="grid grid-cols-2 gap-6 text-xl md:text-2xl mt-4"
-      >
-        <motion.div
-          variants={STAGGER_ITEM}
-          className="bg-surface2 p-8 rounded-2xl flex gap-6 items-start shadow-sm hover:shadow-md transition-shadow"
-        >
-          <MapPin className="w-12 h-12 text-danger shrink-0 mt-1" />
-          <p>
-            Reportes de animales perdidos en Facebook sin <strong>ninguna trazabilidad</strong>.
-          </p>
-        </motion.div>
-        <motion.div
-          variants={STAGGER_ITEM}
-          className="bg-surface2 p-8 rounded-2xl flex gap-6 items-start shadow-sm hover:shadow-md transition-shadow"
-        >
-          <FileText className="w-12 h-12 text-warning shrink-0 mt-1" />
-          <p>
-            Gestión de turnos de Zoonosis (castraciones) aún en <strong>papel</strong>.
-          </p>
-        </motion.div>
-        <motion.div
-          variants={STAGGER_ITEM}
-          className="bg-surface2 p-8 rounded-2xl flex gap-6 items-start shadow-sm hover:shadow-md transition-shadow"
-        >
-          <Users className="w-12 h-12 text-accent shrink-0 mt-1" />
-          <p>
-            <strong>Desgaste extremo</strong> de ONGs y voluntarios buscando recursos a pulmón.
-          </p>
-        </motion.div>
-        <motion.div
-          variants={STAGGER_ITEM}
-          className="bg-surface2 p-8 rounded-2xl flex gap-6 items-start shadow-sm hover:shadow-md transition-shadow"
-        >
-          <Stethoscope className="w-12 h-12 text-info shrink-0 mt-1" />
-          <p>Veterinarias pequeñas sin recursos para llevar control digital de pacientes.</p>
-        </motion.div>
-        <motion.div
-          variants={STAGGER_ITEM}
-          className="bg-surface2 p-8 rounded-2xl flex gap-6 items-start shadow-sm hover:shadow-md transition-shadow"
-        >
-          <Database className="w-12 h-12 text-purple-500 shrink-0 mt-1" />
-          <p>
-            Pérdida total de <strong>datos estadísticos</strong> para tomar políticas públicas
-            locales.
-          </p>
-        </motion.div>
-        <motion.div
-          variants={STAGGER_ITEM}
-          className="bg-surface2 p-8 rounded-2xl flex gap-6 items-start shadow-sm hover:shadow-md transition-shadow"
-        >
-          <Megaphone className="w-12 h-12 text-green-500 shrink-0 mt-1" />
-          <p>
-            Falta de conocimiento sobre la <strong>tenencia responsable</strong> de mascotas.
-          </p>
-        </motion.div>
-      </motion.div>
-    ),
   },
   {
     id: 5,
@@ -187,10 +50,10 @@ const SLIDES = [
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.8 }}
-        className="flex flex-col items-center text-center h-full justify-center bg-black/40 p-12 rounded-3xl backdrop-blur-sm"
+        className="flex flex-col items-center text-center h-full justify-center p-12"
       >
         <Target className="w-32 h-32 text-accent mb-12" />
-        <h2 className="text-3xl md:text-6xl font-black leading-tight max-w-5xl text-white drop-shadow-lg">
+        <h2 className="text-3xl md:text-6xl font-black leading-tight max-w-5xl text-textPrimary">
           &quot;Centralizar y unir a todos los interesados brindándoles herramientas digitales que
           potencien y faciliten la ayuda que ya están intentando dar.&quot;
         </h2>
@@ -591,7 +454,7 @@ export function Slideshow() {
                     <div className="mb-4 flex justify-center md:justify-start">{slide.icon}</div>
                   )}
                   <h1
-                    className={`text-4xl md:text-5xl md:text-6xl font-black mb-6 ${slide.bgImage ? 'text-white drop-shadow-lg' : 'text-text-primary'}`}
+                    className={`text-4xl md:text-5xl md:text-6xl font-black mb-6 ${slide.bgImage ? 'text-textPrimary' : 'text-text-primary'}`}
                   >
                     {slide.title}
                   </h1>
