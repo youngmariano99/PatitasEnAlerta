@@ -96,16 +96,20 @@ function generarColaboradoresMock(cantidad: number): Colaborador[] {
 
     if (typeRoll < 50) {
       tipo = 'persona';
-      nombre = `${NOMBRES[seed % NOMBRES.length]} ${APELLIDOS[(seed * 3) % APELLIDOS.length]}`;
+      const n = NOMBRES[seed % NOMBRES.length] ?? 'Colaborador';
+      const a = APELLIDOS[(seed * 3) % APELLIDOS.length] ?? 'Comunidad';
+      nombre = `${n} ${a}`;
     } else if (typeRoll < 70) {
       tipo = 'organizacion';
-      nombre = ORGANIZACIONES[seed % ORGANIZACIONES.length];
+      nombre = ORGANIZACIONES[seed % ORGANIZACIONES.length] ?? 'Organización';
     } else if (typeRoll < 85) {
       tipo = 'empresa';
-      nombre = EMPRESAS[seed % EMPRESAS.length];
+      nombre = EMPRESAS[seed % EMPRESAS.length] ?? 'Empresa';
     } else {
       tipo = 'veterinario';
-      nombre = `Dr. ${NOMBRES[(seed * 7) % NOMBRES.length]} ${APELLIDOS[(seed * 11) % APELLIDOS.length]}`;
+      const n = NOMBRES[(seed * 7) % NOMBRES.length] ?? 'Veterinario';
+      const a = APELLIDOS[(seed * 11) % APELLIDOS.length] ?? '';
+      nombre = `Dr. ${n} ${a}`.trim();
     }
 
     resultado.push({
@@ -113,7 +117,7 @@ function generarColaboradoresMock(cantidad: number): Colaborador[] {
       nombre,
       tipo,
       ubicacion: 'Coronel Pringles',
-      aporte: APORTES[seed % APORTES.length],
+      aporte: APORTES[seed % APORTES.length] ?? 'Colaboración en la comunidad',
     });
   }
   return resultado;
@@ -175,8 +179,8 @@ export function SeccionComunidad() {
     const nombresUsados = new Set<string>();
     for (const c of todosLosColaboradores) {
       if (unicos.length >= MAX_MOSTRADOS) break;
-      const primerNombre = c.nombre.split(' ')[0];
-      if (!nombresUsados.has(primerNombre)) {
+      const primerNombre = c.nombre.split(' ')[0] ?? '';
+      if (primerNombre && !nombresUsados.has(primerNombre)) {
         unicos.push(c);
         nombresUsados.add(primerNombre);
       }
@@ -202,11 +206,15 @@ export function SeccionComunidad() {
           const candidato =
             todosLosColaboradores[Math.floor(Math.random() * todosLosColaboradores.length)];
 
-          // Evitar que aparezca un nombre que YA está siendo mostrado (ej. dos "Juan")
-          const nombreCandidato = candidato.nombre.split(' ')[0];
-          const yaExisteNombre = nuevos.some((c) => c.nombre.split(' ')[0] === nombreCandidato);
+          if (!candidato) continue;
 
-          if (!yaExisteNombre) {
+          // Evitar que aparezca un nombre que YA está siendo mostrado (ej. dos "Juan")
+          const nombreCandidato = candidato.nombre.split(' ')[0] ?? '';
+          const yaExisteNombre = nuevos.some(
+            (c) => (c.nombre.split(' ')[0] ?? '') === nombreCandidato,
+          );
+
+          if (!yaExisteNombre && nuevos[indiceCambiar] !== undefined) {
             nuevos[indiceCambiar] = candidato;
           }
         }
@@ -236,8 +244,8 @@ export function SeccionComunidad() {
     const nombresUsados = new Set<string>();
     for (const c of filtrados) {
       if (unicos.length >= MAX_MOSTRADOS) break;
-      const primerNombre = c.nombre.split(' ')[0];
-      if (!nombresUsados.has(primerNombre)) {
+      const primerNombre = c.nombre.split(' ')[0] ?? '';
+      if (primerNombre && !nombresUsados.has(primerNombre)) {
         unicos.push(c);
         nombresUsados.add(primerNombre);
       }

@@ -29,8 +29,20 @@ const STAGGER_ITEM: Variants = {
   hidden: { opacity: 0, y: 20 },
   show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } },
 };
+type Slide = {
+  id: number;
+  title?: string;
+  subtitle?: string;
+  logo?: string;
+  icon?: React.ReactNode;
+  image?: string;
+  imagePosition?: 'left' | 'right';
+  bgImage?: string;
+  overlay?: boolean;
+  content?: React.ReactNode;
+};
 
-const SLIDES = [
+const SLIDES: Slide[] = [
   // FASE 1: Introducción
   {
     id: 1,
